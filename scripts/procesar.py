@@ -619,11 +619,26 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict) -> dict:
             "según los cuadernillos de la lista nominal. No incluye casillas especiales ni el voto desde "
             "el extranjero, por eso puede diferir un poco de los resultados oficiales."
         ),
+        # Arco narrativo: panorama, el primer voto y su caída en el centro, y lo que pasa con los años.
         "niveles": [
-            {"nombre": "El primer voto", "mitos": [m_jovenes, m_18]},
-            {"nombre": "¿Quién vota más?", "mitos": [m_sexo, m_campo, m_60]},
-            {"nombre": "Para expertos", "mitos": [m_intermedias, m_tendencia, m_mayores]},
+            {"nombre": "Así vota México",
+             "intro": "Primero, un repaso: quién vota y en qué elecciones.",
+             "mitos": [m_sexo, m_campo, m_intermedias]},
+            {"nombre": "El primer voto",
+             "intro": "Ahora, el centro de esta historia: qué pasa cuando cumples 18.",
+             "mitos": [m_18, m_jovenes]},
+            {"nombre": "Que el primer voto no sea el último",
+             "intro": "¿Y después del primer voto? Veamos qué pasa con los años.",
+             "mitos": [m_60, m_mayores, m_tendencia]},
         ],
+        "cierre": {
+            "titulo": "Que tu primer voto no sea el último",
+            "texto": (
+                "El primer voto entusiasma: a los 18 años se vota más que el promedio nacional. "
+                f"Después la participación baja y llega a su punto más bajo cerca de los {edad_min} años. "
+                "Con los años vuelve a subir. El reto es que tu primer voto no sea el último."
+            ),
+        },
     }
 
 

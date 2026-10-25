@@ -45,7 +45,8 @@
 
   function textoPregunta() {
     const m = estado.mitos[estado.indice];
-    return `Pregunta ${estado.indice + 1} de ${estado.mitos.length}. ${m.enunciado} ` +
+    const intro = m.introNivel ? `${m.introNivel} ` : "";
+    return `${intro}Pregunta ${estado.indice + 1} de ${estado.mitos.length}. ${m.enunciado} ` +
       "¿Es cierto o falso? Elige Cierto o Falso.";
   }
 
@@ -128,6 +129,9 @@
     const m = estado.mitos[estado.indice];
     $("#nivel").textContent = `Nivel ${m.nivel} de ${estado.totalNiveles}: ${m.nombreNivel}`;
     $("#t-mito").textContent = m.enunciado;
+    // Texto de transición al empezar cada nivel.
+    $("#intro-nivel").hidden = !m.introNivel;
+    $("#intro-nivel").textContent = m.introNivel || "";
     document.querySelectorAll(".opcion").forEach((b) => {
       b.disabled = false;
       b.classList.remove("elegida");
@@ -493,7 +497,11 @@
     llenarPerfil();
     estado.totalNiveles = datos.niveles.length;
     estado.mitos = datos.niveles.flatMap((n, i) =>
-      n.mitos.map((m) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre })));
+      n.mitos.map((m, j) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));
+    if (datos.cierre) {
+      $("#t-cierre").textContent = datos.cierre.titulo;
+      $("#cierre-texto").textContent = datos.cierre.texto;
+    }
     $("#nota-metodo").textContent = datos.nota_metodo;
   }
 
