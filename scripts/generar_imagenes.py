@@ -8,6 +8,8 @@ Uso:
 Salidas (site/img/):
     vista-previa.png  1200 x 630, para WhatsApp y redes (og:image)
     qr.png            código QR que lleva al sitio (se dibuja en la tarjeta de resultado)
+    icono-192.png     ícono para instalar el sitio (manifest.webmanifest)
+    icono-512.png
 
 Solo se ejecuta cuando cambia el diseño o la dirección del sitio; el sitio no depende de este script.
 """
@@ -98,10 +100,25 @@ def codigo_qr() -> None:
     qr.make_image(fill_color=TINTA, back_color="white").convert("RGB").save(IMG / "qr.png", optimize=True)
 
 
+def icono(lado: int) -> None:
+    """Recuadro de boleta con la X azul, con margen para recortes redondos."""
+    img = Image.new("RGB", (lado, lado), "white")
+    d = ImageDraw.Draw(img)
+    m = lado * 0.2
+    recuadro_grueso = max(4, lado // 24)
+    d.rectangle([m, m, lado - m, lado - m], fill="white", outline=TINTA, width=recuadro_grueso)
+    x = lado * 0.32
+    d.line([(x, x), (lado - x, lado - x)], fill=AZUL, width=lado // 12)
+    d.line([(lado - x, x), (x, lado - x)], fill=AZUL, width=lado // 12)
+    img.save(IMG / f"icono-{lado}.png", optimize=True)
+
+
 def main() -> None:
     IMG.mkdir(parents=True, exist_ok=True)
     vista_previa()
     codigo_qr()
+    icono(192)
+    icono(512)
     for p in sorted(IMG.glob("*.png")):
         print(f"  {p.relative_to(RAIZ)} ({p.stat().st_size / 1024:.1f} KB)")
 

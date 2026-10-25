@@ -108,7 +108,9 @@ y abre http://localhost:8000.
 - **Personas mayores y con baja visión:** tipografía Lexend (diseñada para la fluidez lectora), texto base de 18 px, control de tamaño de letra (A, A+, A++) que también agranda las gráficas, botones de al menos 44 px y contraste AA.
 - **Lectores de pantalla y teclado:** gráficas SVG con título y descripción, tabla con los datos de cada gráfica, foco visible y navegación completa con teclado.
 - **Niñas, niños y jóvenes:** mecánica de marcar la boleta, casillas de progreso que se llenan y tarjeta de resultado para retar a otras personas.
-- Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación; los datos del sitio pesan menos de 30 KB.
+- Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación.
+- **Sin internet y sin servicios externos:** la fuente Lexend está alojada en `site/fonts/` (licencia OFL) y un service worker (`site/sw.js`) guarda el sitio en el dispositivo después de la primera visita, así funciona sin conexión en talleres. El workflow de publicación cambia la versión de la caché en cada commit, así que las actualizaciones llegan solas.
+- **Peso:** el sitio completo pesa unos 200 KB; lo que se guarda para usar sin conexión son unos 143 KB (los datos, 27 KB; las fuentes, 33 KB). La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
 - Paleta neutral, sin colores asociados a partidos: texto `#1F2937`, datos `#2563EB`, base `#E5E7EB`, acento `#D97706`, blanco y grises.
 - Sin `localStorage`: el estado del juego vive en memoria.
 

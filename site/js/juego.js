@@ -548,6 +548,11 @@
   document.querySelectorAll(".opcion").forEach((b) =>
     b.addEventListener("click", () => responder(b.dataset.respuesta)));
 
+  // Guarda el sitio para usarlo sin conexión (no guarda nada de la persona).
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+
   cargar().catch(() => {
     $("#portada .entrada").textContent = "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.";
   });
