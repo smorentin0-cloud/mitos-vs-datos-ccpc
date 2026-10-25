@@ -1,27 +1,29 @@
-MIT License
+Mitos vs. Datos: el juego
+Copyright (c) 2026 [NOMBRE DEL EQUIPO] ([INTEGRANTES])
 
-Copyright (c) 2026 [NOMBRE DEL EQUIPO]
+AVISO DE DERECHOS
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Este proyecto se presentó al hackatón del Instituto Nacional Electoral (INE)
+«Hackea la participación: Datos que construyen democracia».
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+Conforme a la Base Décimo primera (Derechos de autor) de la convocatoria, las
+personas integrantes del equipo firmaron una Carta de cesión de derechos, por
+la cual:
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  - Los derechos patrimoniales de este trabajo pasan a ser propiedad del INE
+    por una temporalidad de 10 años.
+  - La difusión del trabajo será exclusivamente con fines institucionales y/o
+    educativos.
+  - Las personas integrantes conservan la autoría, los derechos intelectuales
+    y el reconocimiento como creadoras legítimas de la obra.
 
----
+No se concede ninguna licencia de uso, copia, modificación o distribución
+distinta de la anterior. El código se publica en este repositorio únicamente
+para su consulta y evaluación como parte del concurso.
 
-Nota: conforme a la Base Décimo primera de la convocatoria del hackatón del INE
-«Hackea la participación: Datos que construyen democracia», los derechos
-patrimoniales de este proyecto se ceden al Instituto Nacional Electoral.
+DATOS
+
+Los datos provienen de la Plataforma de Conteos Censales de Participación
+Ciudadana 2009–2024 del INE (datos abiertos) y se usan conforme a sus
+términos:
+https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/

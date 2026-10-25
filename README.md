@@ -1,12 +1,15 @@
 # Mitos vs. Datos: el juego
 
-Trivia web interactiva sobre la participación electoral en México. Cada pregunta plantea un mito común; la persona responde si cree que es **Cierto**, **Falso** o **Parcialmente cierto**, y entonces se revela una gráfica con el dato real de los Conteos Censales de Participación Ciudadana (CCPC) 2009–2024 del INE, junto con una explicación en lenguaje ciudadano. Al final se genera una tarjeta de resultado descargable (PNG, 1080 × 1350) para retar a otras personas.
+Trivia web interactiva sobre la participación electoral en México. Cada pregunta plantea una frase común sobre quién vota en México (algunas son mitos y otras son datos reales); la persona responde **Cierto** o **Falso**, y entonces se revela una gráfica con el dato real de los Conteos Censales de Participación Ciudadana (CCPC) 2009–2024 del INE, junto con una explicación en lenguaje ciudadano. Al final se genera una tarjeta de resultado descargable (PNG, 1080 × 1350) para retar a otras personas.
 
 Proyecto para el hackatón del INE **«Hackea la participación: Datos que construyen democracia»**, Reto 3: Storytelling con datos.
 
 **Sitio:** https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/
 
-Público: jóvenes de 18 a 29 años, escuelas y talleres de educación cívica.
+## Mensaje central y público
+
+- **Mensaje central:** muchas ideas que repetimos sobre la participación no coinciden con los datos; la participación cambia con la edad, el sexo, el lugar y el tipo de elección, y cada voto cuenta.
+- **Público:** jóvenes de 18 a 29 años, escuelas y talleres de educación cívica. Lenguaje sin tecnicismos, pensado para el celular.
 
 ## Fuente de datos
 
@@ -21,16 +24,18 @@ SV = registros con marca de voto, NV = registros sin marca de voto. Los registro
 
 Los veredictos los deciden los datos. `scripts/procesar.py` genera los textos con las cifras calculadas y **se detiene** si los datos dejan de sostener alguno de los veredictos aprobados.
 
-| Mito | Cálculo | Veredicto |
-|------|---------|-----------|
-| «Los jóvenes no votan.» | Participación de 18–29 años vs. 30 años o más y vs. promedio nacional (2024); votantes de 18–29 años en millones. | Falso |
-| «A los 18 años nadie vota; ya que crecen, empiezan a votar.» | Participación por edad simple de 18 a 40 años (2024), comparada con el promedio nacional; se revisa en las 6 elecciones. | Falso |
-| «Los hombres votan más que las mujeres.» | Participación de mujeres y hombres por elección, 2009–2024. La opción no binaria (solo 2024, 105 registros) no entra en la comparación. | Falso |
-| «En el campo se vota menos que en la ciudad.» | Participación por tipo de sección del INE (rural vs. urbana), 2009–2024. Se comprobó que el resultado se sostiene si los NS cuentan como no votantes, salvo 2024, que es prácticamente un empate. | Falso |
-| «Las personas de 60 a 74 años son las que más votan.» | Grupo quinquenal de edad con la participación más alta en cada elección. | Cierto |
-| «En las intermedias vota casi la misma gente que en las presidenciales.» | Participación nacional por elección; diferencia entre cada intermedia y la presidencial siguiente. | Falso |
-| «La participación en México va en picada desde 2009.» | Serie de participación nacional 2009–2024 y número absoluto de votantes. | Falso |
-| «Las personas mayores son las que menos votan.» | Participación por grupo quinquenal en 2024, con 85 años o más agrupados; peso de ese grupo en la lista nominal. | Parcialmente cierto |
+Cada frase tiene una sola respuesta, **Cierto** o **Falso**, y se comprueba en **las 6 elecciones** (2009–2024), no solo en una.
+
+| Frase | Cómo se verifica (en las 6 elecciones) | Veredicto |
+|-------|-----------------------------------------|-----------|
+| «Los jóvenes no votan.» | Participación de 18–29 años: nunca fue menor a un tercio (mínimo 35.9% en 2009). | Falso |
+| «A los 18 años se vota menos que el promedio nacional.» | Participación a los 18 años vs. promedio nacional: siempre fue mayor. | Falso |
+| «Los hombres votan más que las mujeres.» | Participación de mujeres vs. hombres: las mujeres siempre votaron más. La opción no binaria (solo 2024, 105 registros) no entra en la comparación. | Falso |
+| «En el campo siempre se ha votado menos que en la ciudad.» | Participación por tipo de sección del INE: lo rural fue igual o mayor que lo urbano en todas; en 2009–2021 también con el método alterno (NS como no votantes). En 2024 hay un empate práctico. | Falso |
+| «Las personas de 60 a 69 años son las que más votan.» | El grupo quinquenal con mayor participación fue 60–64 o 65–69, y la década 60–69 fue la más alta. | Cierto |
+| «En las elecciones intermedias vota menos gente que en las presidenciales.» | La intermedia con más participación (2021, 51.8%) quedó debajo de la presidencial con menos (2024, 59.7%); también en número de votantes. | Cierto |
+| «La participación en las elecciones intermedias ha ido bajando desde 2009.» | Intermedias: 44.1% (2009) → 47.1% (2015) → 51.8% (2021). | Falso |
+| «Las personas de 85 años o más son las que menos votan.» | El grupo de 85 años o más tuvo la participación más baja de todos los grupos de edad. | Cierto |
 
 El detalle de las cifras, los mitos descartados y las pruebas de robustez están en [`data/processed/hallazgos.md`](data/processed/hallazgos.md) y [`data/processed/evidencia_mitos.json`](data/processed/evidencia_mitos.json).
 
@@ -87,6 +92,13 @@ y abre http://localhost:8000.
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
 ```
 
+## Aprovechamiento institucional
+
+- **Material para talleres:** funciona en el celular, sin instalar nada, y se juega en unos 5 minutos; sirve para abrir sesiones de educación cívica en escuelas y en las Juntas Locales y Distritales.
+- **Actualizable:** al publicarse los conteos de una nueva elección basta con agregar el ZIP y ejecutar `python scripts/procesar.py`; los textos y cifras se regeneran solos y el script avisa si algún veredicto deja de cumplirse.
+- **Adaptable por estado:** la sección «Explora los datos» ya filtra por entidad; las preguntas pueden generarse para un estado en particular con el mismo script.
+- **Ligero y sin costo de operación:** sitio estático sin servidor ni base de datos; puede alojarse en cualquier servidor del INE.
+
 ## Diseño y accesibilidad
 
 - Mobile-first, sin dependencias externas ni paso de compilación; los datos del sitio pesan menos de 30 KB.
@@ -105,6 +117,6 @@ Datos: Instituto Nacional Electoral (INE), Conteos Censales de Participación Ci
 
 ## Licencia y derechos
 
-El código se publica bajo la licencia MIT (ver [`LICENSE`](LICENSE)).
+Conforme a la **Base Décimo primera** de la convocatoria, el equipo cede al INE los derechos patrimoniales de este trabajo por **10 años**, y su difusión será exclusivamente con fines institucionales y/o educativos. Las personas integrantes conservan la autoría y el reconocimiento como creadoras de la obra. Por eso el proyecto **no** usa una licencia abierta; ver [`LICENSE`](LICENSE).
 
-**Cesión de derechos:** conforme a la Base Décimo primera de la convocatoria del hackatón «Hackea la participación: Datos que construyen democracia», los derechos patrimoniales de este proyecto se ceden al Instituto Nacional Electoral. Los datos son del INE y se usan conforme a sus términos de datos abiertos.
+Los datos son del INE y se usan conforme a sus términos de datos abiertos.
