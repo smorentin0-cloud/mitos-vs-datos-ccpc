@@ -25,10 +25,15 @@
       </svg>
       <span>Mitos vs. Datos</span>
     </a>
+    <div class="controles">
+    <button id="voz-auto" class="voz-btn" aria-pressed="false" aria-label="Voz: leer en voz alta" hidden>
+      <svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Voz</span>
+    </button>
     <div class="tamano" role="group" aria-label="Tamaño de la letra">
       <button class="tamano-btn" data-tamano="1" aria-pressed="true" aria-label="Letra normal">A</button>
       <button class="tamano-btn" data-tamano="2" aria-pressed="false" aria-label="Letra grande">A</button>
       <button class="tamano-btn" data-tamano="3" aria-pressed="false" aria-label="Letra muy grande">A</button>
+    </div>
     </div>
   </header>
 
@@ -54,7 +59,7 @@
         <button class="boton primario" data-ir="instrucciones">Jugar</button>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>
       </div>
-      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. Este sitio no usa sonido.</p>
+      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. El juego no depende del sonido; si lo prefieres, activa el botón «Voz» para escuchar las preguntas.</p>
     </section>
 
     <!-- 2. Instrucciones -->
@@ -74,6 +79,7 @@
           <span><strong>Mira los datos.</strong> Un sello te dice la respuesta y una gráfica te muestra por qué.</span>
         </li>
       </ol>
+      <p class="voz-aviso" hidden>¿Prefieres escuchar? Activa el botón <strong>Voz</strong> de arriba y el juego te leerá cada pregunta y cada respuesta.</p>
       <div class="nota-papel">
         <p><strong>¿Qué es la participación?</strong> Es cuántas personas de cada 100 fueron a votar. Si dice 60%, votaron 60 de cada 100.</p>
       </div>
@@ -92,6 +98,7 @@
       <article class="boleta">
         <p id="nivel" class="folio"></p>
         <h2 id="t-mito" class="mito" tabindex="-1"></h2>
+        <button class="escuchar" data-leer="pregunta" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button>
         <div id="sello" class="sello" hidden aria-hidden="true">
           <svg class="sello-icono" viewBox="0 0 24 24"><path id="sello-trazo" d=""/></svg>
           <span id="sello-texto"></span>
@@ -113,6 +120,7 @@
         <p id="resultado-respuesta" class="resultado-respuesta" role="status"></p>
         <h3 id="t-veredicto" class="veredicto" tabindex="-1"></h3>
         <p id="explicacion" class="explicacion"></p>
+        <button class="escuchar" data-leer="explicacion" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar explicación</span></button>
         <figure class="grafica">
           <figcaption id="g-titulo" class="g-titulo"></figcaption>
           <div id="g-lienzo" class="g-lienzo"></div>
@@ -133,6 +141,7 @@
     <section id="resultado" class="pantalla" aria-labelledby="t-resultado" hidden>
       <h2 id="t-resultado" tabindex="-1"></h2>
       <p id="mensaje" class="entrada"></p>
+      <button class="escuchar" data-leer="resultado" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar resultado</span></button>
 
       <div class="tarjeta-contenedor">
         <canvas id="tarjeta" width="1080" height="1350" role="img" aria-label=""></canvas>
@@ -219,6 +228,7 @@
 
   <script src="js/graficas.js"></script>
   <script src="js/explora.js"></script>
+  <script src="js/voz.js"></script>
   <script src="js/juego.js"></script>
 </body>
 </html>

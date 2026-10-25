@@ -16,6 +16,7 @@
   // ---------- navegación entre pantallas
 
   function mostrar(id) {
+    Voz.detener();
     document.querySelectorAll(".pantalla").forEach((p) => { p.hidden = p.id !== id; });
     window.scrollTo(0, 0);
     const titulo = document.querySelector(`#${id} h1, #${id} h2`);
@@ -24,7 +25,50 @@
       titulo.focus({ preventScroll: true });
     }
     if (id === "explora") Explora.abrir();
+    if (id === "resultado") Voz.anunciar(textoResultado());
+    if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
   }
+
+  // ---------- textos para leer en voz alta
+
+  function textoPantalla(id) {
+    const s = document.getElementById(id);
+    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .llamado li")]
+      .map((n) => n.textContent.trim()).join(". ");
+  }
+
+  function textoPregunta() {
+    const m = estado.mitos[estado.indice];
+    return `Pregunta ${estado.indice + 1} de ${estado.mitos.length}. ${m.enunciado} ` +
+      "¿Es cierto o falso? Elige Cierto o Falso.";
+  }
+
+  function textoRevelacion() {
+    const m = estado.mitos[estado.indice];
+    return `${$("#resultado-respuesta").textContent} La respuesta es: ${NOMBRES[m.veredicto]}. ` +
+      `${m.explicacion} La gráfica muestra lo siguiente. ${Graficas.describir(m.grafica)} ${m.fuente}`;
+  }
+
+  function textoResultado() {
+    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent}`;
+  }
+
+  // Al activar "Voz" se lee lo que está en pantalla en ese momento.
+  function leerPantallaActual() {
+    const visible = [...document.querySelectorAll(".pantalla")].find((p) => !p.hidden);
+    if (!visible) return;
+    if (visible.id === "juego") {
+      Voz.anunciar($("#revelacion").hidden ? textoPregunta() : textoRevelacion());
+    } else if (visible.id === "resultado") {
+      Voz.anunciar(textoResultado());
+    } else {
+      Voz.anunciar(textoPantalla(visible.id));
+    }
+  }
+
+  const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoResultado };
+  document.querySelectorAll(".escuchar").forEach((b) =>
+    b.addEventListener("click", () => Voz.alternar(LECTURAS[b.dataset.leer](), b)));
 
   document.addEventListener("click", (e) => {
     const destino = e.target.closest("[data-ir]");
@@ -83,6 +127,7 @@
     pintarProgreso();
     window.scrollTo(0, 0);
     $("#t-mito").focus({ preventScroll: true });
+    Voz.anunciar(textoPregunta());
   }
 
   function responder(respuesta) {
@@ -129,6 +174,9 @@
     pintarProgreso();
     $("#contador").textContent =
       `Pregunta ${estado.indice + 1} de ${estado.mitos.length}. Aciertos: ${estado.puntos}.`;
+
+    // Se lee dentro del clic: algunos navegadores solo permiten hablar como respuesta a una acción.
+    Voz.anunciar(textoRevelacion());
 
     // Primero se ve el sello; luego baja a la explicación.
     setTimeout(() => {
@@ -355,6 +403,7 @@
     $("#nota-metodo").textContent = datos.nota_metodo;
   }
 
+  Voz.iniciar({ alActivar: leerPantallaActual });
   $("#iniciar").addEventListener("click", iniciar);
   $("#otra-vez").addEventListener("click", iniciar);
   $("#siguiente").addEventListener("click", siguiente);
