@@ -221,10 +221,6 @@
     return "Los mitos te ganaron esta vez, pero ahora ya conoces los datos.";
   }
 
-  function fraseReto(puntos, total) {
-    return `Acerté ${puntos} de ${total} sobre cómo vota México. ¿Puedes superarme?`;
-  }
-
   function pintarResultado() {
     const total = estado.mitos.length;
     $("#t-resultado").textContent = `Acertaste ${estado.puntos} de ${total}`;
@@ -343,21 +339,33 @@
     return lineas;
   }
 
-  // Tarjeta 1080 x 1350 con forma de boleta.
+  function cargarImagen(src) {
+    return new Promise((ok) => {
+      const img = new Image();
+      img.onload = () => ok(img);
+      img.onerror = () => ok(null);
+      img.src = src;
+    });
+  }
+
+  // Tarjeta 1080 x 1350 con forma de boleta: marcador, dato personalizado, reto y código QR.
   async function dibujarTarjeta() {
+    const T = TEXTOS.tarjeta;
     const c = $("#tarjeta");
     const ctx = c.getContext("2d");
     const W = c.width;
     const H = c.height;
     const F = "Lexend, \"Segoe UI\", system-ui, sans-serif";
     try { await Promise.all([document.fonts.load("700 40px Lexend"), document.fonts.load("400 40px Lexend")]); } catch { /* usa la fuente de respaldo */ }
+    const qr = await cargarImagen("img/qr.png");
     const total = estado.mitos.length;
-    const C = { tinta: "#1F2937", suave: "#4B5563", azul: "#2563EB", base: "#E5E7EB", ambar: "#D97706", gris: "#6B7280", perf: "#9CA3AF" };
+    const anios = estado.datosPerfil.edad.anios;
+    const C = { tinta: "#1F2937", suave: "#4B5563", azul: "#2563EB", ambar: "#D97706", gris: "#6B7280", perf: "#9CA3AF" };
 
     ctx.fillStyle = "#F3F4F6";
     ctx.fillRect(0, 0, W, H);
 
-    // Hoja
+    // Hoja con talón perforado
     const x0 = 80, y0 = 90, w = W - 160, h = H - 180;
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(x0, y0, w, h);
@@ -373,47 +381,52 @@
     ctx.setLineDash([]);
 
     const izq = x0 + 70;
+    const anchoTexto = w - 140;
     ctx.textAlign = "left";
     ctx.fillStyle = C.tinta;
     ctx.font = `700 64px ${F}`;
-    ctx.fillText("Mitos vs. Datos", izq, y0 + 95);
+    ctx.fillText(T.marca, izq, y0 + 95);
 
     ctx.fillStyle = C.suave;
     ctx.font = `400 40px ${F}`;
-    ctx.fillText("Mi resultado", izq, y0 + 260);
+    ctx.fillText(T.miResultado, izq, y0 + 240);
 
     ctx.fillStyle = C.tinta;
-    ctx.font = `700 230px ${F}`;
-    ctx.fillText(`${estado.puntos} de ${total}`, izq - 8, y0 + 480);
+    ctx.font = `700 200px ${F}`;
+    ctx.fillText(T.marcador(estado.puntos, total), izq - 8, y0 + 430);
 
     // Casillas marcadas, una por pregunta
-    const lado = 76, sep = 22;
+    const lado = 70, sep = 20;
     estado.aciertos.forEach((ok, i) => {
       const x = izq + i * (lado + sep);
-      const y = y0 + 560;
+      const y = y0 + 480;
       ctx.lineWidth = 6;
       ctx.strokeStyle = ok ? C.azul : C.gris;
       ctx.fillStyle = ok ? C.azul : "#FFFFFF";
       ctx.fillRect(x, y, lado, lado);
       ctx.strokeRect(x, y, lado, lado);
       ctx.strokeStyle = ok ? "#FFFFFF" : C.gris;
-      ctx.lineWidth = 9;
+      ctx.lineWidth = 8;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.beginPath();
       if (ok) {
-        ctx.moveTo(x + 18, y + 40); ctx.lineTo(x + 32, y + 55); ctx.lineTo(x + 58, y + 22);
+        ctx.moveTo(x + 17, y + 37); ctx.lineTo(x + 30, y + 51); ctx.lineTo(x + 54, y + 20);
       } else {
-        ctx.moveTo(x + 22, y + 22); ctx.lineTo(x + 54, y + 54);
-        ctx.moveTo(x + 54, y + 22); ctx.lineTo(x + 22, y + 54);
+        ctx.moveTo(x + 20, y + 20); ctx.lineTo(x + 50, y + 50);
+        ctx.moveTo(x + 50, y + 20); ctx.lineTo(x + 20, y + 50);
       }
       ctx.stroke();
     });
 
+    // Dato personalizado (o el del país si la persona prefirió no decir)
+    ctx.fillStyle = C.suave;
+    ctx.font = `400 32px ${F}`;
+    ctx.fillText(T.perfil, izq, y0 + 640);
     ctx.fillStyle = C.tinta;
-    ctx.font = `700 54px ${F}`;
-    envolver(ctx, fraseReto(estado.puntos, total), w - 140).forEach((l, i) => {
-      ctx.fillText(l, izq, y0 + 780 + i * 70);
+    ctx.font = `700 42px ${F}`;
+    envolver(ctx, estado.textoPerfil, anchoTexto).slice(0, 4).forEach((l, i) => {
+      ctx.fillText(l, izq, y0 + 700 + i * 56);
     });
 
     // Sello
@@ -428,20 +441,35 @@
     ctx.fillStyle = C.ambar;
     ctx.textAlign = "center";
     ctx.font = `700 30px ${F}`;
-    ctx.fillText("¿MITO O DATO?", 0, 11);
+    ctx.fillText(T.sello, 0, 11);
     ctx.restore();
 
+    // Reto y código QR al pie
+    const ladoQr = 230;
+    const xQr = x0 + w - 60 - ladoQr;
+    const yQr = y0 + h - 60 - ladoQr;
+    if (qr) ctx.drawImage(qr, xQr, yQr, ladoQr, ladoQr);
     ctx.textAlign = "left";
+    ctx.fillStyle = C.tinta;
+    ctx.font = `700 64px ${F}`;
+    ctx.fillText(T.meGanas, izq, yQr + 50);
+    ctx.font = `400 30px ${F}`;
+    ctx.fillText(T.juegaEn, izq, yQr + 100);
+    // La dirección se parte después del dominio para que quepa junto al QR.
+    const url = urlJuego().replace(/^https?:\/\//, "");
+    const corte = url.indexOf("/") + 1;
     ctx.fillStyle = C.azul;
-    ctx.font = `700 34px ${F}`;
-    ctx.fillText(urlJuego().replace(/^https?:\/\//, ""), izq, y0 + h - 130);
+    ctx.font = `700 30px ${F}`;
+    [url.slice(0, corte), url.slice(corte)].filter(Boolean)
+      .forEach((l, i) => ctx.fillText(l, izq, yQr + 142 + i * 38));
     ctx.fillStyle = C.suave;
-    ctx.font = `400 26px ${F}`;
-    envolver(ctx, "Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024", w - 140)
-      .forEach((l, i) => ctx.fillText(l, izq, y0 + h - 84 + i * 36));
+    ctx.font = `400 24px ${F}`;
+    if (qr) ctx.fillText(T.qr, izq, yQr + 230);
+    ctx.textAlign = "center";
+    envolver(ctx, T.fuente(anios[0], anios.at(-1)), w - 80)
+      .forEach((l, i) => ctx.fillText(l, x0 + w / 2, y0 + h + 50 + i * 30));
 
-    c.setAttribute("aria-label",
-      `Tarjeta de resultado: ${estado.puntos} de ${total} respuestas correctas. ${fraseReto(estado.puntos, total)}`);
+    c.setAttribute("aria-label", T.descripcion(estado.puntos, total, estado.textoPerfil));
   }
 
   function blobTarjeta() {
@@ -458,11 +486,12 @@
     a.click();
     a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    $("#aviso-compartir").textContent = "Tarjeta descargada.";
+    $("#aviso-compartir").textContent = TEXTOS.compartir.descargada;
   }
 
   async function compartir() {
-    const datos = { title: "Mitos vs. Datos", text: fraseReto(estado.puntos, estado.mitos.length), url: urlJuego() };
+    const C = TEXTOS.compartir;
+    const datos = { title: C.titulo, text: C.reto(estado.puntos, estado.mitos.length), url: urlJuego() };
     try {
       const archivo = new File([await blobTarjeta()], "mitos-vs-datos-resultado.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -477,14 +506,16 @@
     }
   }
 
+  // Copia el reto completo con el enlace, no solo la dirección.
   async function copiar() {
-    const url = urlJuego();
+    const C = TEXTOS.compartir;
+    const texto = C.retoConEnlace(estado.puntos, estado.mitos.length, urlJuego());
     const aviso = $("#aviso-compartir");
     try {
-      await navigator.clipboard.writeText(url);
-      aviso.textContent = "Enlace copiado. Pégalo donde quieras.";
+      await navigator.clipboard.writeText(texto);
+      aviso.textContent = C.copiado;
     } catch {
-      aviso.textContent = `Copia este enlace: ${url}`;
+      aviso.textContent = C.copiaManual(texto);
     }
   }
 

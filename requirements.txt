@@ -1,1 +1,5 @@
 pandas>=2.0
+
+# Solo para regenerar las imágenes fijas (scripts/generar_imagenes.py)
+pillow>=10.0
+qrcode>=7.4
