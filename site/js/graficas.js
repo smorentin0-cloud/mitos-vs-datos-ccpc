@@ -8,6 +8,8 @@ const Graficas = (() => {
   const COLORES = { datos: "#2563EB", base: "#6B7280", acento: "#D97706", pista: "#E5E7EB" };
   const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let contadorId = 0;
+  // Factor del tamaño de letra elegido (1 = 16 px): la geometría crece con el texto.
+  const escala = () => parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
 
   const fmt = (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`);
 
@@ -123,24 +125,25 @@ const Graficas = (() => {
   // ---------- barras horizontales
 
   function barras(contenedor, spec) {
-    const fila = spec.compacto ? 38 : 46;
-    const grosor = spec.compacto ? 12 : 16;
+    const k = escala();
+    const fila = (spec.compacto ? 42 : 50) * k;
+    const grosor = (spec.compacto ? 12 : 16) * k;
     const alto = spec.items.length * fila + 4;
     const { svg, ancho } = lienzo(contenedor, spec, alto);
-    const espacioValor = 52;
+    const espacioValor = 58 * k;
     const largo = ancho - espacioValor;
     const pausa = spec.items.length > 12 ? 15 : 60;
     spec.items.forEach((item, i) => {
       const y = i * fila;
-      texto(svg, 0, y + 15, item.etiqueta, { "font-size": 14, "font-weight": item.color === "acento" ? 700 : 400 });
-      el("rect", { x: 0, y: y + 21, width: largo, height: grosor, rx: 4, fill: COLORES.pista }, svg);
+      texto(svg, 0, y + 17 * k, item.etiqueta, { class: "etiqueta", "font-weight": item.color === "acento" ? 700 : 400 });
+      el("rect", { x: 0, y: y + 24 * k, width: largo, height: grosor, rx: 2, fill: COLORES.pista }, svg);
       const w = (largo * (item.valor || 0)) / 100;
       el("rect", {
-        x: 0, y: y + 21, width: w, height: grosor, rx: 4,
+        x: 0, y: y + 24 * k, width: w, height: grosor, rx: 2,
         fill: COLORES[item.color || "datos"], class: "crece-x",
         style: `transition-delay:${i * pausa}ms`,
       }, svg);
-      texto(svg, w + 6, y + 21 + grosor - 2, fmt(item.valor), { class: "valor aparece" });
+      texto(svg, w + 6, y + 24 * k + grosor - 2, fmt(item.valor), { class: "valor aparece" });
     });
     return svg;
   }
@@ -152,16 +155,17 @@ const Graficas = (() => {
       ? spec.series.map((s) => ({ nombre: s.nombre, color: s.color })) : null);
     if (elementosLeyenda) leyenda(contenedor, elementosLeyenda);
 
-    const m = { izq: 40, der: 4, arr: 10, aba: 28 };
+    const k = escala();
+    const m = { izq: 44 * k, der: 4, arr: 12 * k, aba: 30 * k };
     const anchoDisponible = Math.max(280, contenedor.clientWidth || 320);
     const grupo = (anchoDisponible - m.izq - m.der) / spec.x.length;
     const n = spec.series.length;
     const hueco = grupo * 0.14;
     const col = (grupo - hueco * 2) / n;
     // Sin espacio para escribir el valor sobre cada columna: se usan barras horizontales.
-    if (col < 34) return barrasAgrupadas(contenedor, spec);
+    if (col < 38 * k) return barrasAgrupadas(contenedor, spec);
 
-    const alto = 280;
+    const alto = 280 * k;
     const { svg, ancho } = lienzo(contenedor, spec, alto);
     const h = alto - m.arr - m.aba;
     const y = (v) => m.arr + h - (h * v) / 100;
@@ -169,14 +173,14 @@ const Graficas = (() => {
 
     spec.x.forEach((etiqueta, k) => {
       const gx = m.izq + k * grupo;
-      texto(svg, gx + grupo / 2, alto - 8, etiqueta, { class: "eje", "text-anchor": "middle" });
+      texto(svg, gx + grupo / 2, alto - 8 * k, etiqueta, { class: "eje", "text-anchor": "middle" });
       spec.series.forEach((s, j) => {
         const v = s.valores[k];
         if (v == null) return;
         const x = gx + hueco + j * col;
         const color = COLORES[(s.colores && s.colores[k]) || s.color || "datos"];
         el("rect", {
-          x: x + 1, y: y(v), width: col - 2, height: y(0) - y(v), rx: 3,
+          x: x + 1, y: y(v), width: col - 2, height: y(0) - y(v), rx: 2,
           fill: color, class: "crece-y", style: `transition-delay:${k * 70}ms`,
         }, svg);
         texto(svg, x + col / 2, y(v) - 6, v.toFixed(1), { class: "valor aparece", "text-anchor": "middle" });
@@ -189,22 +193,23 @@ const Graficas = (() => {
   // Versión horizontal de las columnas: una fila por categoría y una barra por serie.
   function barrasAgrupadas(contenedor, spec) {
     const n = spec.series.length;
-    const grosor = 14;
-    const filaCat = 22 + n * (grosor + 6) + 8;
+    const e = escala();
+    const grosor = 14 * e;
+    const filaCat = 26 * e + n * (grosor + 6) + 10;
     const alto = spec.x.length * filaCat;
     const { svg, ancho } = lienzo(contenedor, spec, alto);
-    const largo = ancho - 52;
+    const largo = ancho - 58 * e;
     spec.x.forEach((etiqueta, k) => {
       const y0 = k * filaCat;
-      texto(svg, 0, y0 + 15, etiqueta, { "font-size": 14, "font-weight": 700 });
+      texto(svg, 0, y0 + 17 * e, etiqueta, { class: "etiqueta", "font-weight": 700 });
       spec.series.forEach((s, j) => {
         const v = s.valores[k];
         if (v == null) return;
-        const y = y0 + 22 + j * (grosor + 6);
+        const y = y0 + 26 * e + j * (grosor + 6);
         const w = (largo * v) / 100;
-        el("rect", { x: 0, y, width: largo, height: grosor, rx: 3, fill: COLORES.pista }, svg);
+        el("rect", { x: 0, y, width: largo, height: grosor, rx: 2, fill: COLORES.pista }, svg);
         el("rect", {
-          x: 0, y, width: w, height: grosor, rx: 3,
+          x: 0, y, width: w, height: grosor, rx: 2,
           fill: COLORES[(s.colores && s.colores[k]) || s.color || "datos"],
           class: "crece-x", style: `transition-delay:${k * 60}ms`,
         }, svg);
@@ -218,25 +223,26 @@ const Graficas = (() => {
 
   function linea(contenedor, spec) {
     if (spec.series.length > 1) leyenda(contenedor, spec.series.map((s) => ({ nombre: s.nombre, color: s.color })));
-    const alto = 280;
+    const k = escala();
+    const alto = 280 * k;
     const { svg, ancho } = lienzo(contenedor, spec, alto);
-    const m = { izq: 40, der: 16, arr: 24, aba: spec.x_titulo ? 46 : 28 };
+    const m = { izq: 44 * k, der: 16, arr: 26 * k, aba: (spec.x_titulo ? 50 : 30) * k };
     const h = alto - m.arr - m.aba;
     const y = (v) => m.arr + h - (h * v) / 100;
     const paso = (ancho - m.izq - m.der) / Math.max(1, spec.x.length - 1);
     const x = (k) => m.izq + k * paso;
     ejeY(svg, m.izq, ancho - m.der, y, h);
 
-    const anchoEtiqueta = Math.max(...spec.x.map((e) => e.length)) * 7 + 10;
+    const anchoEtiqueta = (Math.max(...spec.x.map((e) => e.length)) * 8 + 12) * k;
     const cada = Math.ceil(spec.x.length / Math.max(2, Math.floor((ancho - m.izq - m.der) / anchoEtiqueta)));
     spec.x.forEach((etq, k) => {
       const ultimo = k === spec.x.length - 1 && k % cada >= cada * 0.6;
       if (k % cada === 0 || ultimo) {
-        texto(svg, x(k), alto - m.aba + 18, etq, { class: "eje", "text-anchor": "middle" });
+        texto(svg, x(k), alto - m.aba + 20 * escala(), etq, { class: "eje", "text-anchor": "middle" });
       }
     });
     if (spec.x_titulo) {
-      texto(svg, m.izq + (ancho - m.izq - m.der) / 2, alto - 6, spec.x_titulo, { class: "eje", "text-anchor": "middle" });
+      texto(svg, m.izq + (ancho - m.izq - m.der) / 2, alto - 6 * k, spec.x_titulo, { class: "eje", "text-anchor": "middle" });
     }
 
     if (spec.referencia) {
@@ -266,7 +272,7 @@ const Graficas = (() => {
       // La etiqueta va debajo si el punto queda más bajo que sus vecinos.
       const vecinos = [s0.valores[k - 1], s0.valores[k + 1]].filter((n) => n != null);
       const bajo = vecinos.length && v < vecinos.reduce((a, b) => a + b, 0) / vecinos.length;
-      const arriba = bajo ? 22 : -12;
+      const arriba = (bajo ? 24 : -12) * escala();
       texto(svg, x(k), y(v) + arriba, fmt(v), { class: "valor aparece", "text-anchor": ancla });
     });
     return svg;
@@ -293,6 +299,14 @@ const Graficas = (() => {
 
   const dibujantes = { barras, columnas, linea };
   const observados = new WeakMap();
+  const activos = new Set();
+
+  function redibujar() {
+    activos.forEach((c) => {
+      const actual = observados.get(c);
+      if (c.isConnected && actual && actual.spec && c.offsetParent) dibujar(c, actual.spec, { animado: false });
+    });
+  }
 
   function dibujar(contenedor, spec, { animado = true } = {}) {
     contenedor.replaceChildren();
@@ -313,7 +327,8 @@ const Graficas = (() => {
       observados.set(contenedor, { ro });
     }
     observados.get(contenedor).spec = spec;
+    activos.add(contenedor);
   }
 
-  return { dibujar, tabla, describir, COLORES, fmt };
+  return { dibujar, redibujar, tabla, describir, COLORES, fmt };
 })();
