@@ -87,6 +87,7 @@ y abre http://localhost:8000.
 │   ├── css/estilos.css
 │   ├── js/graficas.js        # gráficas SVG accesibles
 │   ├── js/juego.js           # lógica del juego y tarjeta PNG
+│   ├── js/voz.js             # lectura en voz alta
 │   ├── js/explora.js         # sección «Explora los datos»
 │   └── data/                 # mitos.json, explora.json, entidades.json
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
@@ -102,7 +103,8 @@ y abre http://localhost:8000.
 ## Diseño y accesibilidad
 
 - **Identidad:** la boleta y el cuadernillo de la lista nominal, de donde salen los Conteos Censales. Cada pregunta es una boleta, la respuesta se marca con una X en un recuadro y el veredicto aparece como un sello.
-- **Personas con discapacidad auditiva:** el sitio no usa sonido. Toda la retroalimentación es visual y textual (marca, sello, ícono y texto, nunca solo color), con frases cortas en lenguaje sencillo.
+- **Personas con discapacidad visual:** botón **Voz** que lee en voz alta cada pregunta y, al responder, el resultado, la explicación y lo que muestra la gráfica, con voz en español de México cuando el dispositivo la tiene (Web Speech API, sin servicios externos). También hay botones «Escuchar» para pedir la lectura cuando se quiera. Está apagado por defecto para no encimarse con los lectores de pantalla.
+- **Personas con discapacidad auditiva:** el juego no depende del sonido. Toda la retroalimentación es visual y textual (marca, sello, ícono y texto, nunca solo color), con frases cortas en lenguaje sencillo.
 - **Personas mayores y con baja visión:** tipografía Lexend (diseñada para la fluidez lectora), texto base de 18 px, control de tamaño de letra (A, A+, A++) que también agranda las gráficas, botones de al menos 44 px y contraste AA.
 - **Lectores de pantalla y teclado:** gráficas SVG con título y descripción, tabla con los datos de cada gráfica, foco visible y navegación completa con teclado.
 - **Niñas, niños y jóvenes:** mecánica de marcar la boleta, casillas de progreso que se llenan y tarjeta de resultado para retar a otras personas.
