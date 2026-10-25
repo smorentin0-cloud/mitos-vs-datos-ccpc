@@ -53,18 +53,23 @@ self.addEventListener("fetch", (evento) => {
   const { request } = evento;
   if (request.method !== "GET" || new URL(request.url).origin !== self.location.origin) return;
 
+  // Las páginas se guardan sin parámetros (?entidad=6 usa el mismo HTML): una sola copia por página,
+  // así nunca se sirve una versión vieja guardada con otro parámetro.
+  const url = new URL(request.url);
+  const clave = request.mode === "navigate" ? url.origin + url.pathname : request;
+
   evento.respondWith(
     fetch(request)
       .then((respuesta) => {
         if (respuesta.ok) {
           const copia = respuesta.clone();
-          caches.open(CACHE).then((c) => c.put(request, copia));
+          caches.open(CACHE).then((c) => c.put(clave, copia));
         }
         return respuesta;
       })
       .catch(async () => {
-        // Sin conexión: la copia guardada. Las páginas ignoran parámetros como ?entidad=6.
-        const guardada = await caches.match(request, { ignoreSearch: request.mode === "navigate" });
+        // Sin conexión: la copia guardada.
+        const guardada = await caches.match(clave);
         if (guardada) return guardada;
         if (request.mode === "navigate") return caches.match("index.html");
         return Response.error();
