@@ -38,9 +38,19 @@ Cifras generadas con `python scripts/procesar.py` (detalle completo en `evidenci
 
 Ninguno de los candidatos tuvo que descartarse: los 8 pueden responderse con estos datos (el 5 sí se puede porque existe la variable de tipo de sección).
 
-## Decisión final (aprobada)
+## Versión final del juego (solo Cierto / Falso)
 
-Mitos que entran al juego: **1, 2, 3, 4, 5, 6, 8 y 11**. Veredictos: 1 Falso, 2 Falso, 3 Falso, 4 Falso, 5 Falso, 6 Falso, 8 Parcialmente cierto, 11 Cierto.
-Quedan fuera del juego: 7, 9 y 10 (su evidencia se conserva arriba). El 7 sigue disponible en la sección "Explora los datos" (participación por estado).
+Se eliminó la opción "Parcialmente cierto". Las frases ambiguas o compuestas se reformularon para que tengan una sola respuesta verificable, y cada veredicto se comprueba en **las 6 elecciones** (2009–2024). `scripts/procesar.py` se detiene si alguno deja de cumplirse.
 
-`scripts/procesar.py` revisa que los datos sigan sosteniendo cada veredicto aprobado y se detiene si alguno deja de cumplirse.
+| Frase en el juego | Antes | Verificación en las 6 elecciones | Veredicto |
+|-------------------|-------|----------------------------------|-----------|
+| Los jóvenes no votan. | igual | 18–29 años nunca votó menos de un tercio (mínimo 35.9%, 2009) | Falso |
+| A los 18 años se vota menos que el promedio nacional. | "A los 18 años nadie vota; ya que crecen, empiezan a votar" (frase doble) | 18 años > promedio nacional en las 6 | Falso |
+| Los hombres votan más que las mujeres. | igual | mujeres > hombres en las 6 | Falso |
+| En el campo siempre se ha votado menos que en la ciudad. | sin "siempre" (frágil: en 2024 la diferencia es de 0.23 puntos y se invierte con otro método) | rural ≥ urbano en las 6; en 2009–2021 también con SV/LN | Falso |
+| Las personas de 60 a 69 años son las que más votan. | "60 a 74" (impreciso) | grupo máximo 60–64 o 65–69 en las 6; la década 60–69 es la más alta en las 6 | Cierto |
+| En las elecciones intermedias vota menos gente que en las presidenciales. | "vota casi la misma gente" (vago) | intermedia más alta (51.8%) < presidencial más baja (59.7%) | Cierto |
+| La participación en las elecciones intermedias ha ido bajando desde 2009. | "va en picada desde 2009" (vago y mezclaba tipos de elección) | 44.1% → 47.1% → 51.8% | Falso |
+| Las personas de 85 años o más son las que menos votan. | "Las personas mayores son las que menos votan" (Parcialmente cierto) | 85+ es el grupo más bajo en las 6 | Cierto |
+
+Quedan fuera del juego los mitos 7, 9 y 10; el 7 (diferencias entre estados) se puede consultar en "Explora los datos".
