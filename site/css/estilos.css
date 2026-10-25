@@ -382,3 +382,35 @@ svg .aparece.inicio { opacity: 0; }
   border-left: 6px solid var(--ambar);
   font-size: 1.125rem; font-weight: 700;
 }
+
+/* ---------------------------------------------------------------- talleres y modo salón */
+.talleres { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--perforado); }
+.talleres-titulo { font-size: 1.375rem; margin: 0 0 0.25rem; }
+.talleres p { margin: 0; }
+
+.salon-votar { display: grid; gap: 1rem; justify-items: start; }
+.salon-pregunta { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--azul); }
+.salon-teclas { margin: 0; font-size: 1rem; color: var(--tinta-suave); }
+kbd {
+  display: inline-block; min-width: 1.75em; padding: 0 0.35em;
+  font: inherit; font-weight: 700; text-align: center;
+  border: 2px solid var(--tinta); border-bottom-width: 4px; border-radius: 4px;
+  background: var(--papel);
+}
+.salir-salon {
+  margin-top: 0.75rem; min-height: 44px; padding: 0.25rem 0.875rem;
+  font: inherit; font-size: 1rem; font-weight: 700;
+  background: var(--papel); color: var(--tinta);
+  border: 2px solid var(--tinta); border-radius: 4px; cursor: pointer;
+}
+.casillas li.hecho { background: var(--base); border-color: var(--gris-graf); color: var(--tinta); }
+
+.discusion {
+  margin: 0 0 1.25rem; padding: 0.75rem 1rem;
+  background: var(--papel); border-left: 8px solid var(--ambar);
+  font-size: 1.25rem;
+}
+
+/* En el proyector se aprovecha el ancho de la pantalla. */
+.modo-salon main { max-width: 64rem; }
+.modo-salon .mito { font-size: 2.25rem; }

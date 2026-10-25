@@ -71,6 +71,13 @@
         <button class="boton primario" data-ir="instrucciones">Jugar</button>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>
       </div>
+      <div class="talleres">
+        <h2 class="talleres-titulo">Para talleres</h2>
+        <p>Para jugar en grupo con un proyector.</p>
+        <div class="acciones">
+          <button class="boton secundario" id="entrar-salon">Modo salón</button>
+        </div>
+      </div>
       <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. El juego no depende del sonido; si lo prefieres, activa el botón «Voz» para escuchar las preguntas.</p>
     </section>
 
@@ -122,6 +129,7 @@
       <div class="progreso">
         <ol id="casillas" class="casillas" aria-hidden="true"></ol>
         <p id="contador" class="contador" aria-live="polite"></p>
+        <button id="salir-salon" class="salir-salon" hidden>Salir del modo salón</button>
       </div>
 
       <p id="intro-nivel" class="intro-nivel" hidden></p>
@@ -145,12 +153,18 @@
             <span>Falso</span>
           </button>
         </fieldset>
+        <div id="salon-votar" class="salon-votar" hidden>
+          <p class="salon-pregunta">Levanten la mano: ¿cierto o falso?</p>
+          <button class="boton primario" id="revelar">Revelar</button>
+          <p class="salon-teclas">Teclado: <kbd>→</kbd> o <kbd>Espacio</kbd> para avanzar, <kbd>←</kbd> para regresar, <kbd>Esc</kbd> para salir.</p>
+        </div>
       </article>
 
       <div id="revelacion" class="revelacion" hidden>
         <p id="resultado-respuesta" class="resultado-respuesta" role="status"></p>
         <h3 id="t-veredicto" class="veredicto" tabindex="-1"></h3>
         <p id="explicacion" class="explicacion"></p>
+        <p id="discusion" class="discusion" hidden><strong>Para conversar:</strong> <span id="discusion-texto"></span></p>
         <button class="escuchar" data-leer="explicacion" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar explicación</span></button>
         <figure class="grafica">
           <figcaption id="g-titulo" class="g-titulo"></figcaption>

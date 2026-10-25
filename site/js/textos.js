@@ -25,6 +25,12 @@ const TEXTOS = {
     descripcion: (puntos, total, perfil) =>
       `Tarjeta de resultado: ${puntos} de ${total} respuestas correctas. ${perfil} ¿Me ganas? Incluye un código QR que lleva al juego.`,
   },
+  salon: {
+    votar: "Levanten la mano: ¿cierto o falso?",
+    contador: (n, total) => `Pregunta ${n} de ${total}.`,
+    paraConversar: "Para conversar:",
+    terminar: "Terminar",
+  },
   perfil: {
     titulo: "¿Cómo vota alguien como tú?",
     noDecir: "Prefiero no decir",

@@ -366,6 +366,18 @@ def evidencia(df: pd.DataFrame, s: dict) -> dict:
 
 # ---------------------------------------------------------------- mitos del juego
 
+# Preguntas para conversar en el modo salón. No llevan cifras: invitan a pensar en las causas.
+DISCUSION = {
+    "sexo": "¿Por qué creen que mucha gente piensa que los hombres votan más? ¿Qué podría explicar que las mujeres voten más?",
+    "campo": "¿Qué facilita o dificulta ir a votar en una comunidad rural? ¿Y en una ciudad grande?",
+    "intermedias": "¿Sabían qué se elige en una elección intermedia? ¿Por qué creen que llama menos la atención?",
+    "primer-voto": "¿Qué recuerdan o imaginan de su primer voto? ¿Por qué creen que a los 18 años se vota más?",
+    "jovenes": "¿Qué hace que una persona joven deje de votar después de su primer voto? ¿Qué le ayudaría a seguir votando?",
+    "sesentas": "¿Qué costumbres o experiencias pueden hacer que alguien vote toda su vida?",
+    "mayores": "¿Qué obstáculos puede tener una persona de 85 años o más para ir a votar? ¿Cómo se le podría ayudar?",
+    "tendencia": "Si la participación en las intermedias puede subir, ¿qué podrían hacer ustedes para que siga subiendo?",
+}
+
 def fuente(anios: str) -> str:
     return f"Fuente: INE, Conteos Censales de Participación Ciudadana, {anios}."
 
@@ -612,6 +624,11 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict) -> dict:
         },
         "fuente": fuente("2024"),
     }
+
+    for m in (m_jovenes, m_18, m_sexo, m_intermedias, m_campo, m_tendencia, m_60, m_mayores):
+        if m["id"] not in DISCUSION:
+            raise SystemExit(f"Falta la pregunta de discusión del mito '{m['id']}'.")
+        m["discusion"] = DISCUSION[m["id"]]
 
     return {
         "nota_metodo": (

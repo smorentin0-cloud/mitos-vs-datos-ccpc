@@ -13,6 +13,11 @@
     perfil: { grupo: "", entidad: "" },
     datosPerfil: null,
     textoPerfil: "",
+    // Modo salón: una pregunta por pantalla, sin puntos, la persona facilitadora revela.
+    salon: false,
+    tamanoPrevio: "1",
+    revelada: false,
+    temporizador: null,
   };
 
   function icono(trazo) {
@@ -23,6 +28,7 @@
 
   function mostrar(id) {
     Voz.detener();
+    if (id === "portada" && estado.salon) salirSalon();
     document.querySelectorAll(".pantalla").forEach((p) => { p.hidden = p.id !== id; });
     window.scrollTo(0, 0);
     const titulo = document.querySelector(`#${id} h1, #${id} h2`);
@@ -47,13 +53,15 @@
     const m = estado.mitos[estado.indice];
     const intro = m.introNivel ? `${m.introNivel} ` : "";
     return `${intro}Pregunta ${estado.indice + 1} de ${estado.mitos.length}. ${m.enunciado} ` +
-      "¿Es cierto o falso? Elige Cierto o Falso.";
+      (estado.salon ? TEXTOS.salon.votar : "¿Es cierto o falso? Elige Cierto o Falso.");
   }
 
   function textoRevelacion() {
     const m = estado.mitos[estado.indice];
-    return `${$("#resultado-respuesta").textContent} La respuesta es: ${NOMBRES[m.veredicto]}. ` +
-      `${m.explicacion} La gráfica muestra lo siguiente. ${Graficas.describir(m.grafica)} ${m.fuente}`;
+    const aviso = estado.salon ? "" : `${$("#resultado-respuesta").textContent} `;
+    const discusion = estado.salon ? ` ${TEXTOS.salon.paraConversar} ${m.discusion}` : "";
+    return `${aviso}La respuesta es: ${NOMBRES[m.veredicto]}. ` +
+      `${m.explicacion} La gráfica muestra lo siguiente. ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}`;
   }
 
   function textoResultado() {
@@ -89,20 +97,30 @@
 
   // ---------- tamaño de letra
 
-  document.querySelectorAll(".tamano-btn").forEach((b) => b.addEventListener("click", () => {
-    document.documentElement.dataset.tamano = b.dataset.tamano;
+  function ponerTamano(nivel) {
+    document.documentElement.dataset.tamano = nivel;
     document.querySelectorAll(".tamano-btn").forEach((x) =>
-      x.setAttribute("aria-pressed", String(x === b)));
+      x.setAttribute("aria-pressed", String(x.dataset.tamano === nivel)));
     Graficas.redibujar();
-  }));
+  }
+
+  document.querySelectorAll(".tamano-btn").forEach((b) =>
+    b.addEventListener("click", () => ponerTamano(b.dataset.tamano)));
 
   // ---------- juego
 
   function iniciar({ conPerfil = true } = {}) {
     if (!estado.mitos.length) return;
+    if (estado.salon) salirSalon();
     estado.perfil = conPerfil
       ? { grupo: $("#p-grupo").value, entidad: $("#p-entidad").value }
       : { grupo: "", entidad: "" };
+    prepararRecorrido();
+    mostrar("juego");
+    pintarPregunta();
+  }
+
+  function prepararRecorrido() {
     estado.indice = 0;
     estado.puntos = 0;
     estado.aciertos = [];
@@ -111,11 +129,16 @@
       li.textContent = i + 1;
       return li;
     }));
-    mostrar("juego");
-    pintarPregunta();
   }
 
   function pintarProgreso() {
+    if (estado.salon) {
+      [...$("#casillas").children].forEach((li, i) => {
+        li.className = i < estado.indice ? "hecho" : i === estado.indice ? "actual" : "";
+      });
+      $("#contador").textContent = TEXTOS.salon.contador(estado.indice + 1, estado.mitos.length);
+      return;
+    }
     [...$("#casillas").children].forEach((li, i) => {
       li.className = i < estado.aciertos.length ? (estado.aciertos[i] ? "bien" : "mal")
         : i === estado.indice ? "actual" : "";
@@ -138,8 +161,12 @@
       b.removeAttribute("aria-pressed");
       b.querySelector(".casilla").classList.remove("marcada");
     });
+    estado.revelada = false;
+    clearTimeout(estado.temporizador); // una revelación pendiente no debe caer en otra pregunta
     $("#sello").hidden = true;
     $("#revelacion").hidden = true;
+    $("#opciones").hidden = estado.salon;
+    $("#salon-votar").hidden = !estado.salon;
     pintarProgreso();
     window.scrollTo(0, 0);
     $("#t-mito").focus({ preventScroll: true });
@@ -161,6 +188,24 @@
       }
     });
 
+    const aviso = $("#resultado-respuesta");
+    aviso.className = `resultado-respuesta ${acerto ? "acierto" : "fallo"}`;
+    aviso.innerHTML = icono(acerto ? TRAZOS.bien : TRAZOS.mal);
+    aviso.append(acerto
+      ? "¡Acertaste! Sumas 1 punto."
+      : `No esta vez. Marcaste «${NOMBRES[respuesta]}».`);
+    revelar();
+  }
+
+  // Sello, explicación y gráfica. Lo usan el juego y el modo salón.
+  function revelar() {
+    if (estado.revelada) return;
+    estado.revelada = true;
+    const m = estado.mitos[estado.indice];
+    const aviso = $("#resultado-respuesta");
+    aviso.hidden = estado.salon;
+    $("#salon-votar").hidden = true;
+
     // Sello con la respuesta correcta sobre la boleta.
     $("#sello-texto").textContent = NOMBRES[m.veredicto];
     $("#sello-trazo").setAttribute("d", m.veredicto === "cierto" ? TRAZOS.bien : TRAZOS.mal);
@@ -168,13 +213,6 @@
     sello.hidden = true;
     void sello.offsetWidth; // reinicia la animación
     sello.hidden = false;
-
-    const aviso = $("#resultado-respuesta");
-    aviso.className = `resultado-respuesta ${acerto ? "acierto" : "fallo"}`;
-    aviso.innerHTML = icono(acerto ? TRAZOS.bien : TRAZOS.mal);
-    aviso.append(acerto
-      ? "¡Acertaste! Sumas 1 punto."
-      : `No esta vez. Marcaste «${NOMBRES[respuesta]}».`);
 
     $("#t-veredicto").textContent = `La respuesta es: ${NOMBRES[m.veredicto]}`;
     const g = m.grafica;
@@ -184,22 +222,25 @@
     $("#g-nota").textContent = g.nota || "";
     $("#g-tabla").replaceChildren(Graficas.tabla(g));
     $("#explicacion").textContent = m.explicacion;
-    $("#siguiente").textContent =
-      estado.indice === estado.mitos.length - 1 ? "Ver mi resultado" : "Siguiente pregunta";
+    $("#discusion").hidden = !estado.salon;
+    $("#discusion-texto").textContent = m.discusion || "";
+    const ultima = estado.indice === estado.mitos.length - 1;
+    $("#siguiente").textContent = estado.salon
+      ? (ultima ? TEXTOS.salon.terminar : "Siguiente pregunta")
+      : (ultima ? "Ver mi resultado" : "Siguiente pregunta");
 
     pintarProgreso();
-    $("#contador").textContent =
-      `Pregunta ${estado.indice + 1} de ${estado.mitos.length}. Aciertos: ${estado.puntos}.`;
 
     // Se lee dentro del clic: algunos navegadores solo permiten hablar como respuesta a una acción.
     Voz.anunciar(textoRevelacion());
 
     // Primero se ve el sello; luego baja a la explicación.
-    setTimeout(() => {
+    estado.temporizador = setTimeout(() => {
       $("#revelacion").hidden = false;
       Graficas.dibujar($("#g-lienzo"), g);
       $("#t-veredicto").focus({ preventScroll: true });
-      aviso.scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
+      (estado.salon ? $("#t-veredicto") : aviso)
+        .scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
     }, sinMovimiento() ? 0 : 700);
   }
 
@@ -207,10 +248,64 @@
     if (estado.indice < estado.mitos.length - 1) {
       estado.indice += 1;
       pintarPregunta();
+    } else if (estado.salon) {
+      mostrar("cierre"); // sin tarjeta de puntuación individual
     } else {
       pintarResultado();
     }
   }
+
+  // ---------- modo salón
+
+  function entrarSalon() {
+    if (!estado.mitos.length) return;
+    estado.salon = true;
+    estado.tamanoPrevio = document.documentElement.dataset.tamano || "1";
+    document.body.classList.add("modo-salon");
+    $("#salir-salon").hidden = false;
+    ponerTamano("3");
+    prepararRecorrido();
+    mostrar("juego");
+    pintarPregunta();
+  }
+
+  function salirSalon() {
+    estado.salon = false;
+    document.body.classList.remove("modo-salon");
+    $("#salir-salon").hidden = true;
+    $("#discusion").hidden = true;
+    $("#resultado-respuesta").hidden = false;
+    ponerTamano(estado.tamanoPrevio);
+  }
+
+  // Avanza como en una presentación: primero revela, luego pasa a la siguiente.
+  function avanzarSalon() {
+    if (!estado.revelada) revelar();
+    else if (!$("#revelacion").hidden) siguiente(); // espera a que termine de revelarse
+  }
+
+  function retrocederSalon() {
+    if (estado.revelada) {
+      pintarPregunta();
+    } else if (estado.indice > 0) {
+      estado.indice -= 1;
+      pintarPregunta();
+    }
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (!estado.salon || $("#juego").hidden || e.altKey || e.ctrlKey || e.metaKey) return;
+    const enControl = e.target.closest("button, a, select, input, summary, textarea");
+    if (e.key === "ArrowRight" || e.key === "PageDown" || (e.key === " " && !enControl)) {
+      e.preventDefault();
+      avanzarSalon();
+    } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+      e.preventDefault();
+      retrocederSalon();
+    } else if (e.key === "Escape") {
+      mostrar("portada");
+    }
+  });
 
   // ---------- resultado
 
@@ -538,6 +633,9 @@
 
   Voz.iniciar({ alActivar: leerPantallaActual });
   $("#iniciar").addEventListener("click", () => iniciar());
+  $("#entrar-salon").addEventListener("click", entrarSalon);
+  $("#salir-salon").addEventListener("click", () => mostrar("portada"));
+  $("#revelar").addEventListener("click", revelar);
   $("#saltar").addEventListener("click", () => iniciar({ conPerfil: false }));
   // "Jugar otra vez" conserva el perfil que se haya elegido.
   $("#otra-vez").addEventListener("click", () => iniciar());
