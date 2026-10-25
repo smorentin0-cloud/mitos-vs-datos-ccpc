@@ -101,9 +101,12 @@ y abre http://localhost:8000.
 
 ## Diseño y accesibilidad
 
-- Mobile-first, sin dependencias externas ni paso de compilación; los datos del sitio pesan menos de 30 KB.
-- Gráficas en SVG con título y descripción para lectores de pantalla y una tabla con los datos de cada gráfica.
-- Navegable con teclado; respeta la preferencia de movimiento reducido.
+- **Identidad:** la boleta y el cuadernillo de la lista nominal, de donde salen los Conteos Censales. Cada pregunta es una boleta, la respuesta se marca con una X en un recuadro y el veredicto aparece como un sello.
+- **Personas con discapacidad auditiva:** el sitio no usa sonido. Toda la retroalimentación es visual y textual (marca, sello, ícono y texto, nunca solo color), con frases cortas en lenguaje sencillo.
+- **Personas mayores y con baja visión:** tipografía Lexend (diseñada para la fluidez lectora), texto base de 18 px, control de tamaño de letra (A, A+, A++) que también agranda las gráficas, botones de al menos 44 px y contraste AA.
+- **Lectores de pantalla y teclado:** gráficas SVG con título y descripción, tabla con los datos de cada gráfica, foco visible y navegación completa con teclado.
+- **Niñas, niños y jóvenes:** mecánica de marcar la boleta, casillas de progreso que se llenan y tarjeta de resultado para retar a otras personas.
+- Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación; los datos del sitio pesan menos de 30 KB.
 - Paleta neutral, sin colores asociados a partidos: texto `#1F2937`, datos `#2563EB`, base `#E5E7EB`, acento `#D97706`, blanco y grises.
 - Sin `localStorage`: el estado del juego vive en memoria.
 
