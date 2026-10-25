@@ -9,7 +9,9 @@ const Graficas = (() => {
   const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let contadorId = 0;
   // Factor del tamaño de letra elegido (1 = 16 px): la geometría crece con el texto.
-  const escala = () => parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
+  // Se puede fijar al dibujar (p. ej. más pequeña para imprimir).
+  let escalaFija = null;
+  const escala = () => escalaFija ?? parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
 
   const fmt = (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`);
 
@@ -68,10 +70,16 @@ const Graficas = (() => {
       });
     } else {
       th(cab, spec.x_titulo || "Año");
+      // Si las columnas se distinguen por color (p. ej. presidencial o intermedia), la tabla lo dice con palabras.
+      const tipos = spec.leyenda && spec.series[0].colores
+        ? spec.series[0].colores.map((c) => (spec.leyenda.find((l) => l.color === c) || {}).nombre || "")
+        : null;
+      if (tipos) th(cab, "Tipo");
       spec.series.forEach((s) => th(cab, s.nombre, true));
       spec.x.forEach((x, k) => {
         const f = filas.insertRow();
         f.insertCell().textContent = x;
+        if (tipos) f.insertCell().textContent = tipos[k];
         spec.series.forEach((s) => {
           const c = f.insertCell();
           c.textContent = fmt(s.valores[k]);
@@ -171,17 +179,18 @@ const Graficas = (() => {
     const y = (v) => m.arr + h - (h * v) / 100;
     ejeY(svg, m.izq, ancho - m.der, y, h);
 
-    spec.x.forEach((etiqueta, k) => {
-      const gx = m.izq + k * grupo;
+    // i es la posición de la categoría; k es el factor de escala.
+    spec.x.forEach((etiqueta, i) => {
+      const gx = m.izq + i * grupo;
       texto(svg, gx + grupo / 2, alto - 8 * k, etiqueta, { class: "eje", "text-anchor": "middle" });
       spec.series.forEach((s, j) => {
-        const v = s.valores[k];
+        const v = s.valores[i];
         if (v == null) return;
         const x = gx + hueco + j * col;
-        const color = COLORES[(s.colores && s.colores[k]) || s.color || "datos"];
+        const color = COLORES[(s.colores && s.colores[i]) || s.color || "datos"];
         el("rect", {
           x: x + 1, y: y(v), width: col - 2, height: y(0) - y(v), rx: 2,
-          fill: color, class: "crece-y", style: `transition-delay:${k * 70}ms`,
+          fill: color, class: "crece-y", style: `transition-delay:${i * 70}ms`,
         }, svg);
         texto(svg, x + col / 2, y(v) - 6, v.toFixed(1), { class: "valor aparece", "text-anchor": "middle" });
       });
@@ -304,13 +313,20 @@ const Graficas = (() => {
   function redibujar() {
     activos.forEach((c) => {
       const actual = observados.get(c);
-      if (c.isConnected && actual && actual.spec && c.offsetParent) dibujar(c, actual.spec, { animado: false });
+      if (c.isConnected && actual && actual.spec && c.offsetParent) dibujar(c, actual.spec, { ...actual.opciones, animado: false });
     });
   }
 
-  function dibujar(contenedor, spec, { animado = true } = {}) {
+  function dibujar(contenedor, spec, opciones = {}) {
+    const { animado = true, escala: fija = null } = opciones;
     contenedor.replaceChildren();
-    const svg = dibujantes[spec.tipo](contenedor, spec);
+    escalaFija = fija;
+    let svg;
+    try {
+      svg = dibujantes[spec.tipo](contenedor, spec);
+    } finally {
+      escalaFija = null;
+    }
     contenedor.appendChild(svg);
     if (animado && !sinMovimiento) animar(svg);
 
@@ -321,12 +337,13 @@ const Graficas = (() => {
         if (Math.abs(w - ultimoAncho) < 8) return;
         ultimoAncho = w;
         const actual = observados.get(contenedor);
-        if (actual.spec) dibujar(contenedor, actual.spec, { animado: false });
+        if (actual.spec) dibujar(contenedor, actual.spec, { ...actual.opciones, animado: false });
       });
       ro.observe(contenedor);
       observados.set(contenedor, { ro });
     }
     observados.get(contenedor).spec = spec;
+    observados.get(contenedor).opciones = opciones;
     activos.add(contenedor);
   }
 

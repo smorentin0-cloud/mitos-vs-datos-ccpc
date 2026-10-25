@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mitos vs. Datos: tarjetas para imprimir</title>
+  <meta name="description" content="Tarjetas de cierto o falso para talleres sin dispositivos, con datos de los Conteos Censales de Participación Ciudadana del INE.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/imprimible.css">
+</head>
+<body class="imprimible">
+  <a class="saltar no-imprimir" href="#contenido">Saltar al contenido</a>
+
+  <header class="barra no-imprimir">
+    <a class="marca" href="./">
+      <svg class="marca-icono" viewBox="0 0 28 28" aria-hidden="true">
+        <rect x="2" y="2" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="2.5"/>
+        <path d="M8 8 L20 20 M20 8 L8 20" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <span>Mitos vs. Datos</span>
+    </a>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+    <section class="pantalla-imprimir no-imprimir" aria-labelledby="t-imprimir">
+      <h1 id="t-imprimir">Tarjetas para imprimir</h1>
+      <p class="entrada">Para talleres sin celulares ni proyector. Imprime en tamaño carta, de preferencia por ambos lados, y recorta o reparte las hojas.</p>
+      <div class="acciones">
+        <button class="boton primario" id="imprimir">Imprimir tarjetas</button>
+        <a class="boton secundario" href="./">Volver al juego</a>
+      </div>
+      <p id="aviso-carga" class="aviso" role="status"></p>
+    </section>
+
+    <!-- Hoja 1: instrucciones para la persona facilitadora -->
+    <section class="hoja instrucciones-hoja" aria-labelledby="t-facilitar">
+      <p class="hoja-marca">Mitos vs. Datos</p>
+      <h2 id="t-facilitar">Instrucciones para la persona facilitadora</h2>
+      <p><strong>Objetivo:</strong> que el grupo descubra, con datos del INE, que muchas ideas sobre quién vota no son ciertas, y que el reto es que el primer voto no sea el último.</p>
+      <p><strong>Duración:</strong> unos 20 minutos.</p>
+      <h3>Antes del taller</h3>
+      <ul>
+        <li>Imprime por ambos lados, volteando por el borde largo. Así cada tarjeta lleva la frase al frente y la respuesta atrás.</li>
+        <li>Si solo puedes imprimir de un lado, junta cada frente con su reverso: van en hojas seguidas.</li>
+        <li>La hoja que sigue a esta queda en blanco a propósito.</li>
+      </ul>
+      <h3>Durante el taller</h3>
+      <ol>
+        <li>Forma equipos de 3 a 5 personas y reparte las tarjetas en orden.</li>
+        <li>Cada equipo lee la frase en voz alta y marca <strong>Cierto</strong> o <strong>Falso</strong> antes de voltear la hoja.</li>
+        <li>Voltean la tarjeta, leen la respuesta y revisan la gráfica.</li>
+        <li>Usen la pregunta «Para conversar» de cada tarjeta para comentar en grupo.</li>
+        <li>Al final, cuenten cuántas acertaron y lean juntos el mensaje de cierre.</li>
+      </ol>
+      <p class="hoja-nota">Las gráficas también traen sus datos en una tabla, para leerlas aunque se impriman en blanco y negro.</p>
+      <p class="hoja-nota" id="nota-metodo-imprimible"></p>
+    </section>
+
+    <section class="hoja hoja-blanca" aria-hidden="true">
+      <p>Esta página queda en blanco a propósito para imprimir por ambos lados.</p>
+    </section>
+
+    <div id="tarjetas"></div>
+
+    <section id="cierre-imprimible" class="hoja" aria-labelledby="t-cierre-imprimible">
+      <p class="hoja-marca">Mitos vs. Datos</p>
+      <h2 id="t-cierre-imprimible"></h2>
+      <p id="cierre-imprimible-texto" class="entrada"></p>
+      <ul class="llamado">
+        <li><strong>Infórmate</strong> en fuentes oficiales antes de compartir una cifra.</li>
+        <li><strong>Revisa</strong> que tu credencial para votar esté vigente y que tus datos estén al día.</li>
+        <li><strong>Participa</strong> en cada elección, sea presidencial o intermedia.</li>
+      </ul>
+      <p class="hoja-nota">Juega en línea: <span id="url-sitio"></span></p>
+    </section>
+  </main>
+
+  <script src="js/datos.js"></script>
+  <script src="js/textos.js"></script>
+  <script src="js/graficas.js"></script>
+  <script src="js/imprimible.js"></script>
+</body>
+</html>

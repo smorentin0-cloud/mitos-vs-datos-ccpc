@@ -25,6 +25,17 @@ const TEXTOS = {
     descripcion: (puntos, total, perfil) =>
       `Tarjeta de resultado: ${puntos} de ${total} respuestas correctas. ${perfil} ¿Me ganas? Incluye un código QR que lleva al juego.`,
   },
+  imprimible: {
+    folio: (n, total, nivel, nombreNivel) => `Tarjeta ${n} de ${total}. Nivel ${nivel}: ${nombreNivel}`,
+    frente: (n, total) => `Tarjeta ${n} de ${total}, frente`,
+    reverso: (n, total) => `Tarjeta ${n} de ${total}, reverso`,
+    pregunta: '¿Mito o dato?',
+    instruccionFrente: 'Marca tu respuesta antes de voltear la hoja.',
+    respuesta: (veredicto) => `La respuesta es: ${veredicto}`,
+    paraConversar: 'Para conversar:',
+    listas: (n) => `Listas ${n} tarjetas. Usa el botón Imprimir o el menú de tu navegador.`,
+    error: 'No se pudieron cargar las tarjetas. Recarga la página para intentarlo de nuevo.',
+  },
   salon: {
     votar: "Levanten la mano: ¿cierto o falso?",
     contador: (n, total) => `Pregunta ${n} de ${total}.`,

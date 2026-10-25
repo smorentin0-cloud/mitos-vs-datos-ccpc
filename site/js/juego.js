@@ -618,7 +618,7 @@
 
   async function cargar() {
     const [datos, edad, entidades] = await Promise.all(
-      ["data/mitos.json", "data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())));
+      [Datos.rutaMitos(), "data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())));
     estado.datosPerfil = { edad, entidades };
     llenarPerfil();
     estado.totalNiveles = datos.niveles.length;
