@@ -3,15 +3,20 @@
  */
 (() => {
   const NOMBRES = { cierto: "Cierto", falso: "Falso" };
+  const TRAZOS = { bien: "M5 12.5 L10 17.5 L19 7", mal: "M6 6 L18 18 M18 6 L6 18" };
   const $ = (sel) => document.querySelector(sel);
+  const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const estado = { mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [] };
+
+  function icono(trazo) {
+    return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${trazo}"/></svg>`;
+  }
 
   // ---------- navegación entre pantallas
 
   function mostrar(id) {
     document.querySelectorAll(".pantalla").forEach((p) => { p.hidden = p.id !== id; });
-    $("#marcador").hidden = !(id === "juego");
     window.scrollTo(0, 0);
     const titulo = document.querySelector(`#${id} h1, #${id} h2`);
     if (titulo) {
@@ -23,8 +28,19 @@
 
   document.addEventListener("click", (e) => {
     const destino = e.target.closest("[data-ir]");
-    if (destino) mostrar(destino.dataset.ir);
+    if (!destino) return;
+    e.preventDefault();
+    mostrar(destino.dataset.ir);
   });
+
+  // ---------- tamaño de letra
+
+  document.querySelectorAll(".tamano-btn").forEach((b) => b.addEventListener("click", () => {
+    document.documentElement.dataset.tamano = b.dataset.tamano;
+    document.querySelectorAll(".tamano-btn").forEach((x) =>
+      x.setAttribute("aria-pressed", String(x === b)));
+    Graficas.redibujar();
+  }));
 
   // ---------- juego
 
@@ -33,30 +49,40 @@
     estado.indice = 0;
     estado.puntos = 0;
     estado.aciertos = [];
+    $("#casillas").replaceChildren(...estado.mitos.map((_, i) => {
+      const li = document.createElement("li");
+      li.textContent = i + 1;
+      return li;
+    }));
     mostrar("juego");
     pintarPregunta();
   }
 
-  function actualizarMarcador() {
-    $("#marcador").textContent = `${estado.puntos} ${estado.puntos === 1 ? "punto" : "puntos"}`;
+  function pintarProgreso() {
+    [...$("#casillas").children].forEach((li, i) => {
+      li.className = i < estado.aciertos.length ? (estado.aciertos[i] ? "bien" : "mal")
+        : i === estado.indice ? "actual" : "";
+    });
+    const total = estado.mitos.length;
+    $("#contador").textContent =
+      `Pregunta ${estado.indice + 1} de ${total}. Aciertos: ${estado.puntos}.`;
   }
 
   function pintarPregunta() {
     const m = estado.mitos[estado.indice];
-    const total = estado.mitos.length;
-    $("#nivel").textContent = `Nivel ${m.nivel} de ${estado.totalNiveles} · ${m.nombreNivel}`;
-    $("#contador").textContent = `Pregunta ${estado.indice + 1} de ${total}`;
-    $("#avance").style.width = `${(100 * estado.indice) / total}%`;
+    $("#nivel").textContent = `Nivel ${m.nivel} de ${estado.totalNiveles}: ${m.nombreNivel}`;
     $("#t-mito").textContent = m.enunciado;
     document.querySelectorAll(".opcion").forEach((b) => {
       b.disabled = false;
-      b.classList.remove("elegida", "correcta");
+      b.classList.remove("elegida");
       b.removeAttribute("aria-pressed");
+      b.querySelector(".casilla").classList.remove("marcada");
     });
+    $("#sello").hidden = true;
     $("#revelacion").hidden = true;
-    actualizarMarcador();
-    $("#t-mito").focus({ preventScroll: true });
+    pintarProgreso();
     window.scrollTo(0, 0);
+    $("#t-mito").focus({ preventScroll: true });
   }
 
   function responder(respuesta) {
@@ -70,23 +96,26 @@
       if (b.dataset.respuesta === respuesta) {
         b.classList.add("elegida");
         b.setAttribute("aria-pressed", "true");
+        b.querySelector(".casilla").classList.add("marcada");
       }
-      if (b.dataset.respuesta === m.veredicto) b.classList.add("correcta");
     });
+
+    // Sello con la respuesta correcta sobre la boleta.
+    $("#sello-texto").textContent = NOMBRES[m.veredicto];
+    $("#sello-trazo").setAttribute("d", m.veredicto === "cierto" ? TRAZOS.bien : TRAZOS.mal);
+    const sello = $("#sello");
+    sello.hidden = true;
+    void sello.offsetWidth; // reinicia la animación
+    sello.hidden = false;
 
     const aviso = $("#resultado-respuesta");
     aviso.className = `resultado-respuesta ${acerto ? "acierto" : "fallo"}`;
-    aviso.textContent = acerto
+    aviso.innerHTML = icono(acerto ? TRAZOS.bien : TRAZOS.mal);
+    aviso.append(acerto
       ? "¡Acertaste! Sumas 1 punto."
-      : `Esta vez no. Tú dijiste «${NOMBRES[respuesta]}».`;
+      : `No esta vez. Marcaste «${NOMBRES[respuesta]}».`);
 
-    const veredicto = $("#t-veredicto");
-    veredicto.textContent = "Veredicto de los datos: ";
-    const sello = document.createElement("span");
-    sello.className = "sello";
-    sello.textContent = NOMBRES[m.veredicto];
-    veredicto.appendChild(sello);
-
+    $("#t-veredicto").textContent = `La respuesta es: ${NOMBRES[m.veredicto]}`;
     const g = m.grafica;
     $("#g-titulo").textContent = g.titulo;
     $("#g-fuente").textContent = m.fuente;
@@ -94,14 +123,20 @@
     $("#g-nota").textContent = g.nota || "";
     $("#g-tabla").replaceChildren(Graficas.tabla(g));
     $("#explicacion").textContent = m.explicacion;
-    $("#siguiente").textContent = estado.indice === estado.mitos.length - 1 ? "Ver mi resultado" : "Siguiente";
+    $("#siguiente").textContent =
+      estado.indice === estado.mitos.length - 1 ? "Ver mi resultado" : "Siguiente pregunta";
 
-    $("#revelacion").hidden = false;
-    $("#avance").style.width = `${(100 * (estado.indice + 1)) / estado.mitos.length}%`;
-    actualizarMarcador();
-    Graficas.dibujar($("#g-lienzo"), g);
-    veredicto.focus({ preventScroll: true });
-    $("#resultado-respuesta").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    pintarProgreso();
+    $("#contador").textContent =
+      `Pregunta ${estado.indice + 1} de ${estado.mitos.length}. Aciertos: ${estado.puntos}.`;
+
+    // Primero se ve el sello; luego baja a la explicación.
+    setTimeout(() => {
+      $("#revelacion").hidden = false;
+      Graficas.dibujar($("#g-lienzo"), g);
+      $("#t-veredicto").focus({ preventScroll: true });
+      aviso.scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
+    }, sinMovimiento() ? 0 : 700);
   }
 
   function siguiente() {
@@ -116,33 +151,32 @@
   // ---------- resultado
 
   function mensaje(puntos, total) {
-    if (puntos === total) return "¡Perfecto! Los mitos no pueden contigo. Ahora reta a alguien más.";
-    if (puntos >= total - 2) return "¡Muy bien! Conoces bien cómo vota México.";
-    if (puntos >= total / 2) return "Vas por buen camino. Algunos mitos todavía te engañaron.";
+    if (puntos === total) return "¡Todas bien! Los mitos no pueden contigo. Ahora reta a alguien más.";
+    if (puntos >= total - 2) return "¡Muy bien! Conoces cómo vota México.";
+    if (puntos >= total / 2) return "Vas bien. Algunos mitos todavía te engañaron.";
     return "Los mitos te ganaron esta vez, pero ahora ya conoces los datos.";
   }
 
-  function frasesReto(puntos, total) {
-    return `Acerté ${puntos} de ${total} sobre cómo vota México. ¿Mito o dato? ¿Puedes superarme?`;
+  function fraseReto(puntos, total) {
+    return `Acerté ${puntos} de ${total} sobre cómo vota México. ¿Puedes superarme?`;
   }
 
   function pintarResultado() {
     const total = estado.mitos.length;
     $("#t-resultado").textContent = `Acertaste ${estado.puntos} de ${total}`;
     $("#mensaje").textContent = mensaje(estado.puntos, total);
-    const lista = $("#resumen");
-    lista.replaceChildren();
-    estado.mitos.forEach((m, i) => {
+    $("#resumen").replaceChildren(...estado.mitos.map((m, i) => {
       const li = document.createElement("li");
-      const marca = document.createElement("span");
-      marca.className = estado.aciertos[i] ? "ok" : "";
-      marca.textContent = estado.aciertos[i] ? "✓ Acertaste" : "✗ Fallaste";
-      li.append(`«${m.enunciado}» — ${NOMBRES[m.veredicto]}. `, marca);
-      lista.appendChild(li);
-    });
+      const ok = estado.aciertos[i];
+      li.innerHTML = `<span class="marca-resumen ${ok ? "bien" : ""}">${icono(ok ? TRAZOS.bien : TRAZOS.mal)}</span>`;
+      const txt = document.createElement("span");
+      txt.textContent = `${m.enunciado} Respuesta: ${NOMBRES[m.veredicto]}. ${ok ? "Acertaste." : "Fallaste."}`;
+      li.appendChild(txt);
+      return li;
+    }));
     $("#aviso-compartir").textContent = "";
-    dibujarTarjeta();
     mostrar("resultado");
+    dibujarTarjeta();
   }
 
   function urlJuego() {
@@ -165,75 +199,105 @@
     return lineas;
   }
 
-  function dibujarTarjeta() {
+  // Tarjeta 1080 x 1350 con forma de boleta.
+  async function dibujarTarjeta() {
     const c = $("#tarjeta");
     const ctx = c.getContext("2d");
     const W = c.width;
-    const fuente = getComputedStyle(document.body).fontFamily;
+    const H = c.height;
+    const F = "Lexend, \"Segoe UI\", system-ui, sans-serif";
+    try { await Promise.all([document.fonts.load("700 40px Lexend"), document.fonts.load("400 40px Lexend")]); } catch { /* usa la fuente de respaldo */ }
     const total = estado.mitos.length;
-    const C = Graficas.COLORES;
+    const C = { tinta: "#1F2937", suave: "#4B5563", azul: "#2563EB", base: "#E5E7EB", ambar: "#D97706", gris: "#6B7280", perf: "#9CA3AF" };
 
+    ctx.fillStyle = "#F3F4F6";
+    ctx.fillRect(0, 0, W, H);
+
+    // Hoja
+    const x0 = 80, y0 = 90, w = W - 160, h = H - 180;
     ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, W, c.height);
-    ctx.fillStyle = C.datos;
-    ctx.fillRect(0, 0, W, 280);
-    ctx.textAlign = "center";
+    ctx.fillRect(x0, y0, w, h);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = C.tinta;
+    ctx.strokeRect(x0, y0, w, h);
+    ctx.setLineDash([18, 14]);
+    ctx.strokeStyle = C.perf;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0 + 150);
+    ctx.lineTo(x0 + w, y0 + 150);
+    ctx.stroke();
+    ctx.setLineDash([]);
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = `800 84px ${fuente}`;
-    ctx.fillText("MITOS vs. DATOS", W / 2, 150);
-    ctx.font = `400 42px ${fuente}`;
-    ctx.fillText("El juego sobre cómo vota México", W / 2, 220);
+    const izq = x0 + 70;
+    ctx.textAlign = "left";
+    ctx.fillStyle = C.tinta;
+    ctx.font = `700 64px ${F}`;
+    ctx.fillText("Mitos vs. Datos", izq, y0 + 95);
 
-    ctx.fillStyle = "#4B5563";
-    ctx.font = `700 44px ${fuente}`;
-    ctx.fillText("MI RESULTADO", W / 2, 400);
+    ctx.fillStyle = C.suave;
+    ctx.font = `400 40px ${F}`;
+    ctx.fillText("Mi resultado", izq, y0 + 260);
 
-    ctx.fillStyle = "#1F2937";
-    ctx.font = `800 240px ${fuente}`;
-    ctx.fillText(`${estado.puntos}/${total}`, W / 2, 640);
-    ctx.font = `400 48px ${fuente}`;
-    ctx.fillText("respuestas correctas", W / 2, 720);
+    ctx.fillStyle = C.tinta;
+    ctx.font = `700 230px ${F}`;
+    ctx.fillText(`${estado.puntos} de ${total}`, izq - 8, y0 + 480);
 
-    // Una ficha por mito: llena si acertó, vacía si no.
-    const r = 38;
-    const sep = 108;
-    const x0 = W / 2 - ((total - 1) * sep) / 2;
+    // Casillas marcadas, una por pregunta
+    const lado = 76, sep = 22;
     estado.aciertos.forEach((ok, i) => {
-      const x = x0 + i * sep;
-      const y = 840;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      const x = izq + i * (lado + sep);
+      const y = y0 + 560;
       ctx.lineWidth = 6;
+      ctx.strokeStyle = ok ? C.azul : C.gris;
+      ctx.fillStyle = ok ? C.azul : "#FFFFFF";
+      ctx.fillRect(x, y, lado, lado);
+      ctx.strokeRect(x, y, lado, lado);
+      ctx.strokeStyle = ok ? "#FFFFFF" : C.gris;
+      ctx.lineWidth = 9;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.beginPath();
       if (ok) {
-        ctx.fillStyle = C.datos;
-        ctx.fill();
+        ctx.moveTo(x + 18, y + 40); ctx.lineTo(x + 32, y + 55); ctx.lineTo(x + 58, y + 22);
       } else {
-        ctx.strokeStyle = C.base;
-        ctx.stroke();
+        ctx.moveTo(x + 22, y + 22); ctx.lineTo(x + 54, y + 54);
+        ctx.moveTo(x + 54, y + 22); ctx.lineTo(x + 22, y + 54);
       }
-      ctx.fillStyle = ok ? "#FFFFFF" : C.base;
-      ctx.font = `800 40px ${fuente}`;
-      ctx.fillText(ok ? "✓" : "✗", x, y + 14);
+      ctx.stroke();
     });
 
-    ctx.fillStyle = "#1F2937";
-    ctx.font = `700 54px ${fuente}`;
-    envolver(ctx, frasesReto(estado.puntos, total), 900).forEach((l, i) => {
-      ctx.fillText(l, W / 2, 1000 + i * 70);
+    ctx.fillStyle = C.tinta;
+    ctx.font = `700 54px ${F}`;
+    envolver(ctx, fraseReto(estado.puntos, total), w - 140).forEach((l, i) => {
+      ctx.fillText(l, izq, y0 + 780 + i * 70);
     });
 
-    ctx.fillStyle = C.acento;
-    ctx.fillRect(W / 2 - 80, 1160, 160, 8);
+    // Sello
+    ctx.save();
+    ctx.translate(x0 + w - 165, y0 + 78);
+    ctx.rotate(-0.1);
+    ctx.strokeStyle = C.ambar;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(-125, -42, 250, 84);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(-114, -31, 228, 62);
+    ctx.fillStyle = C.ambar;
+    ctx.textAlign = "center";
+    ctx.font = `700 30px ${F}`;
+    ctx.fillText("¿MITO O DATO?", 0, 11);
+    ctx.restore();
 
-    ctx.fillStyle = C.datos;
-    ctx.font = `700 36px ${fuente}`;
-    ctx.fillText(urlJuego().replace(/^https?:\/\//, ""), W / 2, 1230);
-    ctx.fillStyle = "#4B5563";
-    ctx.font = `400 26px ${fuente}`;
-    ctx.fillText("Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024", W / 2, 1290);
+    ctx.textAlign = "left";
+    ctx.fillStyle = C.azul;
+    ctx.font = `700 34px ${F}`;
+    ctx.fillText(urlJuego().replace(/^https?:\/\//, ""), izq, y0 + h - 130);
+    ctx.fillStyle = C.suave;
+    ctx.font = `400 26px ${F}`;
+    envolver(ctx, "Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024", w - 140)
+      .forEach((l, i) => ctx.fillText(l, izq, y0 + h - 84 + i * 36));
 
-    c.setAttribute("aria-label", `Tarjeta de resultado: ${estado.puntos} de ${total} respuestas correctas. ${frasesReto(estado.puntos, total)}`);
+    c.setAttribute("aria-label",
+      `Tarjeta de resultado: ${estado.puntos} de ${total} respuestas correctas. ${fraseReto(estado.puntos, total)}`);
   }
 
   function blobTarjeta() {
@@ -254,8 +318,7 @@
   }
 
   async function compartir() {
-    const total = estado.mitos.length;
-    const datos = { title: "Mitos vs. Datos", text: frasesReto(estado.puntos, total), url: urlJuego() };
+    const datos = { title: "Mitos vs. Datos", text: fraseReto(estado.puntos, estado.mitos.length), url: urlJuego() };
     try {
       const archivo = new File([await blobTarjeta()], "mitos-vs-datos-resultado.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -275,7 +338,7 @@
     const aviso = $("#aviso-compartir");
     try {
       await navigator.clipboard.writeText(url);
-      aviso.textContent = "Enlace copiado. ¡Pégalo donde quieras!";
+      aviso.textContent = "Enlace copiado. Pégalo donde quieras.";
     } catch {
       aviso.textContent = `Copia este enlace: ${url}`;
     }
