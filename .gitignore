@@ -1,0 +1,16 @@
+# Datos crudos del INE (40–82 MB por archivo). Ver README para descargarlos.
+data/raw/*
+!data/raw/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
