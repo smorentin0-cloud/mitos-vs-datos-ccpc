@@ -2,7 +2,7 @@
  * Lógica del juego "Mitos vs. Datos". Todo el estado vive en memoria (sin localStorage).
  */
 (() => {
-  const NOMBRES = { cierto: "Cierto", falso: "Falso", parcial: "Parcialmente cierto" };
+  const NOMBRES = { cierto: "Cierto", falso: "Falso" };
   const $ = (sel) => document.querySelector(sel);
 
   const estado = { mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [] };
@@ -123,7 +123,7 @@
   }
 
   function frasesReto(puntos, total) {
-    return `Descubrí ${puntos} de ${total} mitos sobre cómo vota México. ¿Puedes superarme?`;
+    return `Acerté ${puntos} de ${total} sobre cómo vota México. ¿Mito o dato? ¿Puedes superarme?`;
   }
 
   function pintarResultado() {
@@ -193,7 +193,7 @@
     ctx.font = `800 240px ${fuente}`;
     ctx.fillText(`${estado.puntos}/${total}`, W / 2, 640);
     ctx.font = `400 48px ${fuente}`;
-    ctx.fillText("mitos descubiertos", W / 2, 720);
+    ctx.fillText("respuestas correctas", W / 2, 720);
 
     // Una ficha por mito: llena si acertó, vacía si no.
     const r = 38;
@@ -233,7 +233,7 @@
     ctx.font = `400 26px ${fuente}`;
     ctx.fillText("Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024", W / 2, 1290);
 
-    c.setAttribute("aria-label", `Tarjeta de resultado: ${estado.puntos} de ${total} mitos descubiertos. ${frasesReto(estado.puntos, total)}`);
+    c.setAttribute("aria-label", `Tarjeta de resultado: ${estado.puntos} de ${total} respuestas correctas. ${frasesReto(estado.puntos, total)}`);
   }
 
   function blobTarjeta() {

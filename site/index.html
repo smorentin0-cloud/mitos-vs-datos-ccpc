@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mitos vs. Datos: el juego</title>
-  <meta name="description" content="Trivia sobre la participación electoral en México con datos de los Conteos Censales de Participación Ciudadana del INE, 2009–2024.">
+  <meta name="description" content="Trivia de cierto o falso sobre la participación electoral en México con datos de los Conteos Censales de Participación Ciudadana del INE, 2009–2024.">
   <meta property="og:title" content="Mitos vs. Datos: el juego">
-  <meta property="og:description" content="¿Cuánto sabes de cómo vota México? Pon a prueba 8 mitos con datos del INE.">
+  <meta property="og:description" content="¿Cuánto sabes de cómo vota México? ¿Mito o dato? Pon a prueba 8 frases con datos del INE.">
   <meta name="theme-color" content="#2563EB">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/estilos.css">
@@ -25,7 +25,7 @@
     <section id="portada" class="pantalla" aria-labelledby="t-portada">
       <p class="antetitulo">Participación electoral en México, 2009–2024</p>
       <h1 id="t-portada">¿Cuánto sabes de cómo vota México?</h1>
-      <p class="entrada">Hay frases que todo mundo repite sobre quién vota y quién no. Te presentamos 8 mitos. Tú decides si son ciertos, y luego los datos del INE dicen la última palabra.</p>
+      <p class="entrada">Hay frases que todo mundo repite sobre quién vota y quién no. Te presentamos 8 frases. Tú decides si son ciertas o falsas, y luego los datos del INE dicen la última palabra.</p>
       <div class="acciones">
         <button class="boton primario" data-ir="instrucciones">Empezar a jugar</button>
         <button class="boton secundario" data-ir="explora">Explorar los datos</button>
@@ -37,8 +37,8 @@
     <section id="instrucciones" class="pantalla" aria-labelledby="t-instr" hidden>
       <h2 id="t-instr">Cómo se juega</h2>
       <ol class="pasos">
-        <li><strong>Lee el mito.</strong> Son 8 frases en 3 niveles.</li>
-        <li><strong>Elige tu respuesta:</strong> Cierto, Falso o Parcialmente cierto.</li>
+        <li><strong>Lee la frase.</strong> Son 8 en 3 niveles. Algunas son mitos y otras son datos reales.</li>
+        <li><strong>Elige tu respuesta:</strong> Cierto o Falso.</li>
         <li><strong>Mira los datos.</strong> Una gráfica te muestra qué pasó en realidad.</li>
         <li><strong>Suma puntos.</strong> Cada acierto vale 1 punto. Al final podrás descargar tu tarjeta y retar a tus amistades.</li>
       </ol>
@@ -58,14 +58,13 @@
         <div class="barra-progreso" aria-hidden="true"><span id="avance"></span></div>
       </div>
 
-      <p class="antetitulo">Mito</p>
+      <p class="antetitulo">¿Mito o dato?</p>
       <h2 id="t-mito" class="mito" tabindex="-1"></h2>
 
       <fieldset id="opciones" class="opciones">
         <legend class="sr">¿Qué crees?</legend>
         <button class="opcion" data-respuesta="cierto">Cierto</button>
         <button class="opcion" data-respuesta="falso">Falso</button>
-        <button class="opcion" data-respuesta="parcial">Parcialmente cierto</button>
       </fieldset>
 
       <div id="revelacion" class="revelacion" hidden>
