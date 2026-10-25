@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mitos vs. Datos: el juego</title>
+  <meta name="description" content="Trivia sobre la participación electoral en México con datos de los Conteos Censales de Participación Ciudadana del INE, 2009–2024.">
+  <meta property="og:title" content="Mitos vs. Datos: el juego">
+  <meta property="og:description" content="¿Cuánto sabes de cómo vota México? Pon a prueba 8 mitos con datos del INE.">
+  <meta name="theme-color" content="#2563EB">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <header class="barra">
+    <span class="marca">Mitos <span aria-hidden="true">vs.</span><span class="sr">contra</span> Datos</span>
+    <span id="marcador" class="marcador" hidden aria-live="polite"></span>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+
+    <!-- 1. Portada -->
+    <section id="portada" class="pantalla" aria-labelledby="t-portada">
+      <p class="antetitulo">Participación electoral en México, 2009–2024</p>
+      <h1 id="t-portada">¿Cuánto sabes de cómo vota México?</h1>
+      <p class="entrada">Hay frases que todo mundo repite sobre quién vota y quién no. Te presentamos 8 mitos. Tú decides si son ciertos, y luego los datos del INE dicen la última palabra.</p>
+      <div class="acciones">
+        <button class="boton primario" data-ir="instrucciones">Empezar a jugar</button>
+        <button class="boton secundario" data-ir="explora">Explorar los datos</button>
+      </div>
+      <p class="pie-fuente">Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024.</p>
+    </section>
+
+    <!-- 2. Instrucciones -->
+    <section id="instrucciones" class="pantalla" aria-labelledby="t-instr" hidden>
+      <h2 id="t-instr">Cómo se juega</h2>
+      <ol class="pasos">
+        <li><strong>Lee el mito.</strong> Son 8 frases en 3 niveles.</li>
+        <li><strong>Elige tu respuesta:</strong> Cierto, Falso o Parcialmente cierto.</li>
+        <li><strong>Mira los datos.</strong> Una gráfica te muestra qué pasó en realidad.</li>
+        <li><strong>Suma puntos.</strong> Cada acierto vale 1 punto. Al final podrás descargar tu tarjeta y retar a tus amistades.</li>
+      </ol>
+      <div class="caja-nota">
+        <p><strong>¿Qué es la participación?</strong> Es el porcentaje de personas de la lista nominal que fueron a votar. Si dice 60%, quiere decir que votaron 6 de cada 10 personas.</p>
+      </div>
+      <div class="acciones">
+        <button class="boton primario" id="iniciar">¡Vamos!</button>
+      </div>
+    </section>
+
+    <!-- 3. Niveles y preguntas -->
+    <section id="juego" class="pantalla" aria-labelledby="t-mito" hidden>
+      <div class="progreso">
+        <p id="nivel" class="nivel"></p>
+        <p id="contador" class="contador"></p>
+        <div class="barra-progreso" aria-hidden="true"><span id="avance"></span></div>
+      </div>
+
+      <p class="antetitulo">Mito</p>
+      <h2 id="t-mito" class="mito" tabindex="-1"></h2>
+
+      <fieldset id="opciones" class="opciones">
+        <legend class="sr">¿Qué crees?</legend>
+        <button class="opcion" data-respuesta="cierto">Cierto</button>
+        <button class="opcion" data-respuesta="falso">Falso</button>
+        <button class="opcion" data-respuesta="parcial">Parcialmente cierto</button>
+      </fieldset>
+
+      <div id="revelacion" class="revelacion" hidden>
+        <div id="resultado-respuesta" class="resultado-respuesta" role="status"></div>
+        <h3 id="t-veredicto" class="veredicto" tabindex="-1"></h3>
+        <figure class="grafica">
+          <figcaption id="g-titulo" class="g-titulo"></figcaption>
+          <div id="g-lienzo" class="g-lienzo"></div>
+          <p id="g-nota" class="g-nota" hidden></p>
+          <p id="g-fuente" class="g-fuente"></p>
+          <details class="g-tabla">
+            <summary>Ver los datos en tabla</summary>
+            <div id="g-tabla"></div>
+          </details>
+        </figure>
+        <p id="explicacion" class="explicacion"></p>
+        <div class="acciones">
+          <button class="boton primario" id="siguiente">Siguiente</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Resultado final -->
+    <section id="resultado" class="pantalla" aria-labelledby="t-resultado" hidden>
+      <p class="antetitulo">Tu resultado</p>
+      <h2 id="t-resultado" tabindex="-1"></h2>
+      <p id="mensaje" class="entrada"></p>
+      <ol id="resumen" class="resumen"></ol>
+
+      <div class="tarjeta-contenedor">
+        <canvas id="tarjeta" width="1080" height="1350" role="img" aria-label=""></canvas>
+      </div>
+      <div class="acciones">
+        <button class="boton primario" id="descargar">Descargar tarjeta (PNG)</button>
+        <button class="boton secundario" id="compartir">Compartir</button>
+        <button class="boton secundario" id="copiar">Copiar enlace</button>
+      </div>
+      <p id="aviso-compartir" class="aviso" role="status"></p>
+      <div class="acciones">
+        <button class="boton enlace" data-ir="cierre">Continuar</button>
+      </div>
+    </section>
+
+    <!-- 5. Cierre -->
+    <section id="cierre" class="pantalla" aria-labelledby="t-cierre" hidden>
+      <h2 id="t-cierre" tabindex="-1">Los datos cuentan otra historia</h2>
+      <p class="entrada">Muchas ideas que repetimos sobre la participación no coinciden con lo que muestran los datos. La participación cambia con la edad, el lugar y el tipo de elección, y cada persona cuenta.</p>
+      <ul class="llamado">
+        <li><strong>Infórmate</strong> en fuentes oficiales antes de compartir una cifra.</li>
+        <li><strong>Revisa</strong> que tu credencial para votar esté vigente y que tus datos estén al día.</li>
+        <li><strong>Participa</strong> en cada elección, sea presidencial o intermedia.</li>
+      </ul>
+      <div class="acciones">
+        <a class="boton primario" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
+        <button class="boton secundario" data-ir="explora">Explorar los datos</button>
+        <button class="boton secundario" id="otra-vez">Volver a jugar</button>
+      </div>
+    </section>
+
+    <!-- Explora los datos -->
+    <section id="explora" class="pantalla" aria-labelledby="t-explora" hidden>
+      <h2 id="t-explora" tabindex="-1">Explora los datos</h2>
+      <p class="entrada">Elige un año y un estado para ver cómo cambia la participación.</p>
+
+      <figure class="grafica">
+        <figcaption class="g-titulo">Participación por grupo de edad</figcaption>
+        <div class="filtros">
+          <label>Año
+            <select id="f-anio-edad"></select>
+          </label>
+          <label>Estado
+            <select id="f-entidad"></select>
+          </label>
+        </div>
+        <div id="e-edad" class="g-lienzo"></div>
+        <p id="e-edad-fuente" class="g-fuente"></p>
+        <details class="g-tabla">
+          <summary>Ver los datos en tabla</summary>
+          <div id="e-edad-tabla"></div>
+        </details>
+      </figure>
+
+      <figure class="grafica">
+        <figcaption class="g-titulo">Participación por estado</figcaption>
+        <div class="filtros">
+          <label>Año
+            <select id="f-anio-estado"></select>
+          </label>
+        </div>
+        <div id="e-estado" class="g-lienzo"></div>
+        <p id="e-estado-fuente" class="g-fuente"></p>
+        <details class="g-tabla">
+          <summary>Ver los datos en tabla</summary>
+          <div id="e-estado-tabla"></div>
+        </details>
+      </figure>
+
+      <div class="acciones">
+        <button class="boton primario" data-ir="portada">Volver al inicio</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pie">
+    <p id="nota-metodo"></p>
+    <p>Proyecto para el hackatón del INE «Hackea la participación: Datos que construyen democracia». Datos abiertos de la <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" rel="noopener">Plataforma de Conteos Censales de Participación Ciudadana</a>.</p>
+  </footer>
+
+  <script src="js/graficas.js"></script>
+  <script src="js/explora.js"></script>
+  <script src="js/juego.js"></script>
+</body>
+</html>
