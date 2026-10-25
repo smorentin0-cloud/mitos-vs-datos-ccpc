@@ -6,6 +6,18 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
 
 **Sitio:** https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/
 
+## Qué incluye
+
+- **Juego de Cierto o Falso** con 8 frases en 3 niveles que siguen un arco: un panorama de quién vota, **el primer voto** al centro (a los 18 años se vota más que el promedio, pero después la participación cae hasta cerca de los 25) y lo que pasa con los años. El cierre retoma la idea: que el primer voto no sea el último.
+- **Final personalizado, «¿Cómo vota alguien como tú?»:** pregunta opcional de edad y estado, que se puede saltar con un botón. Al final muestra cuántas personas de ese grupo votaron en 2024 en ese estado, comparado con el estado y el país. No se guarda ni se envía nada.
+- **Tarjeta para compartir** (PNG 1080 × 1350) con el puntaje, el dato personalizado, un código QR al sitio y el reto «¿Me ganas?». Vista previa para WhatsApp y redes (Open Graph).
+- **Modo salón** para talleres con proyector: letra muy grande, el grupo vota a mano alzada, la persona facilitadora revela con un botón o con el teclado y cada pregunta trae una pregunta para conversar.
+- **Versión para imprimir** (`imprimible.html`): tarjetas en tamaño carta con la frase al frente y la respuesta atrás, legibles en blanco y negro.
+- **Versión por estado** con un solo comando, con demo de Colima.
+- **Funciona sin conexión** después de la primera visita y no usa servicios externos.
+- **Lectura en voz alta**, control de tamaño de letra y gráficas con tabla de datos.
+- **Guía de facilitación** de una página: [`docs/guia-facilitacion.md`](docs/guia-facilitacion.md).
+
 ## Mensaje central y público
 
 - **Mensaje central:** muchas ideas que repetimos sobre la participación no coinciden con los datos; la participación cambia con la edad, el sexo, el lugar y el tipo de elección, y cada voto cuenta.
@@ -63,6 +75,8 @@ El repositorio incluye el agregado `data/processed/conteos_agregados.csv`, así 
 
 2. Ejecuta `python scripts/procesar.py --rehacer` (tarda de 1 a 2 minutos; lee los ZIP sin descomprimirlos).
 
+Las imágenes fijas (vista previa para redes, código QR e íconos) se regeneran con `python scripts/generar_imagenes.py` (requiere `pillow` y `qrcode`); solo hace falta si cambia el diseño o la dirección del sitio.
+
 Para ver el sitio en tu computadora:
 
 ```bash
@@ -101,25 +115,51 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │       ├── conteos_agregados.csv   # entidad × tipo de sección × sexo × edad × año
 │       ├── evidencia_mitos.json    # cifras usadas para evaluar cada mito
 │       └── hallazgos.md            # tabla de mitos, cifras y veredictos
+├── docs/
+│   └── guia-facilitacion.md  # taller de 20 minutos
 ├── scripts/
-│   └── procesar.py           # limpieza, agregación y generación de JSON
+│   ├── procesar.py           # limpieza, agregación, validaciones y JSON del sitio (--entidad)
+│   ├── generar_imagenes.py   # vista previa para redes, código QR e íconos
+│   └── recursos/             # Lexend en TTF (licencia OFL) para generar las imágenes
 ├── site/                     # sitio estático (HTML, CSS y JavaScript sin frameworks)
-│   ├── index.html
-│   ├── css/estilos.css
+│   ├── index.html            # juego, modo salón, resultado, cierre y «Explora los datos»
+│   ├── imprimible.html       # tarjetas para imprimir
+│   ├── sw.js                 # service worker: funciona sin conexión
+│   ├── manifest.webmanifest
+│   ├── css/                  # estilos.css e imprimible.css (@media print)
+│   ├── js/textos.js          # textos que arma JavaScript (para traducir)
+│   ├── js/datos.js           # rutas de datos y versión por estado (?entidad=)
 │   ├── js/graficas.js        # gráficas SVG accesibles
-│   ├── js/juego.js           # lógica del juego y tarjeta PNG
+│   ├── js/juego.js           # juego, final personalizado, modo salón y tarjeta PNG
 │   ├── js/voz.js             # lectura en voz alta
 │   ├── js/explora.js         # sección «Explora los datos»
-│   └── data/                 # mitos.json, explora.json, entidades.json
+│   ├── js/imprimible.js      # arma las tarjetas para imprimir
+│   ├── data/                 # mitos.json, explora.json, entidades.json, entidad/<clave>/mitos.json
+│   ├── fonts/                # Lexend 400 y 700 en woff2, con su licencia OFL
+│   └── img/                  # vista previa, código QR e íconos
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
 ```
 
 ## Aprovechamiento institucional
 
-- **Material para talleres:** funciona en el celular, sin instalar nada, y se juega en unos 5 minutos; sirve para abrir sesiones de educación cívica en escuelas y en las Juntas Locales y Distritales.
-- **Actualizable:** al publicarse los conteos de una nueva elección basta con agregar el ZIP y ejecutar `python scripts/procesar.py`; los textos y cifras se regeneran solos y el script avisa si algún veredicto deja de cumplirse.
-- **Adaptable por estado:** la sección «Explora los datos» ya filtra por entidad; las preguntas pueden generarse para un estado en particular con el mismo script.
-- **Ligero y sin costo de operación:** sitio estático sin servidor ni base de datos; puede alojarse en cualquier servidor del INE.
+El proyecto es un **kit de educación cívica** listo para usarse en Juntas Locales y Distritales, escuelas y talleres:
+
+| Pieza | Para qué sirve |
+|---|---|
+| Sitio en el celular | Que cada persona juegue sola en unos 5 minutos y comparta su tarjeta |
+| Modo salón | Talleres con proyector: el grupo vota a mano alzada y se conversa cada respuesta |
+| Versión para imprimir | Comunidades o escuelas sin dispositivos ni internet |
+| Versión por estado | Que cada Junta Local use los datos de su entidad con un solo comando |
+| Guía de facilitación | Un taller de 20 minutos paso a paso |
+
+- **Actualizable:** al publicarse los conteos de una nueva elección basta con agregar el ZIP y ejecutar `python scripts/procesar.py`; los textos y cifras se regeneran solos y el script se detiene si algún veredicto deja de cumplirse.
+- **Ligero y sin costo de operación:** sitio estático sin servidor ni base de datos ni servicios externos; puede alojarse en cualquier servidor del INE y funciona sin conexión.
+- **Sin datos personales:** solo usa datos agregados de la CCPC; lo que la persona elige en el final personalizado vive en la memoria del navegador y nunca se guarda ni se envía.
+
+## Fase 2 (no implementado)
+
+- **Traducción a lenguas indígenas,** empezando por maya y náhuatl, con hablantes de cada lengua. Los textos ya están separados para facilitarlo: el texto fijo de las pantallas está en `site/index.html` e `imprimible.html`; el que arma JavaScript, en `site/js/textos.js`; y las frases, explicaciones y preguntas para conversar, en `scripts/procesar.py`.
+- **Videos en Lengua de Señas Mexicana** por pregunta, junto a cada frase y cada explicación.
 
 ## Diseño y accesibilidad
 
@@ -131,7 +171,7 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 - **Niñas, niños y jóvenes:** mecánica de marcar la boleta, casillas de progreso que se llenan y tarjeta de resultado para retar a otras personas.
 - Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación.
 - **Sin internet y sin servicios externos:** la fuente Lexend está alojada en `site/fonts/` (licencia OFL) y un service worker (`site/sw.js`) guarda el sitio en el dispositivo después de la primera visita, así funciona sin conexión en talleres. El workflow de publicación cambia la versión de la caché en cada commit, así que las actualizaciones llegan solas.
-- **Peso:** el sitio completo pesa unos 200 KB; lo que se guarda para usar sin conexión son unos 143 KB (los datos, 27 KB; las fuentes, 33 KB). La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
+- **Peso:** el sitio completo pesa unos 231 KB; lo que se guarda para usar sin conexión son unos 173 KB (código 79 KB, datos 33 KB, fuentes 33 KB). La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
 - Paleta neutral, sin colores asociados a partidos: texto `#1F2937`, datos `#2563EB`, base `#E5E7EB`, acento `#D97706`, blanco y grises.
 - Sin `localStorage`: el estado del juego vive en memoria.
 

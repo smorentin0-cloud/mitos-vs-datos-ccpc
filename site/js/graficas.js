@@ -13,7 +13,7 @@ const Graficas = (() => {
   let escalaFija = null;
   const escala = () => escalaFija ?? parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
 
-  const fmt = (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`);
+  const fmt = (v) => (v == null ? TEXTOS.graficas.sinDato : `${v.toFixed(1)}%`);
 
   function el(nombre, attrs = {}, padre) {
     const nodo = document.createElementNS(SVG, nombre);
@@ -40,8 +40,8 @@ const Graficas = (() => {
       if (pares.length <= 8) return nombre + pares.map(([x, v]) => `${x}, ${fmt(v)}`).join("; ");
       const min = pares.reduce((a, b) => (b[1] < a[1] ? b : a));
       const max = pares.reduce((a, b) => (b[1] > a[1] ? b : a));
-      return `${nombre}de ${fmt(pares[0][1])} en ${pares[0][0]} a ${fmt(pares.at(-1)[1])} en ${pares.at(-1)[0]}; ` +
-        `mínimo de ${fmt(min[1])} en ${min[0]} y máximo de ${fmt(max[1])} en ${max[0]}`;
+      return nombre + TEXTOS.graficas.resumenSerie(fmt(pares[0][1]), pares[0][0], fmt(pares.at(-1)[1]),
+        pares.at(-1)[0], fmt(min[1]), min[0], fmt(max[1]), max[0]);
     });
     let desc = `${spec.titulo}. ${partes.join(". ")}.`;
     if (spec.referencia) desc += ` ${spec.referencia.etiqueta}.`;
@@ -59,8 +59,8 @@ const Graficas = (() => {
       fila.appendChild(c);
     };
     if (spec.tipo === "barras") {
-      th(cab, "Grupo");
-      th(cab, "Participación", true);
+      th(cab, TEXTOS.graficas.grupo);
+      th(cab, TEXTOS.graficas.participacion, true);
       spec.items.forEach((i) => {
         const f = filas.insertRow();
         f.insertCell().textContent = i.etiqueta;
@@ -69,12 +69,12 @@ const Graficas = (() => {
         c.className = "num";
       });
     } else {
-      th(cab, spec.x_titulo || "Año");
+      th(cab, spec.x_titulo || TEXTOS.graficas.anio);
       // Si las columnas se distinguen por color (p. ej. presidencial o intermedia), la tabla lo dice con palabras.
       const tipos = spec.leyenda && spec.series[0].colores
         ? spec.series[0].colores.map((c) => (spec.leyenda.find((l) => l.color === c) || {}).nombre || "")
         : null;
-      if (tipos) th(cab, "Tipo");
+      if (tipos) th(cab, TEXTOS.graficas.tipo);
       spec.series.forEach((s) => th(cab, s.nombre, true));
       spec.x.forEach((x, k) => {
         const f = filas.insertRow();

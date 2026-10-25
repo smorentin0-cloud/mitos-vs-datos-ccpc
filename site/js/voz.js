@@ -22,7 +22,7 @@ const Voz = (() => {
     if (!boton) return;
     const etiqueta = boton.querySelector("span");
     if (!boton.dataset.texto) boton.dataset.texto = etiqueta.textContent;
-    etiqueta.textContent = hablando ? "Detener" : boton.dataset.texto;
+    etiqueta.textContent = hablando ? TEXTOS.voz.detener : boton.dataset.texto;
     boton.classList.toggle("hablando", hablando);
   }
 

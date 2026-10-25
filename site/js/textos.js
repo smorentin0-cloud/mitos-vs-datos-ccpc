@@ -1,8 +1,56 @@
 /*
  * Textos de la interfaz que arma JavaScript. Están juntos para facilitar una traducción futura.
  * Las cifras nunca se escriben aquí: llegan de los JSON que genera scripts/procesar.py.
+ *
+ * Para traducir el sitio hay que revisar tres lugares:
+ *   1. site/index.html e imprimible.html  (texto fijo de las pantallas)
+ *   2. este archivo                      (texto que arma JavaScript)
+ *   3. scripts/procesar.py               (frases, explicaciones y preguntas para conversar)
  */
 const TEXTOS = {
+  veredictos: { cierto: "Cierto", falso: "Falso" },
+  juego: {
+    pregunta: (n, total) => `Pregunta ${n} de ${total}.`,
+    contador: (n, total, puntos) => `Pregunta ${n} de ${total}. Aciertos: ${puntos}.`,
+    cierto_o_falso: "¿Es cierto o falso? Elige Cierto o Falso.",
+    acierto: "¡Acertaste! Sumas 1 punto.",
+    fallo: (marcada) => `No esta vez. Marcaste «${marcada}».`,
+    respuesta: (veredicto) => `La respuesta es: ${veredicto}`,
+    graficaMuestra: "La gráfica muestra lo siguiente.",
+    siguiente: "Siguiente pregunta",
+    verResultado: "Ver mi resultado",
+    errorCarga: "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.",
+  },
+  resultado: {
+    titulo: (puntos, total) => `Acertaste ${puntos} de ${total}`,
+    mensaje: (puntos, total, lugar) => {
+      if (puntos === total) return "¡Todas bien! Los mitos no pueden contigo. Ahora reta a alguien más.";
+      if (puntos >= total - 2) return `¡Muy bien! Conoces cómo vota ${lugar}.`;
+      if (puntos >= total / 2) return "Vas bien. Algunos mitos todavía te engañaron.";
+      return "Los mitos te ganaron esta vez, pero ahora ya conoces los datos.";
+    },
+    resumen: (enunciado, veredicto, acerto) =>
+      `${enunciado} Respuesta: ${veredicto}. ${acerto ? "Acertaste." : "Fallaste."}`,
+  },
+  explora: {
+    todoPais: "Todo el país",
+    tituloEdad: (lugar, anio) => `Participación por grupo de edad: ${lugar}, ${anio}`,
+    ejeEdad: "Grupo de edad (años)",
+    promedioNacional: "Promedio nacional",
+    tituloEstados: (anio) => `Participación por estado, ${anio}`,
+    fuente: (anio) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${anio}.`,
+    error: "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.",
+  },
+  voz: { detener: "Detener" },
+  graficas: {
+    sinDato: "sin dato",
+    grupo: "Grupo",
+    participacion: "Participación",
+    anio: "Año",
+    tipo: "Tipo",
+    resumenSerie: (desde, x0, hasta, x1, min, xMin, max, xMax) =>
+      `de ${desde} en ${x0} a ${hasta} en ${x1}; mínimo de ${min} en ${xMin} y máximo de ${max} en ${xMax}`,
+  },
   portada: {
     entrada: (n) => `Todo mundo repite frases sobre quién vota y quién no. Aquí hay ${n}. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.`,
     edicion: (lugar) => `Esta versión usa solo datos de ${lugar}. Las frases que no se cumplen con los datos de este estado no aparecen.`,

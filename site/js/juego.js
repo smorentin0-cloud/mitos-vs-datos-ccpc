@@ -2,7 +2,8 @@
  * Lógica del juego "Mitos vs. Datos". Todo el estado vive en memoria (sin localStorage).
  */
 (() => {
-  const NOMBRES = { cierto: "Cierto", falso: "Falso" };
+  const NOMBRES = TEXTOS.veredictos;
+  const J = TEXTOS.juego;
   const TRAZOS = { bien: "M5 12.5 L10 17.5 L19 7", mal: "M6 6 L18 18 M18 6 L6 18" };
   const $ = (sel) => document.querySelector(sel);
   const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -53,23 +54,23 @@
   function textoPregunta() {
     const m = estado.mitos[estado.indice];
     const intro = m.introNivel ? `${m.introNivel} ` : "";
-    return `${intro}Pregunta ${estado.indice + 1} de ${estado.mitos.length}. ${m.enunciado} ` +
-      (estado.salon ? TEXTOS.salon.votar : "¿Es cierto o falso? Elige Cierto o Falso.");
+    return `${intro}${J.pregunta(estado.indice + 1, estado.mitos.length)} ${m.enunciado} ` +
+      (estado.salon ? TEXTOS.salon.votar : J.cierto_o_falso);
   }
 
   function textoRevelacion() {
     const m = estado.mitos[estado.indice];
     const aviso = estado.salon ? "" : `${$("#resultado-respuesta").textContent} `;
     const discusion = estado.salon ? ` ${TEXTOS.salon.paraConversar} ${m.discusion}` : "";
-    return `${aviso}La respuesta es: ${NOMBRES[m.veredicto]}. ` +
-      `${m.explicacion} La gráfica muestra lo siguiente. ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}`;
+    return `${aviso}${J.respuesta(NOMBRES[m.veredicto])}. ` +
+      `${m.explicacion} ${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}`;
   }
 
   function textoResultado() {
     const g = $("#perfil-g-lienzo").dataset.spec ? JSON.parse($("#perfil-g-lienzo").dataset.spec) : null;
     return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ` +
       `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
-      (g ? `La gráfica muestra lo siguiente. ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent}` : "");
+      (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent}` : "");
   }
 
   // Al activar "Voz" se lee lo que está en pantalla en ese momento.
@@ -146,7 +147,7 @@
     });
     const total = estado.mitos.length;
     $("#contador").textContent =
-      `Pregunta ${estado.indice + 1} de ${total}. Aciertos: ${estado.puntos}.`;
+      J.contador(estado.indice + 1, total, estado.puntos);
   }
 
   function pintarPregunta() {
@@ -192,9 +193,7 @@
     const aviso = $("#resultado-respuesta");
     aviso.className = `resultado-respuesta ${acerto ? "acierto" : "fallo"}`;
     aviso.innerHTML = icono(acerto ? TRAZOS.bien : TRAZOS.mal);
-    aviso.append(acerto
-      ? "¡Acertaste! Sumas 1 punto."
-      : `No esta vez. Marcaste «${NOMBRES[respuesta]}».`);
+    aviso.append(acerto ? J.acierto : J.fallo(NOMBRES[respuesta]));
     revelar();
   }
 
@@ -215,7 +214,7 @@
     void sello.offsetWidth; // reinicia la animación
     sello.hidden = false;
 
-    $("#t-veredicto").textContent = `La respuesta es: ${NOMBRES[m.veredicto]}`;
+    $("#t-veredicto").textContent = J.respuesta(NOMBRES[m.veredicto]);
     const g = m.grafica;
     $("#g-titulo").textContent = g.titulo;
     $("#g-fuente").textContent = m.fuente;
@@ -227,8 +226,8 @@
     $("#discusion-texto").textContent = m.discusion || "";
     const ultima = estado.indice === estado.mitos.length - 1;
     $("#siguiente").textContent = estado.salon
-      ? (ultima ? TEXTOS.salon.terminar : "Siguiente pregunta")
-      : (ultima ? "Ver mi resultado" : "Siguiente pregunta");
+      ? (ultima ? TEXTOS.salon.terminar : J.siguiente)
+      : (ultima ? J.verResultado : J.siguiente);
 
     pintarProgreso();
 
@@ -310,23 +309,16 @@
 
   // ---------- resultado
 
-  function mensaje(puntos, total) {
-    if (puntos === total) return "¡Todas bien! Los mitos no pueden contigo. Ahora reta a alguien más.";
-    if (puntos >= total - 2) return `¡Muy bien! Conoces cómo vota ${estado.lugar}.`;
-    if (puntos >= total / 2) return "Vas bien. Algunos mitos todavía te engañaron.";
-    return "Los mitos te ganaron esta vez, pero ahora ya conoces los datos.";
-  }
-
   function pintarResultado() {
     const total = estado.mitos.length;
-    $("#t-resultado").textContent = `Acertaste ${estado.puntos} de ${total}`;
-    $("#mensaje").textContent = mensaje(estado.puntos, total);
+    $("#t-resultado").textContent = TEXTOS.resultado.titulo(estado.puntos, total);
+    $("#mensaje").textContent = TEXTOS.resultado.mensaje(estado.puntos, total, estado.lugar);
     $("#resumen").replaceChildren(...estado.mitos.map((m, i) => {
       const li = document.createElement("li");
       const ok = estado.aciertos[i];
       li.innerHTML = `<span class="marca-resumen ${ok ? "bien" : ""}">${icono(ok ? TRAZOS.bien : TRAZOS.mal)}</span>`;
       const txt = document.createElement("span");
-      txt.textContent = `${m.enunciado} Respuesta: ${NOMBRES[m.veredicto]}. ${ok ? "Acertaste." : "Fallaste."}`;
+      txt.textContent = TEXTOS.resultado.resumen(m.enunciado, NOMBRES[m.veredicto], ok);
       li.appendChild(txt);
       return li;
     }));
@@ -677,6 +669,6 @@
   }
 
   cargar().catch(() => {
-    $("#portada .entrada").textContent = "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.";
+    $("#portada-entrada").textContent = J.errorCarga;
   });
 })();

@@ -3,7 +3,7 @@
  */
 const Explora = (() => {
   const $ = (sel) => document.querySelector(sel);
-  const fuente = (anio) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${anio}.`;
+  const E = TEXTOS.explora;
   let datos = null;
 
   async function cargar() {
@@ -17,7 +17,7 @@ const Explora = (() => {
       .map((a) => `<option value="${a}">${a}</option>`).join("");
     $("#f-anio-edad").innerHTML = opcionesAnio;
     $("#f-anio-estado").innerHTML = opcionesAnio;
-    $("#f-entidad").innerHTML = `<option value="0">Todo el país</option>` +
+    $("#f-entidad").innerHTML = `<option value="0">${E.todoPais}</option>` +
       edad.entidades.map((e) => `<option value="${e.clave}">${e.nombre}</option>`).join("");
 
     $("#f-anio-edad").addEventListener("change", porEdad);
@@ -29,20 +29,20 @@ const Explora = (() => {
     const anio = $("#f-anio-edad").value;
     const clave = $("#f-entidad").value;
     const { edad } = datos;
-    const nombre = clave === "0" ? "Todo el país"
+    const nombre = clave === "0" ? E.todoPais
       : edad.entidades.find((e) => String(e.clave) === clave).nombre;
     const series = [{ nombre, valores: edad.datos[anio][clave], color: "datos" }];
-    if (clave !== "0") series.push({ nombre: "Todo el país", valores: edad.datos[anio]["0"], color: "base" });
+    if (clave !== "0") series.push({ nombre: E.todoPais, valores: edad.datos[anio]["0"], color: "base" });
     const spec = {
       tipo: "linea",
-      titulo: `Participación por grupo de edad: ${nombre}, ${anio}`,
+      titulo: E.tituloEdad(nombre, anio),
       x: edad.grupos,
-      x_titulo: "Grupo de edad (años)",
+      x_titulo: E.ejeEdad,
       series,
     };
     Graficas.dibujar($("#e-edad"), spec);
     $("#e-edad-tabla").replaceChildren(Graficas.tabla(spec));
-    $("#e-edad-fuente").textContent = fuente(anio);
+    $("#e-edad-fuente").textContent = E.fuente(anio);
   }
 
   function porEstado() {
@@ -54,17 +54,17 @@ const Explora = (() => {
       valor: entidades.participacion[anio][i],
       color: e.clave === clave ? "acento" : "datos",
     }));
-    items.push({ etiqueta: "Promedio nacional", valor: entidades.nacional[anio], color: "base" });
+    items.push({ etiqueta: E.promedioNacional, valor: entidades.nacional[anio], color: "base" });
     items.sort((a, b) => b.valor - a.valor);
     const spec = {
       tipo: "barras",
       compacto: true,
-      titulo: `Participación por estado, ${anio}`,
+      titulo: E.tituloEstados(anio),
       items,
     };
     Graficas.dibujar($("#e-estado"), spec);
     $("#e-estado-tabla").replaceChildren(Graficas.tabla(spec));
-    $("#e-estado-fuente").textContent = fuente(anio);
+    $("#e-estado-fuente").textContent = E.fuente(anio);
   }
 
   async function abrir() {
@@ -73,7 +73,7 @@ const Explora = (() => {
       porEdad();
       porEstado();
     } catch {
-      $("#e-edad").textContent = "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.";
+      $("#e-edad").textContent = E.error;
     }
   }
 
