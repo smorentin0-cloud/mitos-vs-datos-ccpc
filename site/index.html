@@ -4,114 +4,158 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mitos vs. Datos: el juego</title>
-  <meta name="description" content="Trivia de cierto o falso sobre la participación electoral en México con datos de los Conteos Censales de Participación Ciudadana del INE, 2009–2024.">
+  <meta name="description" content="Juego de cierto o falso sobre la participación electoral en México, con datos de los Conteos Censales de Participación Ciudadana del INE, 2009–2024.">
   <meta property="og:title" content="Mitos vs. Datos: el juego">
   <meta property="og:description" content="¿Cuánto sabes de cómo vota México? ¿Mito o dato? Pon a prueba 8 frases con datos del INE.">
-  <meta name="theme-color" content="#2563EB">
+  <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap">
   <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
 
   <header class="barra">
-    <span class="marca">Mitos <span aria-hidden="true">vs.</span><span class="sr">contra</span> Datos</span>
-    <span id="marcador" class="marcador" hidden aria-live="polite"></span>
+    <a class="marca" href="#portada" data-ir="portada">
+      <svg class="marca-icono" viewBox="0 0 28 28" aria-hidden="true">
+        <rect x="2" y="2" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="2.5"/>
+        <path d="M8 8 L20 20 M20 8 L8 20" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+      <span>Mitos vs. Datos</span>
+    </a>
+    <div class="tamano" role="group" aria-label="Tamaño de la letra">
+      <button class="tamano-btn" data-tamano="1" aria-pressed="true" aria-label="Letra normal">A</button>
+      <button class="tamano-btn" data-tamano="2" aria-pressed="false" aria-label="Letra grande">A</button>
+      <button class="tamano-btn" data-tamano="3" aria-pressed="false" aria-label="Letra muy grande">A</button>
+    </div>
   </header>
 
   <main id="contenido" tabindex="-1">
 
     <!-- 1. Portada -->
     <section id="portada" class="pantalla" aria-labelledby="t-portada">
-      <p class="antetitulo">Participación electoral en México, 2009–2024</p>
-      <h1 id="t-portada">¿Cuánto sabes de cómo vota México?</h1>
-      <p class="entrada">Hay frases que todo mundo repite sobre quién vota y quién no. Te presentamos 8 frases. Tú decides si son ciertas o falsas, y luego los datos del INE dicen la última palabra.</p>
-      <div class="acciones">
-        <button class="boton primario" data-ir="instrucciones">Empezar a jugar</button>
-        <button class="boton secundario" data-ir="explora">Explorar los datos</button>
+      <div class="portada-boleta" aria-hidden="true">
+        <div class="mini-boleta">
+          <span class="mini-folio">Folio 2009–2024</span>
+          <span class="mini-pregunta">¿Mito o dato?</span>
+          <span class="mini-opciones">
+            <span class="mini-opcion"><span class="casilla"></span>Mito</span>
+            <span class="mini-opcion"><span class="casilla marcada">
+              <svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg>
+            </span>Dato</span>
+          </span>
+        </div>
       </div>
-      <p class="pie-fuente">Datos: INE, Conteos Censales de Participación Ciudadana 2009–2024.</p>
+      <h1 id="t-portada">¿Cuánto sabes de cómo vota México?</h1>
+      <p class="entrada">Todo mundo repite frases sobre quién vota y quién no. Aquí hay 8. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.</p>
+      <div class="acciones">
+        <button class="boton primario" data-ir="instrucciones">Jugar</button>
+        <button class="boton secundario" data-ir="explora">Ver los datos</button>
+      </div>
+      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. Este sitio no usa sonido.</p>
     </section>
 
     <!-- 2. Instrucciones -->
     <section id="instrucciones" class="pantalla" aria-labelledby="t-instr" hidden>
       <h2 id="t-instr">Cómo se juega</h2>
       <ol class="pasos">
-        <li><strong>Lee la frase.</strong> Son 8 en 3 niveles. Algunas son mitos y otras son datos reales.</li>
-        <li><strong>Elige tu respuesta:</strong> Cierto o Falso.</li>
-        <li><strong>Mira los datos.</strong> Una gráfica te muestra qué pasó en realidad.</li>
-        <li><strong>Suma puntos.</strong> Cada acierto vale 1 punto. Al final podrás descargar tu tarjeta y retar a tus amistades.</li>
+        <li>
+          <span class="paso-num" aria-hidden="true">1</span>
+          <span><strong>Lee la frase.</strong> Algunas son mitos y otras son datos reales.</span>
+        </li>
+        <li>
+          <span class="paso-num" aria-hidden="true">2</span>
+          <span><strong>Marca tu respuesta:</strong> Cierto o Falso.</span>
+        </li>
+        <li>
+          <span class="paso-num" aria-hidden="true">3</span>
+          <span><strong>Mira los datos.</strong> Un sello te dice la respuesta y una gráfica te muestra por qué.</span>
+        </li>
       </ol>
-      <div class="caja-nota">
-        <p><strong>¿Qué es la participación?</strong> Es el porcentaje de personas de la lista nominal que fueron a votar. Si dice 60%, quiere decir que votaron 6 de cada 10 personas.</p>
+      <div class="nota-papel">
+        <p><strong>¿Qué es la participación?</strong> Es cuántas personas de cada 100 fueron a votar. Si dice 60%, votaron 60 de cada 100.</p>
       </div>
       <div class="acciones">
-        <button class="boton primario" id="iniciar">¡Vamos!</button>
+        <button class="boton primario" id="iniciar">Empezar</button>
       </div>
     </section>
 
-    <!-- 3. Niveles y preguntas -->
+    <!-- 3. Preguntas -->
     <section id="juego" class="pantalla" aria-labelledby="t-mito" hidden>
       <div class="progreso">
-        <p id="nivel" class="nivel"></p>
-        <p id="contador" class="contador"></p>
-        <div class="barra-progreso" aria-hidden="true"><span id="avance"></span></div>
+        <ol id="casillas" class="casillas" aria-hidden="true"></ol>
+        <p id="contador" class="contador" aria-live="polite"></p>
       </div>
 
-      <p class="antetitulo">¿Mito o dato?</p>
-      <h2 id="t-mito" class="mito" tabindex="-1"></h2>
-
-      <fieldset id="opciones" class="opciones">
-        <legend class="sr">¿Qué crees?</legend>
-        <button class="opcion" data-respuesta="cierto">Cierto</button>
-        <button class="opcion" data-respuesta="falso">Falso</button>
-      </fieldset>
+      <article class="boleta">
+        <p id="nivel" class="folio"></p>
+        <h2 id="t-mito" class="mito" tabindex="-1"></h2>
+        <div id="sello" class="sello" hidden aria-hidden="true">
+          <svg class="sello-icono" viewBox="0 0 24 24"><path id="sello-trazo" d=""/></svg>
+          <span id="sello-texto"></span>
+        </div>
+        <fieldset id="opciones" class="opciones">
+          <legend class="sr">¿Es cierto o falso?</legend>
+          <button class="opcion" data-respuesta="cierto">
+            <span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span>
+            <span>Cierto</span>
+          </button>
+          <button class="opcion" data-respuesta="falso">
+            <span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span>
+            <span>Falso</span>
+          </button>
+        </fieldset>
+      </article>
 
       <div id="revelacion" class="revelacion" hidden>
-        <div id="resultado-respuesta" class="resultado-respuesta" role="status"></div>
+        <p id="resultado-respuesta" class="resultado-respuesta" role="status"></p>
         <h3 id="t-veredicto" class="veredicto" tabindex="-1"></h3>
+        <p id="explicacion" class="explicacion"></p>
         <figure class="grafica">
           <figcaption id="g-titulo" class="g-titulo"></figcaption>
           <div id="g-lienzo" class="g-lienzo"></div>
           <p id="g-nota" class="g-nota" hidden></p>
           <p id="g-fuente" class="g-fuente"></p>
           <details class="g-tabla">
-            <summary>Ver los datos en tabla</summary>
+            <summary>Ver los datos en una tabla</summary>
             <div id="g-tabla"></div>
           </details>
         </figure>
-        <p id="explicacion" class="explicacion"></p>
         <div class="acciones">
-          <button class="boton primario" id="siguiente">Siguiente</button>
+          <button class="boton primario" id="siguiente">Siguiente pregunta</button>
         </div>
       </div>
     </section>
 
-    <!-- 4. Resultado final -->
+    <!-- 4. Resultado -->
     <section id="resultado" class="pantalla" aria-labelledby="t-resultado" hidden>
-      <p class="antetitulo">Tu resultado</p>
       <h2 id="t-resultado" tabindex="-1"></h2>
       <p id="mensaje" class="entrada"></p>
-      <ol id="resumen" class="resumen"></ol>
 
       <div class="tarjeta-contenedor">
         <canvas id="tarjeta" width="1080" height="1350" role="img" aria-label=""></canvas>
       </div>
       <div class="acciones">
-        <button class="boton primario" id="descargar">Descargar tarjeta (PNG)</button>
+        <button class="boton primario" id="descargar">Descargar tarjeta</button>
         <button class="boton secundario" id="compartir">Compartir</button>
         <button class="boton secundario" id="copiar">Copiar enlace</button>
       </div>
       <p id="aviso-compartir" class="aviso" role="status"></p>
+
+      <h3 class="subtitulo">Tus respuestas</h3>
+      <ol id="resumen" class="resumen"></ol>
+
       <div class="acciones">
-        <button class="boton enlace" data-ir="cierre">Continuar</button>
+        <button class="boton secundario" data-ir="cierre">Seguir</button>
       </div>
     </section>
 
     <!-- 5. Cierre -->
     <section id="cierre" class="pantalla" aria-labelledby="t-cierre" hidden>
       <h2 id="t-cierre" tabindex="-1">Los datos cuentan otra historia</h2>
-      <p class="entrada">Muchas ideas que repetimos sobre la participación no coinciden con lo que muestran los datos. La participación cambia con la edad, el lugar y el tipo de elección, y cada persona cuenta.</p>
+      <p class="entrada">Muchas frases que repetimos sobre el voto no coinciden con los datos. La participación cambia con la edad, el lugar y el tipo de elección. Cada persona cuenta.</p>
       <ul class="llamado">
         <li><strong>Infórmate</strong> en fuentes oficiales antes de compartir una cifra.</li>
         <li><strong>Revisa</strong> que tu credencial para votar esté vigente y que tus datos estén al día.</li>
@@ -119,8 +163,8 @@
       </ul>
       <div class="acciones">
         <a class="boton primario" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
-        <button class="boton secundario" data-ir="explora">Explorar los datos</button>
-        <button class="boton secundario" id="otra-vez">Volver a jugar</button>
+        <button class="boton secundario" data-ir="explora">Ver los datos</button>
+        <button class="boton secundario" id="otra-vez">Jugar otra vez</button>
       </div>
     </section>
 
@@ -142,7 +186,7 @@
         <div id="e-edad" class="g-lienzo"></div>
         <p id="e-edad-fuente" class="g-fuente"></p>
         <details class="g-tabla">
-          <summary>Ver los datos en tabla</summary>
+          <summary>Ver los datos en una tabla</summary>
           <div id="e-edad-tabla"></div>
         </details>
       </figure>
@@ -157,7 +201,7 @@
         <div id="e-estado" class="g-lienzo"></div>
         <p id="e-estado-fuente" class="g-fuente"></p>
         <details class="g-tabla">
-          <summary>Ver los datos en tabla</summary>
+          <summary>Ver los datos en una tabla</summary>
           <div id="e-estado-tabla"></div>
         </details>
       </figure>
