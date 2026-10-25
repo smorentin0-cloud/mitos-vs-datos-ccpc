@@ -70,7 +70,7 @@ body {
 a { color: var(--azul); text-underline-offset: 0.15em; }
 
 h1, h2, h3 { line-height: 1.2; letter-spacing: -0.01em; }
-h1 { font-size: 2.25rem; margin: 0 0 1rem; }
+h1, .titular { font-size: 2.25rem; margin: 0 0 1rem; }
 h2 { font-size: 1.75rem; margin: 0 0 1rem; }
 h3 { font-size: 1.375rem; margin: 0 0 0.5rem; }
 
@@ -345,7 +345,7 @@ svg .aparece.inicio { opacity: 0; }
 
 /* ---------------------------------------------------------------- pantallas anchas */
 @media (min-width: 40rem) {
-  h1 { font-size: 3rem; }
+  h1, .titular { font-size: 3rem; }
   .acciones { flex-direction: row; flex-wrap: wrap; }
   main { padding-top: 3rem; }
   .boleta { padding: 1.25rem 2rem 2rem; }
