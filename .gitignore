@@ -14,3 +14,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Documentos de la convocatoria (no son parte del proyecto)
+Convocatoria_Hackaton.pdf
