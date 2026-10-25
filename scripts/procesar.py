@@ -238,6 +238,11 @@ def construir_salidas(df: pd.DataFrame) -> tuple[dict, dict]:
                 r1(g_eg[(anio, c, g)]) if (anio, c, g) in g_eg.index else None for g in GRUPOS_85
             ]
 
+    # El final personalizado usa el año más reciente: no puede faltar ninguna combinación.
+    ultimo = explora["datos"][str(ANIOS[-1])]
+    if any(v is None for valores in ultimo.values() for v in valores):
+        raise SystemExit(f"Faltan datos de {ANIOS[-1]} por entidad y grupo de edad para el final personalizado.")
+
     salidas = {
         "nacional": nacional,
         "edad": edad,

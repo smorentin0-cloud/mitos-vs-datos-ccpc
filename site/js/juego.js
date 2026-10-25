@@ -7,7 +7,13 @@
   const $ = (sel) => document.querySelector(sel);
   const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const estado = { mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [] };
+  const estado = {
+    mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [],
+    // Perfil opcional: vive solo en memoria y nunca sale del navegador.
+    perfil: { grupo: "", entidad: "" },
+    datosPerfil: null,
+    textoPerfil: "",
+  };
 
   function icono(trazo) {
     return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${trazo}"/></svg>`;
@@ -33,7 +39,7 @@
 
   function textoPantalla(id) {
     const s = document.getElementById(id);
-    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .llamado li")]
+    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .nota-papel, .perfil legend, .perfil-ayuda, .privacidad, .llamado li")]
       .map((n) => n.textContent.trim()).join(". ");
   }
 
@@ -50,7 +56,10 @@
   }
 
   function textoResultado() {
-    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent}`;
+    const g = $("#perfil-g-lienzo").dataset.spec ? JSON.parse($("#perfil-g-lienzo").dataset.spec) : null;
+    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ` +
+      `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
+      (g ? `La gráfica muestra lo siguiente. ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent}` : "");
   }
 
   // Al activar "Voz" se lee lo que está en pantalla en ese momento.
@@ -88,8 +97,11 @@
 
   // ---------- juego
 
-  function iniciar() {
+  function iniciar({ conPerfil = true } = {}) {
     if (!estado.mitos.length) return;
+    estado.perfil = conPerfil
+      ? { grupo: $("#p-grupo").value, entidad: $("#p-entidad").value }
+      : { grupo: "", entidad: "" };
     estado.indice = 0;
     estado.puntos = 0;
     estado.aciertos = [];
@@ -223,8 +235,88 @@
       return li;
     }));
     $("#aviso-compartir").textContent = "";
+    pintarPerfil();
     mostrar("resultado");
+    const g = JSON.parse($("#perfil-g-lienzo").dataset.spec);
+    Graficas.dibujar($("#perfil-g-lienzo"), g);
     dibujarTarjeta();
+  }
+
+  // ---------- final personalizado
+
+  function llenarPerfil() {
+    const { edad, entidades } = estado.datosPerfil;
+    const T = TEXTOS.perfil;
+    const opcion = (valor, texto) => `<option value="${valor}">${texto}</option>`;
+    $("#p-grupo").innerHTML = opcion("", T.noDecir) + opcion("menor", T.menor) +
+      edad.grupos.map((g, i) => opcion(i, T.grupoLegible(g))).join("");
+    $("#p-entidad").innerHTML = opcion("", T.noDecir) +
+      entidades.entidades.map((e) => opcion(e.clave, e.nombre)).join("");
+  }
+
+  // Arma el mensaje, la comparación y la gráfica con datos reales del año más reciente.
+  function pintarPerfil() {
+    const T = TEXTOS.perfil;
+    const { edad, entidades } = estado.datosPerfil;
+    const anio = String(Math.max(...edad.anios));
+    const { grupo, entidad } = estado.perfil;
+    const menor = grupo === "menor";
+    const iGrupo = menor ? 0 : grupo === "" ? null : Number(grupo);
+    const iEnt = entidad === "" ? null : entidades.entidades.findIndex((e) => String(e.clave) === entidad);
+    const nombreEnt = iEnt === null ? null : entidades.entidades[iEnt].nombre;
+    const pais = entidades.nacional[anio];
+    const r = T.deCada100;
+
+    let valor;
+    let items;
+    let titulo = T.graficaTitulo(anio);
+    let comparacion;
+    const grupoTxt = iGrupo === null ? null : T.grupoLegible(edad.grupos[iGrupo]);
+
+    if (iGrupo !== null && iEnt !== null) {
+      valor = edad.datos[anio][entidad][iGrupo];
+      const promEnt = entidades.participacion[anio][iEnt];
+      comparacion = T.comparaEstado(nombreEnt, r(promEnt), r(pais));
+      items = [
+        { etiqueta: T.etiquetaGrupoLugar(grupoTxt, nombreEnt), valor, color: "datos" },
+        { etiqueta: T.todo(nombreEnt), valor: promEnt, color: "base" },
+        { etiqueta: T.todoPais, valor: pais, color: "base" },
+      ];
+    } else if (iGrupo !== null) {
+      valor = edad.datos[anio]["0"][iGrupo];
+      comparacion = T.comparaPais(r(pais));
+      items = [
+        { etiqueta: T.etiquetaGrupoLugar(grupoTxt, T.pais), valor, color: "datos" },
+        { etiqueta: T.todoPais, valor: pais, color: "base" },
+      ];
+    } else if (iEnt !== null) {
+      valor = entidades.participacion[anio][iEnt];
+      comparacion = T.comparaPais(r(pais));
+      items = [
+        { etiqueta: T.todo(nombreEnt), valor, color: "datos" },
+        { etiqueta: T.todoPais, valor: pais, color: "base" },
+      ];
+    } else {
+      // Sin datos de la persona: el dato del país y cómo votó cada grupo de edad.
+      valor = pais;
+      comparacion = T.contexto;
+      titulo = T.graficaGrupos(anio);
+      items = edad.grupos.map((g, i) => ({
+        etiqueta: T.grupoLegible(g), valor: edad.datos[anio]["0"][i], color: "datos",
+      }));
+    }
+
+    const mensajePerfil = T.mensaje({
+      lugar: nombreEnt || T.pais, grupo: grupoTxt, valor: r(valor), anio, menor,
+    });
+    estado.textoPerfil = mensajePerfil;
+    $("#perfil-mensaje").textContent = mensajePerfil;
+    $("#perfil-comparacion").textContent = comparacion;
+    const spec = { tipo: "barras", titulo, items };
+    $("#perfil-g-titulo").textContent = titulo;
+    $("#perfil-g-fuente").textContent = T.fuente(anio);
+    $("#perfil-g-tabla").replaceChildren(Graficas.tabla(spec));
+    $("#perfil-g-lienzo").dataset.spec = JSON.stringify(spec);
   }
 
   function urlJuego() {
@@ -395,8 +487,10 @@
   // ---------- arranque
 
   async function cargar() {
-    const resp = await fetch("data/mitos.json");
-    const datos = await resp.json();
+    const [datos, edad, entidades] = await Promise.all(
+      ["data/mitos.json", "data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())));
+    estado.datosPerfil = { edad, entidades };
+    llenarPerfil();
     estado.totalNiveles = datos.niveles.length;
     estado.mitos = datos.niveles.flatMap((n, i) =>
       n.mitos.map((m) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre })));
@@ -404,8 +498,10 @@
   }
 
   Voz.iniciar({ alActivar: leerPantallaActual });
-  $("#iniciar").addEventListener("click", iniciar);
-  $("#otra-vez").addEventListener("click", iniciar);
+  $("#iniciar").addEventListener("click", () => iniciar());
+  $("#saltar").addEventListener("click", () => iniciar({ conPerfil: false }));
+  // "Jugar otra vez" conserva el perfil que se haya elegido.
+  $("#otra-vez").addEventListener("click", () => iniciar());
   $("#siguiente").addEventListener("click", siguiente);
   $("#descargar").addEventListener("click", descargar);
   $("#compartir").addEventListener("click", compartir);
