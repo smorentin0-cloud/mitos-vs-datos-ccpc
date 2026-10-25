@@ -1,0 +1,319 @@
+/*
+ * Gráficas en SVG sin dependencias: barras horizontales, columnas agrupadas y líneas.
+ * Cada gráfica recibe una especificación (ver site/data/mitos.json) y se vuelve a
+ * dibujar al cambiar el ancho del contenedor. El eje de porcentaje siempre va de 0 a 100.
+ */
+const Graficas = (() => {
+  const SVG = "http://www.w3.org/2000/svg";
+  const COLORES = { datos: "#2563EB", base: "#6B7280", acento: "#D97706", pista: "#E5E7EB" };
+  const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let contadorId = 0;
+
+  const fmt = (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`);
+
+  function el(nombre, attrs = {}, padre) {
+    const nodo = document.createElementNS(SVG, nombre);
+    for (const [k, v] of Object.entries(attrs)) nodo.setAttribute(k, v);
+    if (padre) padre.appendChild(nodo);
+    return nodo;
+  }
+
+  function texto(padre, x, y, contenido, attrs = {}) {
+    const t = el("text", { x, y, ...attrs }, padre);
+    t.textContent = contenido;
+    return t;
+  }
+
+  // ---------- descripción accesible y tabla
+
+  function describir(spec) {
+    if (spec.tipo === "barras") {
+      return `${spec.titulo}. ` + spec.items.map((i) => `${i.etiqueta}: ${fmt(i.valor)}`).join("; ") + ".";
+    }
+    const partes = spec.series.map((s) => {
+      const pares = spec.x.map((x, k) => [x, s.valores[k]]).filter((p) => p[1] != null);
+      const nombre = spec.series.length > 1 ? `${s.nombre}: ` : "";
+      if (pares.length <= 8) return nombre + pares.map(([x, v]) => `${x}, ${fmt(v)}`).join("; ");
+      const min = pares.reduce((a, b) => (b[1] < a[1] ? b : a));
+      const max = pares.reduce((a, b) => (b[1] > a[1] ? b : a));
+      return `${nombre}de ${fmt(pares[0][1])} en ${pares[0][0]} a ${fmt(pares.at(-1)[1])} en ${pares.at(-1)[0]}; ` +
+        `mínimo de ${fmt(min[1])} en ${min[0]} y máximo de ${fmt(max[1])} en ${max[0]}`;
+    });
+    let desc = `${spec.titulo}. ${partes.join(". ")}.`;
+    if (spec.referencia) desc += ` ${spec.referencia.etiqueta}.`;
+    return desc;
+  }
+
+  function tabla(spec) {
+    const t = document.createElement("table");
+    const cab = t.createTHead().insertRow();
+    const filas = t.createTBody();
+    const th = (fila, txt, num) => {
+      const c = document.createElement("th");
+      c.textContent = txt;
+      if (num) c.className = "num";
+      fila.appendChild(c);
+    };
+    if (spec.tipo === "barras") {
+      th(cab, "Grupo");
+      th(cab, "Participación", true);
+      spec.items.forEach((i) => {
+        const f = filas.insertRow();
+        f.insertCell().textContent = i.etiqueta;
+        const c = f.insertCell();
+        c.textContent = fmt(i.valor);
+        c.className = "num";
+      });
+    } else {
+      th(cab, spec.x_titulo || "Año");
+      spec.series.forEach((s) => th(cab, s.nombre, true));
+      spec.x.forEach((x, k) => {
+        const f = filas.insertRow();
+        f.insertCell().textContent = x;
+        spec.series.forEach((s) => {
+          const c = f.insertCell();
+          c.textContent = fmt(s.valores[k]);
+          c.className = "num";
+        });
+      });
+    }
+    return t;
+  }
+
+  // ---------- lienzo base
+
+  function lienzo(contenedor, spec, alto) {
+    const ancho = Math.max(280, contenedor.clientWidth || 320);
+    const id = `g${++contadorId}`;
+    const svg = el("svg", {
+      viewBox: `0 0 ${ancho} ${alto}`,
+      width: ancho,
+      height: alto,
+      role: "img",
+      "aria-labelledby": `${id}-t ${id}-d`,
+    });
+    el("title", { id: `${id}-t` }, svg).textContent = spec.titulo;
+    el("desc", { id: `${id}-d` }, svg).textContent = spec.alt || describir(spec);
+    return { svg, ancho, alto };
+  }
+
+  function leyenda(contenedor, elementos) {
+    const ul = document.createElement("ul");
+    ul.className = "leyenda";
+    ul.setAttribute("aria-hidden", "true");
+    elementos.forEach((e) => {
+      const li = document.createElement("li");
+      const m = document.createElement("span");
+      m.className = "muestra";
+      m.style.background = COLORES[e.color];
+      li.append(m, e.nombre);
+      ul.appendChild(li);
+    });
+    contenedor.appendChild(ul);
+  }
+
+  function ejeY(g, x0, x1, y, h) {
+    [0, 25, 50, 75, 100].forEach((v) => {
+      const yy = y(v);
+      el("line", { x1: x0, x2: x1, y1: yy, y2: yy, class: "rejilla" }, g);
+      texto(g, x0 - 6, yy + 4, `${v}%`, { class: "eje", "text-anchor": "end" });
+    });
+  }
+
+  // ---------- barras horizontales
+
+  function barras(contenedor, spec) {
+    const fila = spec.compacto ? 38 : 46;
+    const grosor = spec.compacto ? 12 : 16;
+    const alto = spec.items.length * fila + 4;
+    const { svg, ancho } = lienzo(contenedor, spec, alto);
+    const espacioValor = 52;
+    const largo = ancho - espacioValor;
+    const pausa = spec.items.length > 12 ? 15 : 60;
+    spec.items.forEach((item, i) => {
+      const y = i * fila;
+      texto(svg, 0, y + 15, item.etiqueta, { "font-size": 14, "font-weight": item.color === "acento" ? 700 : 400 });
+      el("rect", { x: 0, y: y + 21, width: largo, height: grosor, rx: 4, fill: COLORES.pista }, svg);
+      const w = (largo * (item.valor || 0)) / 100;
+      el("rect", {
+        x: 0, y: y + 21, width: w, height: grosor, rx: 4,
+        fill: COLORES[item.color || "datos"], class: "crece-x",
+        style: `transition-delay:${i * pausa}ms`,
+      }, svg);
+      texto(svg, w + 6, y + 21 + grosor - 2, fmt(item.valor), { class: "valor aparece" });
+    });
+    return svg;
+  }
+
+  // ---------- columnas (agrupadas o con color por columna)
+
+  function columnas(contenedor, spec) {
+    const elementosLeyenda = spec.leyenda || (spec.series.length > 1
+      ? spec.series.map((s) => ({ nombre: s.nombre, color: s.color })) : null);
+    if (elementosLeyenda) leyenda(contenedor, elementosLeyenda);
+
+    const m = { izq: 40, der: 4, arr: 10, aba: 28 };
+    const anchoDisponible = Math.max(280, contenedor.clientWidth || 320);
+    const grupo = (anchoDisponible - m.izq - m.der) / spec.x.length;
+    const n = spec.series.length;
+    const hueco = grupo * 0.14;
+    const col = (grupo - hueco * 2) / n;
+    // Sin espacio para escribir el valor sobre cada columna: se usan barras horizontales.
+    if (col < 34) return barrasAgrupadas(contenedor, spec);
+
+    const alto = 280;
+    const { svg, ancho } = lienzo(contenedor, spec, alto);
+    const h = alto - m.arr - m.aba;
+    const y = (v) => m.arr + h - (h * v) / 100;
+    ejeY(svg, m.izq, ancho - m.der, y, h);
+
+    spec.x.forEach((etiqueta, k) => {
+      const gx = m.izq + k * grupo;
+      texto(svg, gx + grupo / 2, alto - 8, etiqueta, { class: "eje", "text-anchor": "middle" });
+      spec.series.forEach((s, j) => {
+        const v = s.valores[k];
+        if (v == null) return;
+        const x = gx + hueco + j * col;
+        const color = COLORES[(s.colores && s.colores[k]) || s.color || "datos"];
+        el("rect", {
+          x: x + 1, y: y(v), width: col - 2, height: y(0) - y(v), rx: 3,
+          fill: color, class: "crece-y", style: `transition-delay:${k * 70}ms`,
+        }, svg);
+        texto(svg, x + col / 2, y(v) - 6, v.toFixed(1), { class: "valor aparece", "text-anchor": "middle" });
+      });
+    });
+    el("line", { x1: m.izq, x2: ancho - m.der, y1: y(0), y2: y(0), stroke: "#1F2937" }, svg);
+    return svg;
+  }
+
+  // Versión horizontal de las columnas: una fila por categoría y una barra por serie.
+  function barrasAgrupadas(contenedor, spec) {
+    const n = spec.series.length;
+    const grosor = 14;
+    const filaCat = 22 + n * (grosor + 6) + 8;
+    const alto = spec.x.length * filaCat;
+    const { svg, ancho } = lienzo(contenedor, spec, alto);
+    const largo = ancho - 52;
+    spec.x.forEach((etiqueta, k) => {
+      const y0 = k * filaCat;
+      texto(svg, 0, y0 + 15, etiqueta, { "font-size": 14, "font-weight": 700 });
+      spec.series.forEach((s, j) => {
+        const v = s.valores[k];
+        if (v == null) return;
+        const y = y0 + 22 + j * (grosor + 6);
+        const w = (largo * v) / 100;
+        el("rect", { x: 0, y, width: largo, height: grosor, rx: 3, fill: COLORES.pista }, svg);
+        el("rect", {
+          x: 0, y, width: w, height: grosor, rx: 3,
+          fill: COLORES[(s.colores && s.colores[k]) || s.color || "datos"],
+          class: "crece-x", style: `transition-delay:${k * 60}ms`,
+        }, svg);
+        texto(svg, w + 6, y + grosor - 2, fmt(v), { class: "valor aparece" });
+      });
+    });
+    return svg;
+  }
+
+  // ---------- líneas
+
+  function linea(contenedor, spec) {
+    if (spec.series.length > 1) leyenda(contenedor, spec.series.map((s) => ({ nombre: s.nombre, color: s.color })));
+    const alto = 280;
+    const { svg, ancho } = lienzo(contenedor, spec, alto);
+    const m = { izq: 40, der: 16, arr: 24, aba: spec.x_titulo ? 46 : 28 };
+    const h = alto - m.arr - m.aba;
+    const y = (v) => m.arr + h - (h * v) / 100;
+    const paso = (ancho - m.izq - m.der) / Math.max(1, spec.x.length - 1);
+    const x = (k) => m.izq + k * paso;
+    ejeY(svg, m.izq, ancho - m.der, y, h);
+
+    const anchoEtiqueta = Math.max(...spec.x.map((e) => e.length)) * 7 + 10;
+    const cada = Math.ceil(spec.x.length / Math.max(2, Math.floor((ancho - m.izq - m.der) / anchoEtiqueta)));
+    spec.x.forEach((etq, k) => {
+      const ultimo = k === spec.x.length - 1 && k % cada >= cada * 0.6;
+      if (k % cada === 0 || ultimo) {
+        texto(svg, x(k), alto - m.aba + 18, etq, { class: "eje", "text-anchor": "middle" });
+      }
+    });
+    if (spec.x_titulo) {
+      texto(svg, m.izq + (ancho - m.izq - m.der) / 2, alto - 6, spec.x_titulo, { class: "eje", "text-anchor": "middle" });
+    }
+
+    if (spec.referencia) {
+      const ry = y(spec.referencia.valor);
+      el("line", {
+        x1: m.izq, x2: ancho - m.der, y1: ry, y2: ry,
+        stroke: COLORES.acento, "stroke-width": 2, "stroke-dasharray": "6 4",
+      }, svg);
+      texto(svg, ancho - m.der, ry - 6, spec.referencia.etiqueta, { class: "eje aparece", "text-anchor": "end" });
+    }
+
+    spec.series.forEach((s) => {
+      const puntos = s.valores.map((v, k) => (v == null ? null : [x(k), y(v)])).filter(Boolean);
+      const d = puntos.map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("");
+      el("path", {
+        d, fill: "none", stroke: COLORES[s.color || "datos"], "stroke-width": 3,
+        "stroke-linejoin": "round", "stroke-linecap": "round", class: "traza",
+      }, svg);
+    });
+
+    const s0 = spec.series[0];
+    (spec.marcas || []).forEach((k) => {
+      const v = s0.valores[k];
+      if (v == null) return;
+      el("circle", { cx: x(k), cy: y(v), r: 5, fill: "#FFFFFF", stroke: COLORES.datos, "stroke-width": 3, class: "aparece" }, svg);
+      const ancla = k === 0 ? "start" : k === spec.x.length - 1 ? "end" : "middle";
+      // La etiqueta va debajo si el punto queda más bajo que sus vecinos.
+      const vecinos = [s0.valores[k - 1], s0.valores[k + 1]].filter((n) => n != null);
+      const bajo = vecinos.length && v < vecinos.reduce((a, b) => a + b, 0) / vecinos.length;
+      const arriba = bajo ? 22 : -12;
+      texto(svg, x(k), y(v) + arriba, fmt(v), { class: "valor aparece", "text-anchor": ancla });
+    });
+    return svg;
+  }
+
+  // ---------- animación
+
+  function animar(svg) {
+    svg.querySelectorAll(".traza").forEach((p) => {
+      const largo = p.getTotalLength();
+      p.style.strokeDasharray = largo;
+      p.style.strokeDashoffset = largo;
+      p.classList.add("linea-anim");
+    });
+    svg.querySelectorAll(".crece-x, .crece-y, .aparece").forEach((n) => n.classList.add("inicio"));
+    // Dos cuadros para que el navegador pinte el estado inicial antes de animar.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      svg.querySelectorAll(".traza").forEach((p) => { p.style.strokeDashoffset = 0; });
+      svg.querySelectorAll(".inicio").forEach((n) => n.classList.remove("inicio"));
+    }));
+  }
+
+  // ---------- API pública
+
+  const dibujantes = { barras, columnas, linea };
+  const observados = new WeakMap();
+
+  function dibujar(contenedor, spec, { animado = true } = {}) {
+    contenedor.replaceChildren();
+    const svg = dibujantes[spec.tipo](contenedor, spec);
+    contenedor.appendChild(svg);
+    if (animado && !sinMovimiento) animar(svg);
+
+    if (!observados.has(contenedor)) {
+      let ultimoAncho = contenedor.clientWidth;
+      const ro = new ResizeObserver(() => {
+        const w = contenedor.clientWidth;
+        if (Math.abs(w - ultimoAncho) < 8) return;
+        ultimoAncho = w;
+        const actual = observados.get(contenedor);
+        if (actual.spec) dibujar(contenedor, actual.spec, { animado: false });
+      });
+      ro.observe(contenedor);
+      observados.set(contenedor, { ro });
+    }
+    observados.get(contenedor).spec = spec;
+  }
+
+  return { dibujar, tabla, describir, COLORES, fmt };
+})();
