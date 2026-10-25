@@ -3,11 +3,16 @@
  * Las cifras nunca se escriben aquí: llegan de los JSON que genera scripts/procesar.py.
  */
 const TEXTOS = {
+  portada: {
+    entrada: (n) => `Todo mundo repite frases sobre quién vota y quién no. Aquí hay ${n}. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.`,
+    edicion: (lugar) => `Esta versión usa solo datos de ${lugar}. Las frases que no se cumplen con los datos de este estado no aparecen.`,
+    sinEdicion: 'Todavía no hay una versión para ese estado; estás jugando la versión de todo el país.',
+  },
   compartir: {
     titulo: "Mitos vs. Datos",
     // Lo que se comparte o se copia siempre lleva el reto.
-    reto: (puntos, total) => `Acerté ${puntos} de ${total} en «Mitos vs. Datos», el juego sobre cómo vota México. ¿Me ganas? Juega en:`,
-    retoConEnlace: (puntos, total, url) => `${TEXTOS.compartir.reto(puntos, total)} ${url}`,
+    reto: (puntos, total, lugar) => `Acerté ${puntos} de ${total} en «Mitos vs. Datos», el juego sobre cómo vota ${lugar}. ¿Me ganas? Juega en:`,
+    retoConEnlace: (puntos, total, lugar, url) => `${TEXTOS.compartir.reto(puntos, total, lugar)} ${url}`,
     copiado: "Copiamos el reto con el enlace. Pégalo donde quieras.",
     copiaManual: (texto) => `Copia este texto: ${texto}`,
     descargada: "Tarjeta descargada.",

@@ -414,3 +414,10 @@ kbd {
 /* En el proyector se aprovecha el ancho de la pantalla. */
 .modo-salon main { max-width: 64rem; }
 .modo-salon .mito { font-size: 2.25rem; }
+
+/* Versión con datos de un solo estado */
+.edicion {
+  margin: -0.5rem 0 1.5rem; padding: 0.5rem 0 0.5rem 1rem;
+  border-left: 6px solid var(--azul);
+  font-size: 1rem; font-weight: 700;
+}

@@ -71,6 +71,27 @@ python -m http.server 8000 --directory site
 
 y abre http://localhost:8000.
 
+## Versión por estado
+
+Cualquier Junta Local puede generar el juego con los datos de su estado con un solo comando, usando la clave INE de la entidad (de 1 a 32):
+
+```bash
+python scripts/procesar.py --entidad 14   # 14 = Jalisco
+```
+
+El comando crea `site/data/entidad/14/mitos.json`. Al publicarlo (commit y push a `main`), el juego de ese estado queda en:
+
+```
+https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
+```
+
+- Se aplican las mismas validaciones que en la versión nacional. Si con los datos del estado algún mito no se cumple en las 6 elecciones, **se omite** y la consola explica por qué con cifras, en lugar de mostrar un veredicto falso.
+- Los textos se ajustan solos («promedio de Jalisco», «Así vota Jalisco»), igual que el cierre, el reto para compartir y la versión imprimible (`imprimible.html?entidad=14`).
+- Si alguien abre un estado que no se ha generado, el sitio muestra la versión nacional con un aviso.
+- Para que ese estado funcione sin conexión desde la primera visita, agrega su ruta a la lista `ARCHIVOS` de `site/sw.js` (si no, se guarda en cuanto se visita con internet).
+
+**Demo:** Colima (clave 6) ya está publicada en [`?entidad=6`](https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=6). Con sus datos se sostienen 4 de los 8 mitos; el script omite los otros 4, por ejemplo porque la intermedia de 2015 en Colima (59.3%) superó a la presidencial de 2024 (56.4%).
+
 ## Estructura del repositorio
 
 ```

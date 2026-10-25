@@ -3,14 +3,16 @@ Procesa los Conteos Censales de Participación Ciudadana (CCPC) 2009-2024 del IN
 y genera archivos JSON pequeños para el juego "Mitos vs. Datos".
 
 Uso:
-    python scripts/procesar.py            # usa el agregado en caché si existe
-    python scripts/procesar.py --rehacer  # vuelve a leer los ZIP crudos
+    python scripts/procesar.py               # usa el agregado en caché si existe
+    python scripts/procesar.py --rehacer     # vuelve a leer los ZIP crudos
+    python scripts/procesar.py --entidad 6   # juego con datos de un solo estado (6 = Colima)
 
 Entradas (data/raw/):  ccpc_2009.zip, ccpc_2012.zip, ..., ccpc_2024.zip
 Salidas:
     data/processed/conteos_agregados.csv  (entidad x tipo de sección x sexo x edad)
     data/processed/evidencia_mitos.json   (cifras usadas para evaluar cada mito)
     site/data/*.json                      (datos que consume el sitio)
+    site/data/entidad/<clave>/mitos.json  (con --entidad: el juego de ese estado)
 
 Definición de participación (igual que la plataforma CCPC):
     participación = SV / (SV + NV)
@@ -160,7 +162,8 @@ def serie_por(df: pd.DataFrame, columna: str, orden: list) -> dict:
     return salida
 
 
-def construir_salidas(df: pd.DataFrame) -> tuple[dict, dict]:
+def estadisticas(df: pd.DataFrame) -> dict:
+    """Participación por año, edad, sexo y tipo de sección. Sirve para el país o para un estado."""
     nac = participacion(df, ["AELEC"]).set_index("AELEC")
     nacional = {
         "anios": ANIOS,
@@ -213,6 +216,12 @@ def construir_salidas(df: pd.DataFrame) -> tuple[dict, dict]:
             for c, n in TIPOS_SECCION.items()
         },
     }
+    return {"nacional": nacional, "edad": edad, "sexo": sexo, "tipo_seccion": tipo_seccion}
+
+
+def construir_salidas(df: pd.DataFrame) -> tuple[dict, dict]:
+    s = estadisticas(df)
+    nacional = s["nacional"]
 
     g_ent = participacion(df, ["AELEC", "EDOCVE"]).set_index(["AELEC", "EDOCVE"])["PART"]
     entidades = {
@@ -243,21 +252,16 @@ def construir_salidas(df: pd.DataFrame) -> tuple[dict, dict]:
     if any(v is None for valores in ultimo.values() for v in valores):
         raise SystemExit(f"Faltan datos de {ANIOS[-1]} por entidad y grupo de edad para el final personalizado.")
 
-    salidas = {
-        "nacional": nacional,
-        "edad": edad,
-        "sexo": sexo,
-        "tipo_seccion": tipo_seccion,
-        "entidades": entidades,
-        "explora": explora,
-    }
+    salidas = {**s, "entidades": entidades, "explora": explora}
     ev = evidencia(df, salidas)
     salidas["mitos"] = construir_mitos(df, salidas, ev)
     return salidas, ev
 
 
 def evidencia(df: pd.DataFrame, s: dict) -> dict:
-    """Cifras concretas para evaluar cada mito candidato."""
+    """Cifras concretas para evaluar cada mito candidato.
+    Las comparaciones entre estados solo se calculan cuando hay datos de todo el país."""
+    todo_el_pais = "entidades" in s
     nac = dict(zip(ANIOS, s["nacional"]["participacion"]))
     jov = participacion(df[df["EDAD"] <= 29], ["AELEC"]).set_index("AELEC")["PART"]
     resto = participacion(df[df["EDAD"] >= 30], ["AELEC"]).set_index("AELEC")["PART"]
@@ -298,7 +302,7 @@ def evidencia(df: pd.DataFrame, s: dict) -> dict:
     }
     ev["m6_tendencia"] = nac
     ev["m7_estados"] = {}
-    for a in ANIOS:
+    for a in (ANIOS if todo_el_pais else []):
         vals = dict(zip(ENTIDADES.values(), s["entidades"]["participacion"][str(a)]))
         alto = max(vals, key=vals.get)
         bajo = min(vals, key=vals.get)
@@ -343,17 +347,18 @@ def evidencia(df: pd.DataFrame, s: dict) -> dict:
         }
         for a in ANIOS
     }
-    te = participacion(df, ["AELEC", "EDOCVE", "TIPOSEC"]).pivot_table(
-        index=["AELEC", "EDOCVE"], columns="TIPOSEC", values="PART")
-    ev["estados_con_rural_mayor_que_urbana"] = {
-        str(a): int((te.loc[a, "R"] > te.loc[a, "U"]).sum()) for a in ANIOS
-    }
-    e = participacion(df, ["AELEC", "EDOCVE"])
-    e["LUGAR"] = e.groupby("AELEC")["PART"].rank(ascending=False).astype(int)
-    lugares = e.pivot(index="EDOCVE", columns="AELEC", values="LUGAR")
-    ev["lugar_por_estado"] = {
-        ENTIDADES[c]: {str(a): int(lugares.loc[c, a]) for a in ANIOS} for c in ENTIDADES
-    }
+    if todo_el_pais:
+        te = participacion(df, ["AELEC", "EDOCVE", "TIPOSEC"]).pivot_table(
+            index=["AELEC", "EDOCVE"], columns="TIPOSEC", values="PART")
+        ev["estados_con_rural_mayor_que_urbana"] = {
+            str(a): int((te.loc[a, "R"] > te.loc[a, "U"]).sum()) for a in ANIOS
+        }
+        e = participacion(df, ["AELEC", "EDOCVE"])
+        e["LUGAR"] = e.groupby("AELEC")["PART"].rank(ascending=False).astype(int)
+        lugares = e.pivot(index="EDOCVE", columns="AELEC", values="LUGAR")
+        ev["lugar_por_estado"] = {
+            ENTIDADES[c]: {str(a): int(lugares.loc[c, a]) for a in ANIOS} for c in ENTIDADES
+        }
     ev["brecha_mujeres_menos_hombres_por_grupo"] = {
         str(a): {
             g: r1(m - h) for g, h, m in zip(GRUPOS, s["sexo"]["por_grupo"][str(a)]["Hombres"],
@@ -386,276 +391,380 @@ def pct(x: float) -> str:
     return f"{x:.1f}%"
 
 
-def comprobar(condicion: bool, mito: str) -> None:
-    """Detiene el proceso si los datos ya no sostienen el veredicto aprobado."""
+class MitoNoSostenido(Exception):
+    """Los datos no sostienen el veredicto aprobado de un mito."""
+
+    def __init__(self, mito: str, detalle: str = ""):
+        super().__init__(f"Los datos ya no sostienen el veredicto del mito '{mito}'.")
+        self.mito = mito
+        self.detalle = detalle
+
+
+def comprobar(condicion: bool, mito: str, detalle=None) -> None:
+    """Avisa si los datos ya no sostienen el veredicto aprobado.
+    `detalle` es una función que explica por qué, con cifras; solo se calcula si falla."""
     if not condicion:
-        raise SystemExit(f"Los datos ya no sostienen el veredicto del mito '{mito}'. Revísalo.")
+        raise MitoNoSostenido(mito, detalle() if detalle else "")
 
 
-def construir_mitos(df: pd.DataFrame, s: dict, ev: dict) -> dict:
-    """Textos, veredictos y datos de gráfica de cada mito. Todas las cifras salen de los datos."""
+def cantidad(personas: float) -> str:
+    """11.9 millones, o 52 mil cuando no llega al millón."""
+    if personas >= 1e6:
+        return f"{personas / 1e6:.1f} millones"
+    return f"{round(personas / 1e3):,} mil"
+
+
+def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = None) -> dict:
+    """Textos, veredictos y datos de gráfica de cada mito. Todas las cifras salen de los datos.
+
+    Sin `ambito` se arma el juego nacional y cualquier mito que no se cumpla detiene el proceso.
+    Con `ambito` ({"clave", "nombre"}) se arma el de un estado: el mito que no se cumpla ahí se omite
+    y se explica en consola, en lugar de mostrar un veredicto falso.
+    """
     nac = ev["nacional"]
     a = "2024"
     anios_txt = [str(x) for x in ANIOS]
     rango = f"{ANIOS[0]}–{ANIOS[-1]}"
 
-    # 1. Los jóvenes no votan. (Falso)
-    j = ev["m1_jovenes"][a]
-    millones = ev["jovenes_18_29"][a]["votaron_millones"]
-    min_jov = min(ev["m1_jovenes"][str(x)]["18_29"] for x in ANIOS)
-    anio_min_jov = min(ANIOS, key=lambda x: ev["m1_jovenes"][str(x)]["18_29"])
-    comprobar(min_jov >= 100 / 3, "jóvenes")
-    m_jovenes = {
-        "id": "jovenes",
-        "enunciado": "Los jóvenes no votan.",
-        "veredicto": "falso",
-        "explicacion": (
-            f"Es falso. En 2024 votó el {pct(j['18_29'])} de las personas de 18 a 29 años: {millones} millones. "
-            f"En ninguna elección desde 2009 votó menos de un tercio de ellas (el mínimo fue "
-            f"{pct(min_jov)} en {anio_min_jov}). Sí votan menos que quienes tienen 30 años o más "
-            f"({pct(j['30_mas'])} en 2024)."
-        ),
-        "grafica": {
-            "tipo": "barras",
-            "titulo": "Participación por edad, 2024",
-            "items": [
-                {"etiqueta": "18 a 29 años", "valor": j["18_29"], "color": "datos"},
-                {"etiqueta": "30 años o más", "valor": j["30_mas"], "color": "base"},
-                {"etiqueta": "Promedio nacional", "valor": nac[2024], "color": "base"},
-            ],
-        },
-        "fuente": fuente("2024"),
-    }
+    # Palabras que cambian entre el país y un estado.
+    if ambito is None:
+        lugar = "México"
+        promedio = "promedio nacional"
+        frente_a = "nacional"
+        titulo_elecciones = f"Participación nacional por elección, {rango}"
+    else:
+        lugar = ambito["nombre"]
+        promedio = f"promedio de {lugar}"
+        frente_a = f"de {lugar}"
+        titulo_elecciones = f"Participación en {lugar} por elección, {rango}"
+    Promedio = promedio[0].upper() + promedio[1:]
 
-    # 2. A los 18 años se vota menos que el promedio nacional. (Falso)
+    # Cifras que comparten varios mitos o el cierre.
     edades = s["edad"]["edades"]
     serie = s["edad"]["por_edad"][a]
     hasta = edades.index(40) + 1
     jovenes = serie[:12]
     minimo = min(jovenes)
     edad_min = edades[jovenes.index(minimo)]
-    comprobar(all(s["edad"]["por_edad"][str(x)][0] > nac[x] for x in ANIOS), "18 años")
-    m_18 = {
-        "id": "primer-voto",
-        "enunciado": "A los 18 años se vota menos que el promedio nacional.",
-        "veredicto": "falso",
-        "explicacion": (
-            "Es al revés: a los 18 años se vota más que el promedio nacional, y así fue en las 6 "
-            f"elecciones desde 2009. En 2024 votó el {pct(serie[0])} de quienes tenían 18 años, frente "
-            f"al {pct(nac[2024])} nacional. La participación baja después: llega a {pct(minimo)} a los "
-            f"{edad_min} años y luego vuelve a subir."
-        ),
-        "grafica": {
-            "tipo": "linea",
-            "titulo": "Participación por edad, de 18 a 40 años, 2024",
-            "x": [str(e) for e in edades[:hasta]],
-            "x_titulo": "Edad",
-            "series": [{"nombre": "2024", "valores": serie[:hasta], "color": "datos"}],
-            "referencia": {"valor": nac[2024], "etiqueta": f"Promedio nacional: {pct(nac[2024])}"},
-            "marcas": [0, jovenes.index(minimo)],
-        },
-        "fuente": fuente("2024"),
-    }
-
-    # 3. Los hombres votan más que las mujeres. (Falso)
-    hom = s["sexo"]["total"]["Hombres"]
-    muj = s["sexo"]["total"]["Mujeres"]
-    comprobar(all(m > h for m, h in zip(muj, hom)), "sexo")
-    desde = ev["m3_sexo"][a]["grupos_donde_hombres_votan_mas"][0].split("-")[0]
-    m_sexo = {
-        "id": "sexo",
-        "enunciado": "Los hombres votan más que las mujeres.",
-        "veredicto": "falso",
-        "explicacion": (
-            "Es al revés: las mujeres votaron más que los hombres en las 6 elecciones desde 2009. "
-            f"En 2024 votó el {pct(muj[-1])} de las mujeres y el {pct(hom[-1])} de los hombres. "
-            f"Solo a partir de los {desde} años los hombres votaron un poco más."
-        ),
-        "grafica": {
-            "tipo": "columnas",
-            "titulo": f"Participación por sexo, {rango}",
-            "x": anios_txt,
-            "series": [
-                {"nombre": "Mujeres", "valores": muj, "color": "datos"},
-                {"nombre": "Hombres", "valores": hom, "color": "base"},
-            ],
-            "nota": "En 2024 se registró por primera vez la opción no binaria (105 registros); no se incluye en esta comparación.",
-        },
-        "fuente": fuente(rango),
-    }
-
-    # 4. En las intermedias vota menos gente que en las presidenciales. (Cierto)
     inter = {x: nac[x] for x in ANIOS if x not in PRESIDENCIALES}
     pres = {x: nac[x] for x in ANIOS if x in PRESIDENCIALES}
-    max_inter = max(inter, key=inter.get)
-    min_pres = min(pres, key=pres.get)
-    comprobar(inter[max_inter] < pres[min_pres], "intermedias")
-    m_intermedias = {
-        "id": "intermedias",
-        "enunciado": "En las elecciones intermedias vota menos gente que en las presidenciales.",
-        "veredicto": "cierto",
-        "explicacion": (
-            "Es cierto. En las 3 intermedias votó menos gente que en cualquiera de las 3 presidenciales: "
-            f"la intermedia con más participación ({max_inter}, {pct(inter[max_inter])}) quedó debajo de la "
-            f"presidencial con menos ({min_pres}, {pct(pres[min_pres])}). En las intermedias se elige la "
-            "Cámara de Diputados, pero no la Presidencia."
-        ),
-        "grafica": {
-            "tipo": "columnas",
-            "titulo": f"Participación nacional por elección, {rango}",
-            "x": anios_txt,
-            "series": [{
-                "nombre": "Participación",
-                "valores": [nac[x] for x in ANIOS],
-                "colores": ["datos" if x in PRESIDENCIALES else "base" for x in ANIOS],
-            }],
-            "leyenda": [{"nombre": "Presidencial", "color": "datos"}, {"nombre": "Intermedia", "color": "base"}],
-        },
-        "fuente": fuente(rango),
-    }
+
+    # 1. Los jóvenes no votan. (Falso)
+    def mito_jovenes() -> dict:
+        j = ev["m1_jovenes"][a]
+        votaron = df[(df["AELEC"] == 2024) & (df["EDAD"] <= 29)]["SV"].sum()
+        min_jov = min(ev["m1_jovenes"][str(x)]["18_29"] for x in ANIOS)
+        anio_min_jov = min(ANIOS, key=lambda x: ev["m1_jovenes"][str(x)]["18_29"])
+        comprobar(min_jov >= 100 / 3, "jóvenes",
+                  lambda: f"en {anio_min_jov} votó solo el {pct(min_jov)} de las personas de 18 a 29 años.")
+        return {
+            "id": "jovenes",
+            "enunciado": "Los jóvenes no votan.",
+            "veredicto": "falso",
+            "explicacion": (
+                f"Es falso. En 2024 votó el {pct(j['18_29'])} de las personas de 18 a 29 años: {cantidad(votaron)}. "
+                f"En ninguna elección desde 2009 votó menos de un tercio de ellas (el mínimo fue "
+                f"{pct(min_jov)} en {anio_min_jov}). Sí votan menos que quienes tienen 30 años o más "
+                f"({pct(j['30_mas'])} en 2024)."
+            ),
+            "grafica": {
+                "tipo": "barras",
+                "titulo": "Participación por edad, 2024",
+                "items": [
+                    {"etiqueta": "18 a 29 años", "valor": j["18_29"], "color": "datos"},
+                    {"etiqueta": "30 años o más", "valor": j["30_mas"], "color": "base"},
+                    {"etiqueta": Promedio, "valor": nac[2024], "color": "base"},
+                ],
+            },
+            "fuente": fuente("2024"),
+        }
+
+    # 2. A los 18 años se vota menos que el promedio. (Falso)
+    def mito_18() -> dict:
+        comprobar(all(s["edad"]["por_edad"][str(x)][0] > nac[x] for x in ANIOS), "18 años",
+                  lambda: "a los 18 años no se votó más que el promedio en " + ", ".join(
+                      f"{x} ({pct(s['edad']['por_edad'][str(x)][0])} contra {pct(nac[x])})"
+                      for x in ANIOS if s["edad"]["por_edad"][str(x)][0] <= nac[x]) + ".")
+        return {
+            "id": "primer-voto",
+            "enunciado": f"A los 18 años se vota menos que el {promedio}.",
+            "veredicto": "falso",
+            "explicacion": (
+                f"Es al revés: a los 18 años se vota más que el {promedio}, y así fue en las 6 "
+                f"elecciones desde 2009. En 2024 votó el {pct(serie[0])} de quienes tenían 18 años, frente "
+                f"al {pct(nac[2024])} {frente_a}. La participación baja después: llega a {pct(minimo)} a los "
+                f"{edad_min} años y luego vuelve a subir."
+            ),
+            "grafica": {
+                "tipo": "linea",
+                "titulo": "Participación por edad, de 18 a 40 años, 2024",
+                "x": [str(e) for e in edades[:hasta]],
+                "x_titulo": "Edad",
+                "series": [{"nombre": "2024", "valores": serie[:hasta], "color": "datos"}],
+                "referencia": {"valor": nac[2024], "etiqueta": f"{Promedio}: {pct(nac[2024])}"},
+                "marcas": [0, jovenes.index(minimo)],
+            },
+            "fuente": fuente("2024"),
+        }
+
+    # 3. Los hombres votan más que las mujeres. (Falso)
+    def mito_sexo() -> dict:
+        hom = s["sexo"]["total"]["Hombres"]
+        muj = s["sexo"]["total"]["Mujeres"]
+        comprobar(all(m > h for m, h in zip(muj, hom)), "sexo",
+                  lambda: "los hombres votaron igual o más en " + ", ".join(
+                      f"{x} ({pct(h)} contra {pct(m_)})" for x, h, m_ in zip(ANIOS, hom, muj) if m_ <= h) + ".")
+        grupos_h = ev["m3_sexo"][a]["grupos_donde_hombres_votan_mas"]
+        cierre_sexo = (f" Solo a partir de los {grupos_h[0].split('-')[0]} años los hombres votaron un poco más."
+                       if grupos_h else "")
+        no_binario = int(df[(df["AELEC"] == 2024) & (df["SEXO"] == 2)]["LN"].sum())
+        registros = f" ({no_binario} registros)" if no_binario else ""
+        return {
+            "id": "sexo",
+            "enunciado": "Los hombres votan más que las mujeres.",
+            "veredicto": "falso",
+            "explicacion": (
+                "Es al revés: las mujeres votaron más que los hombres en las 6 elecciones desde 2009. "
+                f"En 2024 votó el {pct(muj[-1])} de las mujeres y el {pct(hom[-1])} de los hombres."
+                + cierre_sexo
+            ),
+            "grafica": {
+                "tipo": "columnas",
+                "titulo": f"Participación por sexo, {rango}",
+                "x": anios_txt,
+                "series": [
+                    {"nombre": "Mujeres", "valores": muj, "color": "datos"},
+                    {"nombre": "Hombres", "valores": hom, "color": "base"},
+                ],
+                "nota": f"En 2024 se registró por primera vez la opción no binaria{registros}; no se incluye en esta comparación.",
+            },
+            "fuente": fuente(rango),
+        }
+
+    # 4. En las intermedias vota menos gente que en las presidenciales. (Cierto)
+    def mito_intermedias() -> dict:
+        max_inter = max(inter, key=inter.get)
+        min_pres = min(pres, key=pres.get)
+        comprobar(inter[max_inter] < pres[min_pres], "intermedias",
+                  lambda: f"la intermedia de {max_inter} ({pct(inter[max_inter])}) superó a la presidencial "
+                          f"de {min_pres} ({pct(pres[min_pres])}).")
+        return {
+            "id": "intermedias",
+            "enunciado": "En las elecciones intermedias vota menos gente que en las presidenciales.",
+            "veredicto": "cierto",
+            "explicacion": (
+                "Es cierto. En las 3 intermedias votó menos gente que en cualquiera de las 3 presidenciales: "
+                f"la intermedia con más participación ({max_inter}, {pct(inter[max_inter])}) quedó debajo de la "
+                f"presidencial con menos ({min_pres}, {pct(pres[min_pres])}). En las intermedias se elige la "
+                "Cámara de Diputados, pero no la Presidencia."
+            ),
+            "grafica": {
+                "tipo": "columnas",
+                "titulo": titulo_elecciones,
+                "x": anios_txt,
+                "series": [{
+                    "nombre": "Participación",
+                    "valores": [nac[x] for x in ANIOS],
+                    "colores": ["datos" if x in PRESIDENCIALES else "base" for x in ANIOS],
+                }],
+                "leyenda": [{"nombre": "Presidencial", "color": "datos"}, {"nombre": "Intermedia", "color": "base"}],
+            },
+            "fuente": fuente(rango),
+        }
 
     # 5. En el campo siempre se ha votado menos que en la ciudad. (Falso)
-    tp = s["tipo_seccion"]["participacion"]
-    rural, urbana = tp["Rural"], tp["Urbana"]
-    rob = ev["tipo_seccion_robustez"]
-    # Falso con cualquier método: hay elecciones donde lo rural supera a lo urbano también con SV/LN.
-    comprobar(all(r >= u for r, u in zip(rural, urbana))
-              and any(rob[str(x)]["Rural"]["sv_entre_ln"] > rob[str(x)]["Urbana"]["sv_entre_ln"] for x in ANIOS),
-              "campo")
-    m_campo = {
-        "id": "campo",
-        "enunciado": "En el campo siempre se ha votado menos que en la ciudad.",
-        "veredicto": "falso",
-        "explicacion": (
-            "Es falso: en todas las elecciones desde 2009 se votó igual o más en las secciones rurales "
-            f"que en las urbanas. En 2021, por ejemplo, votó el {pct(rural[4])} en secciones rurales y el "
-            f"{pct(urbana[4])} en urbanas. En 2024 quedaron prácticamente empatadas "
-            f"({pct(rural[5])} y {pct(urbana[5])})."
-        ),
-        "grafica": {
-            "tipo": "columnas",
-            "titulo": f"Participación por tipo de sección electoral, {rango}",
-            "x": anios_txt,
-            "series": [
-                {"nombre": "Rural", "valores": rural, "color": "datos"},
-                {"nombre": "Urbana", "valores": urbana, "color": "base"},
-            ],
-            "nota": "El tipo de sección es la clasificación del INE. No se muestran las secciones mixtas.",
-        },
-        "fuente": fuente(rango),
-    }
+    def mito_campo() -> dict:
+        tp = s["tipo_seccion"]["participacion"]
+        rural, urbana = tp["Rural"], tp["Urbana"]
+        rob = ev["tipo_seccion_robustez"]
+        # Falso con cualquier método: hay elecciones donde lo rural supera a lo urbano también con SV/LN.
+        comprobar(all(r >= u for r, u in zip(rural, urbana))
+                  and any(rob[str(x)]["Rural"]["sv_entre_ln"] > rob[str(x)]["Urbana"]["sv_entre_ln"] for x in ANIOS),
+                  "campo",
+                  lambda: ("en las secciones rurales se votó menos que en las urbanas en " + ", ".join(
+                      f"{x} ({pct(r)} contra {pct(u)})" for x, r, u in zip(ANIOS, rural, urbana) if r < u) + ".")
+                  if any(r < u for r, u in zip(rural, urbana))
+                  else "lo rural solo supera a lo urbano con un método de cálculo, no con ambos.")
+        if abs(rural[5] - urbana[5]) < 1:
+            ultimo = f"En 2024 quedaron prácticamente empatadas ({pct(rural[5])} y {pct(urbana[5])})."
+        else:
+            ultimo = f"En 2024 votó el {pct(rural[5])} en secciones rurales y el {pct(urbana[5])} en urbanas."
+        return {
+            "id": "campo",
+            "enunciado": "En el campo siempre se ha votado menos que en la ciudad.",
+            "veredicto": "falso",
+            "explicacion": (
+                "Es falso: en todas las elecciones desde 2009 se votó igual o más en las secciones rurales "
+                f"que en las urbanas. En 2021, por ejemplo, votó el {pct(rural[4])} en secciones rurales y el "
+                f"{pct(urbana[4])} en urbanas. {ultimo}"
+            ),
+            "grafica": {
+                "tipo": "columnas",
+                "titulo": f"Participación por tipo de sección electoral, {rango}",
+                "x": anios_txt,
+                "series": [
+                    {"nombre": "Rural", "valores": rural, "color": "datos"},
+                    {"nombre": "Urbana", "valores": urbana, "color": "base"},
+                ],
+                "nota": "El tipo de sección es la clasificación del INE. No se muestran las secciones mixtas.",
+            },
+            "fuente": fuente(rango),
+        }
 
     # 6. La participación en las intermedias ha ido bajando desde 2009. (Falso)
-    anios_inter = list(inter)
-    vals_inter = [inter[x] for x in anios_inter]
-    comprobar(all(b > a_ for a_, b in zip(vals_inter, vals_inter[1:])), "tendencia")
-    m_tendencia = {
-        "id": "tendencia",
-        "enunciado": "La participación en las elecciones intermedias ha ido bajando desde 2009.",
-        "veredicto": "falso",
-        "explicacion": (
-            "Es al revés: cada elección intermedia ha tenido más participación que la anterior. "
-            f"Votó el {pct(vals_inter[0])} en {anios_inter[0]}, el {pct(vals_inter[1])} en "
-            f"{anios_inter[1]} y el {pct(vals_inter[2])} en {anios_inter[2]}. Para comparar bien hay que "
-            "ver elecciones del mismo tipo, porque en las presidenciales siempre vota más gente."
-        ),
-        "grafica": {
-            "tipo": "columnas",
-            "titulo": "Participación en las elecciones intermedias",
-            "x": [str(x) for x in anios_inter],
-            "series": [{"nombre": "Participación", "valores": vals_inter, "color": "datos"}],
-        },
-        "fuente": fuente(f"{anios_inter[0]}, {anios_inter[1]} y {anios_inter[2]}"),
-    }
+    def mito_tendencia() -> dict:
+        anios_inter = list(inter)
+        vals_inter = [inter[x] for x in anios_inter]
+        comprobar(all(b > a_ for a_, b in zip(vals_inter, vals_inter[1:])), "tendencia",
+                  lambda: "la participación en las intermedias no subió cada vez: " + " → ".join(
+                      f"{pct(v)} ({x})" for x, v in zip(anios_inter, vals_inter)) + ".")
+        return {
+            "id": "tendencia",
+            "enunciado": "La participación en las elecciones intermedias ha ido bajando desde 2009.",
+            "veredicto": "falso",
+            "explicacion": (
+                "Es al revés: cada elección intermedia ha tenido más participación que la anterior. "
+                f"Votó el {pct(vals_inter[0])} en {anios_inter[0]}, el {pct(vals_inter[1])} en "
+                f"{anios_inter[1]} y el {pct(vals_inter[2])} en {anios_inter[2]}. Para comparar bien hay que "
+                "ver elecciones del mismo tipo, porque en las presidenciales siempre vota más gente."
+            ),
+            "grafica": {
+                "tipo": "columnas",
+                "titulo": "Participación en las elecciones intermedias",
+                "x": [str(x) for x in anios_inter],
+                "series": [{"nombre": "Participación", "valores": vals_inter, "color": "datos"}],
+            },
+            "fuente": fuente(f"{anios_inter[0]}, {anios_inter[1]} y {anios_inter[2]}"),
+        }
 
     # 11. Las personas de 60 a 69 años son las que más votan. (Cierto)
-    picos = []
-    for x in ANIOS:
-        d = ev["m8_mayores"][str(x)]
-        picos.append({"etiqueta": f"{x}: {etiqueta_grupo(d['grupo_mas_alto'])} años",
-                      "valor": d["valor_mas_alto"], "color": "datos"})
-        comprobar(d["grupo_mas_alto"] in ("60-64", "65-69"), "60 a 69")
-    decadas = df.assign(DECADA=(df["EDAD"] // 10 * 10).clip(upper=80))
-    g_dec = participacion(decadas, ["AELEC", "DECADA"])
-    comprobar(all(g_dec[g_dec["AELEC"] == x].set_index("DECADA")["PART"].idxmax() == 60 for x in ANIOS),
-              "60 a 69 (por décadas)")
-    m_60 = {
-        "id": "sesentas",
-        "enunciado": "Las personas de 60 a 69 años son las que más votan.",
-        "veredicto": "cierto",
-        "explicacion": (
-            "Es cierto. En las 6 elecciones desde 2009, el grupo de edad que más votó tuvo entre 60 y 69 años. "
-            f"En 2024 fue el de {etiqueta_grupo(ev['m8_mayores'][a]['grupo_mas_alto'])} años, con "
-            f"{pct(ev['m8_mayores'][a]['valor_mas_alto'])}, muy por encima del promedio nacional "
-            f"({pct(nac[2024])})."
-        ),
-        "grafica": {
-            "tipo": "barras",
-            "titulo": "Grupo de edad con mayor participación en cada elección",
-            "items": picos,
-        },
-        "fuente": fuente(rango),
-    }
+    def mito_60() -> dict:
+        picos = []
+        for x in ANIOS:
+            d = ev["m8_mayores"][str(x)]
+            picos.append({"etiqueta": f"{x}: {etiqueta_grupo(d['grupo_mas_alto'])} años",
+                          "valor": d["valor_mas_alto"], "color": "datos"})
+            comprobar(d["grupo_mas_alto"] in ("60-64", "65-69"), "60 a 69",
+                      lambda: f"en {x} el grupo que más votó fue el de {etiqueta_grupo(d['grupo_mas_alto'])} años.")
+        decadas = df.assign(DECADA=(df["EDAD"] // 10 * 10).clip(upper=80))
+        g_dec = participacion(decadas, ["AELEC", "DECADA"])
+        maximos = {x: int(g_dec[g_dec["AELEC"] == x].set_index("DECADA")["PART"].idxmax()) for x in ANIOS}
+        comprobar(all(v == 60 for v in maximos.values()), "60 a 69 (por décadas)",
+                  lambda: "por décadas de edad, la que más votó no fue la de 60 a 69 en " + ", ".join(
+                      f"{x} (fue la de {v} a {v + 9})" for x, v in maximos.items() if v != 60) + ".")
+        return {
+            "id": "sesentas",
+            "enunciado": "Las personas de 60 a 69 años son las que más votan.",
+            "veredicto": "cierto",
+            "explicacion": (
+                "Es cierto. En las 6 elecciones desde 2009, el grupo de edad que más votó tuvo entre 60 y 69 años. "
+                f"En 2024 fue el de {etiqueta_grupo(ev['m8_mayores'][a]['grupo_mas_alto'])} años, con "
+                f"{pct(ev['m8_mayores'][a]['valor_mas_alto'])}, muy por encima del {promedio} "
+                f"({pct(nac[2024])})."
+            ),
+            "grafica": {
+                "tipo": "barras",
+                "titulo": "Grupo de edad con mayor participación en cada elección",
+                "items": picos,
+            },
+            "fuente": fuente(rango),
+        }
 
     # 8. Las personas de 85 años o más son las que menos votan. (Cierto)
-    g85_todos = participacion(df, ["AELEC", "GRUPO85"]).pivot(index="GRUPO85", columns="AELEC", values="PART")
-    comprobar(all(g85_todos[x].idxmin() == "85+" for x in ANIOS), "85 años o más")
-    g85 = g85_todos[2024]
-    valores = [r1(g85[g]) for g in GRUPOS_85]
-    siguiente = g85.drop("85+").idxmin()
-    m_mayores = {
-        "id": "mayores",
-        "enunciado": "Las personas de 85 años o más son las que menos votan.",
-        "veredicto": "cierto",
-        "explicacion": (
-            "Es cierto. En las 6 elecciones desde 2009, el grupo de 85 años o más fue el que menos votó. "
-            f"En 2024 votó el {pct(g85['85+'])}, frente al {pct(g85[siguiente])} del grupo de "
-            f"{etiqueta_grupo(siguiente)} años, el siguiente más bajo. Es un grupo pequeño: el "
-            f"{pct(ev['pct_lista_85_mas'][a])} de la lista nominal."
-        ),
-        "grafica": {
-            "tipo": "barras",
-            "titulo": "Participación por grupo de edad, 2024",
-            "items": [
-                {"etiqueta": "85 años o más" if g == "85+" else f"{etiqueta_grupo(g)} años", "valor": v,
-                 "color": "acento" if g == "85+" else "base"}
-                for g, v in zip(GRUPOS_85, valores)
-            ],
-        },
-        "fuente": fuente("2024"),
-    }
+    def mito_mayores() -> dict:
+        g85_todos = participacion(df, ["AELEC", "GRUPO85"]).pivot(index="GRUPO85", columns="AELEC", values="PART")
+        comprobar(all(g85_todos[x].idxmin() == "85+" for x in ANIOS), "85 años o más",
+                  lambda: "el grupo que menos votó no fue el de 85 años o más en " + ", ".join(
+                      f"{x} (fue el de {etiqueta_grupo(g85_todos[x].idxmin())} años)"
+                      for x in ANIOS if g85_todos[x].idxmin() != "85+") + ".")
+        g85 = g85_todos[2024]
+        valores = [r1(g85[g]) for g in GRUPOS_85]
+        siguiente = g85.drop("85+").idxmin()
+        return {
+            "id": "mayores",
+            "enunciado": "Las personas de 85 años o más son las que menos votan.",
+            "veredicto": "cierto",
+            "explicacion": (
+                "Es cierto. En las 6 elecciones desde 2009, el grupo de 85 años o más fue el que menos votó. "
+                f"En 2024 votó el {pct(g85['85+'])}, frente al {pct(g85[siguiente])} del grupo de "
+                f"{etiqueta_grupo(siguiente)} años, el siguiente más bajo. Es un grupo pequeño: el "
+                f"{pct(ev['pct_lista_85_mas'][a])} de la lista nominal."
+            ),
+            "grafica": {
+                "tipo": "barras",
+                "titulo": "Participación por grupo de edad, 2024",
+                "items": [
+                    {"etiqueta": "85 años o más" if g == "85+" else f"{etiqueta_grupo(g)} años", "valor": v,
+                     "color": "acento" if g == "85+" else "base"}
+                    for g, v in zip(GRUPOS_85, valores)
+                ],
+            },
+            "fuente": fuente("2024"),
+        }
 
-    for m in (m_jovenes, m_18, m_sexo, m_intermedias, m_campo, m_tendencia, m_60, m_mayores):
+    omitidos = []
+
+    def intentar(construir) -> dict | None:
+        try:
+            m = construir()
+        except MitoNoSostenido as error:
+            if ambito is None:
+                raise SystemExit(f"{error} {error.detalle} Revísalo.".replace("  ", " "))
+            explicacion = f"Se omite el mito «{error.mito}» en {lugar}: {error.detalle}"
+            print(f"  {explicacion}")
+            omitidos.append(explicacion)
+            return None
         if m["id"] not in DISCUSION:
             raise SystemExit(f"Falta la pregunta de discusión del mito '{m['id']}'.")
         m["discusion"] = DISCUSION[m["id"]]
+        return m
+
+    m = {nombre: intentar(f) for nombre, f in [
+        ("sexo", mito_sexo), ("campo", mito_campo), ("intermedias", mito_intermedias),
+        ("primer-voto", mito_18), ("jovenes", mito_jovenes),
+        ("sesentas", mito_60), ("mayores", mito_mayores), ("tendencia", mito_tendencia),
+    ]}
+
+    # Arco narrativo: panorama, el primer voto y su caída en el centro, y lo que pasa con los años.
+    niveles = [
+        {"nombre": f"Así vota {lugar}",
+         "intro": "Primero, un repaso: quién vota y en qué elecciones.",
+         "mitos": [m["sexo"], m["campo"], m["intermedias"]]},
+        {"nombre": "El primer voto",
+         "intro": "Ahora, el centro de esta historia: qué pasa cuando cumples 18.",
+         "mitos": [m["primer-voto"], m["jovenes"]]},
+        {"nombre": "Que el primer voto no sea el último",
+         "intro": "¿Y después del primer voto? Veamos qué pasa con los años.",
+         "mitos": [m["sesentas"], m["mayores"], m["tendencia"]]},
+    ]
+    for n in niveles:
+        n["mitos"] = [x for x in n["mitos"] if x is not None]
+    niveles = [n for n in niveles if n["mitos"]]
+
+    # El cierre retoma la caída solo si los datos la sostienen en este ámbito.
+    if m["primer-voto"] is not None and serie[hasta - 1] > minimo:
+        texto_cierre = (
+            f"El primer voto entusiasma: a los 18 años se vota más que el {promedio}. "
+            f"Después la participación baja y llega a su punto más bajo cerca de los {edad_min} años. "
+            "Con los años vuelve a subir. El reto es que tu primer voto no sea el último."
+        )
+    else:
+        texto_cierre = (
+            "La participación cambia con la edad, el lugar y el tipo de elección. "
+            "El reto es que tu primer voto no sea el último."
+        )
 
     return {
+        "ambito": {"clave": 0 if ambito is None else ambito["clave"], "nombre": lugar},
+        "titulo": f"¿Cuánto sabes de cómo vota {lugar}?",
         "nota_metodo": (
             "Participación = personas que votaron ÷ (personas que votaron + personas que no votaron), "
             "según los cuadernillos de la lista nominal. No incluye casillas especiales ni el voto desde "
             "el extranjero, por eso puede diferir un poco de los resultados oficiales."
         ),
-        # Arco narrativo: panorama, el primer voto y su caída en el centro, y lo que pasa con los años.
-        "niveles": [
-            {"nombre": "Así vota México",
-             "intro": "Primero, un repaso: quién vota y en qué elecciones.",
-             "mitos": [m_sexo, m_campo, m_intermedias]},
-            {"nombre": "El primer voto",
-             "intro": "Ahora, el centro de esta historia: qué pasa cuando cumples 18.",
-             "mitos": [m_18, m_jovenes]},
-            {"nombre": "Que el primer voto no sea el último",
-             "intro": "¿Y después del primer voto? Veamos qué pasa con los años.",
-             "mitos": [m_60, m_mayores, m_tendencia]},
-        ],
-        "cierre": {
-            "titulo": "Que tu primer voto no sea el último",
-            "texto": (
-                "El primer voto entusiasma: a los 18 años se vota más que el promedio nacional. "
-                f"Después la participación baja y llega a su punto más bajo cerca de los {edad_min} años. "
-                "Con los años vuelve a subir. El reto es que tu primer voto no sea el último."
-            ),
-        },
+        "niveles": niveles,
+        "cierre": {"titulo": "Que tu primer voto no sea el último", "texto": texto_cierre},
+        "omitidos": omitidos,
     }
 
 
@@ -669,9 +778,14 @@ def guardar_json(ruta: Path, datos: dict) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[1])
     parser.add_argument("--rehacer", action="store_true", help="vuelve a leer los ZIP crudos")
+    parser.add_argument("--entidad", type=int, choices=sorted(ENTIDADES), metavar="CLAVE",
+                        help="genera el juego con datos de un solo estado (clave INE de 1 a 32)")
     args = parser.parse_args()
 
     df = preparar(cargar(args.rehacer))
+    if args.entidad:
+        generar_entidad(df, args.entidad)
+        return
     salidas, ev = construir_salidas(df)
 
     print("Escribiendo salidas:")
@@ -680,6 +794,22 @@ def main() -> None:
     with open(PROCESADOS / "evidencia_mitos.json", "w", encoding="utf-8") as f:
         json.dump(ev, f, ensure_ascii=False, indent=2)
     print(f"  {(PROCESADOS / 'evidencia_mitos.json').relative_to(RAIZ)}")
+
+
+def generar_entidad(df: pd.DataFrame, clave: int) -> None:
+    """Juego con datos de un solo estado. Los mitos que no se cumplen ahí se omiten."""
+    nombre = ENTIDADES[clave]
+    df_ent = df[df["EDOCVE"] == clave]
+    s = estadisticas(df_ent)
+    ev = evidencia(df_ent, s)
+    print(f"Generando el juego de {nombre} (clave {clave}):")
+    mitos = construir_mitos(df_ent, s, ev, ambito={"clave": clave, "nombre": nombre})
+    total = sum(len(n["mitos"]) for n in mitos["niveles"])
+    if total == 0:
+        raise SystemExit(f"Ningún mito se sostiene con los datos de {nombre}; no se generó el juego.")
+    guardar_json(SITIO_DATOS / "entidad" / str(clave) / "mitos.json", mitos)
+    print(f"  {total} de {total + len(mitos['omitidos'])} mitos se sostienen con los datos de {nombre}.")
+    print(f"  Abre el juego con: index.html?entidad={clave}")
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@
     mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [],
     // Perfil opcional: vive solo en memoria y nunca sale del navegador.
     perfil: { grupo: "", entidad: "" },
+    lugar: "México",
     datosPerfil: null,
     textoPerfil: "",
     // Modo salón: una pregunta por pantalla, sin puntos, la persona facilitadora revela.
@@ -311,7 +312,7 @@
 
   function mensaje(puntos, total) {
     if (puntos === total) return "¡Todas bien! Los mitos no pueden contigo. Ahora reta a alguien más.";
-    if (puntos >= total - 2) return "¡Muy bien! Conoces cómo vota México.";
+    if (puntos >= total - 2) return `¡Muy bien! Conoces cómo vota ${estado.lugar}.`;
     if (puntos >= total / 2) return "Vas bien. Algunos mitos todavía te engañaron.";
     return "Los mitos te ganaron esta vez, pero ahora ya conoces los datos.";
   }
@@ -335,6 +336,26 @@
     const g = JSON.parse($("#perfil-g-lienzo").dataset.spec);
     Graficas.dibujar($("#perfil-g-lienzo"), g);
     dibujarTarjeta();
+  }
+
+  // ---------- portada según la versión (nacional o de un estado)
+
+  function pintarPortada(datos, respaldo) {
+    const P = TEXTOS.portada;
+    const total = datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0);
+    estado.lugar = datos.ambito ? datos.ambito.nombre : "México";
+    if (datos.titulo) $("#t-portada").textContent = datos.titulo;
+    $("#portada-entrada").textContent = P.entrada(total);
+    const edicion = $("#edicion");
+    if (datos.ambito && datos.ambito.clave) {
+      edicion.textContent = P.edicion(estado.lugar);
+      edicion.hidden = false;
+      $("#p-entidad").value = String(datos.ambito.clave); // el perfil empieza en ese estado
+    } else if (respaldo) {
+      edicion.textContent = P.sinEdicion;
+      edicion.hidden = false;
+    }
+    document.querySelectorAll(".enlace-imprimible").forEach((a) => { a.href = Datos.conEntidad("imprimible.html"); });
   }
 
   // ---------- final personalizado
@@ -414,8 +435,9 @@
     $("#perfil-g-lienzo").dataset.spec = JSON.stringify(spec);
   }
 
+  // Dirección para compartir; conserva la versión estatal (?entidad=6) si se está jugando una.
   function urlJuego() {
-    return location.origin + location.pathname.replace(/index\.html$/, "");
+    return location.origin + Datos.conEntidad(location.pathname.replace(/index\.html$/, ""));
   }
 
   function envolver(ctx, txt, ancho) {
@@ -586,7 +608,7 @@
 
   async function compartir() {
     const C = TEXTOS.compartir;
-    const datos = { title: C.titulo, text: C.reto(estado.puntos, estado.mitos.length), url: urlJuego() };
+    const datos = { title: C.titulo, text: C.reto(estado.puntos, estado.mitos.length, estado.lugar), url: urlJuego() };
     try {
       const archivo = new File([await blobTarjeta()], "mitos-vs-datos-resultado.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -604,7 +626,7 @@
   // Copia el reto completo con el enlace, no solo la dirección.
   async function copiar() {
     const C = TEXTOS.compartir;
-    const texto = C.retoConEnlace(estado.puntos, estado.mitos.length, urlJuego());
+    const texto = C.retoConEnlace(estado.puntos, estado.mitos.length, estado.lugar, urlJuego());
     const aviso = $("#aviso-compartir");
     try {
       await navigator.clipboard.writeText(texto);
@@ -617,10 +639,13 @@
   // ---------- arranque
 
   async function cargar() {
-    const [datos, edad, entidades] = await Promise.all(
-      [Datos.rutaMitos(), "data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())));
+    const [{ datos, respaldo }, edad, entidades] = await Promise.all([
+      Datos.mitos(),
+      ...["data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())),
+    ]);
     estado.datosPerfil = { edad, entidades };
     llenarPerfil();
+    pintarPortada(datos, respaldo);
     estado.totalNiveles = datos.niveles.length;
     estado.mitos = datos.niveles.flatMap((n, i) =>
       n.mitos.map((m, j) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));

@@ -9,14 +9,14 @@
   <meta property="og:locale" content="es_MX">
   <meta property="og:url" content="https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/">
   <meta property="og:title" content="Mitos vs. Datos: el juego">
-  <meta property="og:description" content="¿Cuánto sabes de cómo vota México? ¿Mito o dato? Pon a prueba 8 frases con datos del INE.">
+  <meta property="og:description" content="¿Cuánto sabes de cómo vota México? ¿Mito o dato? Pon a prueba lo que sabes con datos del INE.">
   <meta property="og:image" content="https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/img/vista-previa.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Boleta con la pregunta ¿Cuánto sabes de cómo vota México? y las casillas Mito y Dato.">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Mitos vs. Datos: el juego">
-  <meta name="twitter:description" content="¿Cuánto sabes de cómo vota México? Pon a prueba 8 frases con datos del INE.">
+  <meta name="twitter:description" content="¿Cuánto sabes de cómo vota México? Pon a prueba lo que sabes con datos del INE.">
   <meta name="twitter:image" content="https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/img/vista-previa.png">
   <meta name="theme-color" content="#FFFFFF">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -66,7 +66,8 @@
         </div>
       </div>
       <h1 id="t-portada">¿Cuánto sabes de cómo vota México?</h1>
-      <p class="entrada">Todo mundo repite frases sobre quién vota y quién no. Aquí hay 8. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.</p>
+      <p id="portada-entrada" class="entrada">Todo mundo repite frases sobre quién vota y quién no. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.</p>
+      <p id="edicion" class="edicion" hidden></p>
       <div class="acciones">
         <button class="boton primario" data-ir="instrucciones">Jugar</button>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>
@@ -76,7 +77,7 @@
         <p>En grupo, con proyector, o en papel si no hay dispositivos.</p>
         <div class="acciones">
           <button class="boton secundario" id="entrar-salon">Modo salón</button>
-          <a class="boton secundario" href="imprimible.html">Versión para imprimir</a>
+          <a class="boton secundario enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
         </div>
       </div>
       <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. El juego no depende del sonido; si lo prefieres, activa el botón «Voz» para escuchar las preguntas.</p>
@@ -234,7 +235,7 @@
       <div class="acciones">
         <a class="boton primario" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>
-        <a class="boton secundario" href="imprimible.html">Versión para imprimir</a>
+        <a class="boton secundario enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
         <button class="boton secundario" id="otra-vez">Jugar otra vez</button>
       </div>
     </section>

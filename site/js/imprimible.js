@@ -70,7 +70,7 @@
   }
 
   async function armar() {
-    const datos = await fetch(Datos.rutaMitos()).then((r) => r.json());
+    const { datos } = await Datos.mitos();
     const mitos = datos.niveles.flatMap((n, i) =>
       n.mitos.map((m) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre })));
     const contenedor = $("#tarjetas");
@@ -87,7 +87,9 @@
     $("#nota-metodo-imprimible").textContent = datos.nota_metodo;
     $("#t-cierre-imprimible").textContent = datos.cierre.titulo;
     $("#cierre-imprimible-texto").textContent = datos.cierre.texto;
-    $("#url-sitio").textContent = new URL("./", location.href).href;
+    const juego = new URL(Datos.conEntidad("./"), location.href).href;
+    $("#url-sitio").textContent = juego;
+    $("#volver-juego").href = Datos.conEntidad("./");
     $("#aviso-carga").textContent = T.listas(mitos.length);
   }
 

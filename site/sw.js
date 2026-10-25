@@ -27,6 +27,7 @@ const ARCHIVOS = [
   "data/mitos.json",
   "data/explora.json",
   "data/entidades.json",
+  "data/entidad/6/mitos.json",
   "fonts/lexend-latin-400.woff2",
   "fonts/lexend-latin-700.woff2",
   "img/qr.png",
