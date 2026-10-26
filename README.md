@@ -96,7 +96,7 @@ y abre http://localhost:8000.
 ## Personalización y privacidad
 
 - **Nada sale del navegador.** La edad, el estado, el municipio, las estimaciones y el compromiso viven solo en la memoria de la página: no hay `localStorage`, `sessionStorage`, cookies ni analítica, y no se envían a ningún servidor. Al cerrar la pestaña se pierden.
-- **Nada personal en la dirección.** El enlace de reto solo lleva el puntaje (`?reto=5-8`). Por esa regla, el reto compartido desde una versión estatal abre la versión nacional.
+- **Nada personal en la dirección.** El enlace de reto solo lleva el puntaje (`?reto=5-8`) y, si se juega una versión estatal, la edición (`?entidad=6&reto=3-4`), que es la página pública y no un dato de la persona; así el reto abre la misma edición.
 - **Datos por estado bajo demanda.** `procesar.py` genera `site/data/entidad/<clave>/personal.json` (edad simple, grupos, sexo, tipo de sección y las comparaciones de «Y en tu caso…») y `municipios.json`. El sitio solo descarga el del estado que se elige.
 - **Umbral de celdas pequeñas: 1,000 personas en la lista nominal.** Si una celda (por ejemplo, 83 años en un estado pequeño en 2009) tiene menos, no se publica: el sitio usa el grupo quinquenal o el dato nacional y lo dice en el texto. Con este umbral quedan vacías 47 de 13,056 celdas de edad simple y 175 municipios en 2024. Detalle en [`data/processed/hallazgos.md`](data/processed/hallazgos.md).
 - **Edad en cada elección:** se calcula con la edad de hoy y el año del dispositivo, así que puede variar un año según el cumpleaños.
@@ -128,6 +128,8 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 ## Estructura del repositorio
 
 ```
+├── AGENTS.md                 # guía para colaborar: contexto, reglas y estado (personas e IA)
+├── CLAUDE.md                 # importa AGENTS.md
 ├── data/
 │   ├── raw/                  # ZIP del INE (no se suben; ver arriba)
 │   └── processed/
