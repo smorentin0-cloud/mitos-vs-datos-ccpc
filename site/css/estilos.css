@@ -737,3 +737,16 @@ main:has(> #resultado:not([hidden])) { padding-top: var(--esp-4); }
 .hito-proxima .hito-texto { font-size: 0.9375rem; line-height: 1.25; }
 #paso-3 .estimaciones { margin-top: var(--esp-3); }
 #paso-3 .estimaciones .plegable { margin-top: var(--esp-1); }
+
+/* ---------------------------------------------------------------- «Adivina» en una pantalla */
+.est-pregunta { margin: 0 0 var(--esp-2); font-size: 1.0625rem; font-weight: 400; line-height: 1.45; }
+.est-valor { margin: var(--esp-1) 0 var(--esp-3); line-height: 1.2; }
+.est-valor output { font-size: 1.875rem; }
+.estimar { margin-bottom: var(--esp-3); }
+.boleta:has(#estimar:not([hidden])) .mito { margin-bottom: var(--esp-3); }
+/* El valor elegido y «Ver el dato» comparten renglón. */
+#estimar { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: var(--esp-3); }
+#estimar > * { grid-column: 1 / -1; }
+#estimar > .est-valor { grid-column: 1; margin: var(--esp-2) 0; }
+#estimar > #est-ver { grid-column: 2; margin: var(--esp-2) 0; }
+.intro-nivel { font-size: 1rem; margin-bottom: var(--esp-3); }
