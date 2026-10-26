@@ -300,11 +300,12 @@
     const vista = $("#vista");
     vista.hidden = !estado.caso;
     if (estado.caso) {
-      const [nacional, local] = vista.querySelectorAll(".vista-btn");
+      const [local, nacional] = vista.querySelectorAll(".vista-btn");
       nacional.textContent = estado.lugar;
       local.textContent = estado.caso.lugar === estado.lugar ? J.vistaEdad : estado.caso.lugar;
     }
-    estado.vista = "nacional";
+    // Con perfil, la figura abre en «Y en tu caso…»; el dato del ámbito del juego ya está arriba, en la cifra clave.
+    estado.vista = estado.caso ? "local" : "nacional";
 
     const ultima = estado.indice === estado.mitos.length - 1;
     $("#siguiente").textContent = estado.salon
@@ -320,7 +321,7 @@
     estado.temporizador = setTimeout(() => {
       $("#revelacion").hidden = false;
       contar($("#dato-cifra"), m.dato.cifra);
-      pintarVista("nacional");
+      pintarVista(estado.vista);
       retro.focus({ preventScroll: true });
       retro.scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
     }, sinMovimiento() ? 0 : 700);
@@ -362,6 +363,8 @@
     document.querySelectorAll(".vista-btn").forEach((b) =>
       b.setAttribute("aria-pressed", String(b.dataset.vista === estado.vista)));
     const g = local ? caso.grafica : m.grafica;
+    $("#g-caso").hidden = !local;
+    $("#g-caso").textContent = local ? TEXTOS.enTuCaso.titulo : "";
     $("#g-titulo").textContent = g ? g.titulo : TEXTOS.enTuCaso.titulo;
     $("#g-local").hidden = !local;
     $("#g-local").textContent = local ? caso.texto : "";

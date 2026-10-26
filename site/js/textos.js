@@ -230,6 +230,15 @@ const TEXTOS = {
       }[d.relacion];
     },
     tituloIntermedias: (lugar) => `Participación en las intermedias en ${lugar}`,
+    // Municipio (solo intermedias y tendencia). Dice «que en el país» para no confundirse con la frase del estado.
+    municipioIgual: (mun) => `En ${mun} pasa lo mismo que en el país:`,
+    municipioDistinto: (mun) => `En ${mun} es distinto al país:`,
+    municipioEmpate: (mun) => `En ${mun} casi empatan:`,
+    municipioUmbral: (mun, umbral) => `En ${mun}, alguna de estas elecciones tuvo menos de ${umbral.toLocaleString("es-MX")} personas en la lista nominal; es muy poco para dar un dato confiable.`,
+    municipioFaltan: (mun) => `${mun} no tiene conteo en todas estas elecciones (por ejemplo, porque se creó después de 2009), así que no se puede comparar.`,
+    anioTipo: (anio, tipo) => `${anio}, ${tipo.toLowerCase()}`,
+    tituloEleccionesMunicipio: (mun, estado) => `Participación en ${mun} y en ${estado} por elección`,
+    tituloIntermediasMunicipio: (mun, estado) => `Participación en las intermedias en ${mun} y en ${estado}`,
     primerVoto: (d, v18, prom, lugar, pct) => ({
       coincide: `a los 18 años votó el ${pct(v18)}, más que el promedio de ${lugar} (${pct(prom)}).`,
       empate: `a los 18 años votó el ${pct(v18)}; el promedio de ${lugar} fue de ${pct(prom)}.`,

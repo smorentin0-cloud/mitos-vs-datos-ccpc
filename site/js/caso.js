@@ -1,5 +1,5 @@
 /*
- * «Y en tu caso…»: el dato del mito para el estado o la edad de la persona.
+ * «Y en tu caso…»: el dato del mito para el estado, el municipio o la edad de la persona.
  * La comparación con el veredicto (coincide, empate o contrario) la calcula scripts/procesar.py;
  * aquí solo se elige la plantilla de textos.js. El sello del veredicto nunca cambia.
  */
@@ -41,6 +41,32 @@ const EnTuCaso = (() => {
     return p.grupos[Personal.indiceGrupo(p, Math.max(edad, 18))];
   }
 
+  // Municipio de la persona en los mitos que responde su participación total (intermedias y tendencia).
+  // Devuelve { texto, valido } o null si no eligió municipio.
+  function fraseMunicipio(m, ctx, armarTexto) {
+    const mun = ctx.perfil.municipio;
+    if (!mun || !mun.en_tu_caso || !mun.en_tu_caso[m.id]) return null;
+    const t = T();
+    const d = mun.en_tu_caso[m.id];
+    if (d.relacion === "sin_datos") {
+      return { texto: d.motivo === "faltan" ? t.municipioFaltan(mun.nombre) : t.municipioUmbral(mun.nombre, mun.umbral), valido: false };
+    }
+    const abre = { coincide: t.municipioIgual, empate: t.municipioEmpate, contrario: t.municipioDistinto }[d.relacion];
+    return { texto: `${abre(mun.nombre)} ${armarTexto(d)}`, valido: true };
+  }
+
+  // Columnas del municipio junto a las del estado; el tipo de elección va en la etiqueta del año.
+  function graficaConMunicipio(titulo, anios, local, mun, tipo) {
+    return {
+      tipo: "columnas", titulo,
+      x: anios.map((a) => (tipo ? T().anioTipo(a, tipo(a)) : String(a))),
+      series: [
+        { nombre: mun.nombre, valores: anios.map((a) => mun.participacion[a]), color: "datos" },
+        { nombre: local.nombre, valores: anios.map((a) => local.total[a]), color: "base" },
+      ],
+    };
+  }
+
   const armadores = {
     sexo(m, ctx, d) {
       const t = T();
@@ -73,36 +99,52 @@ const EnTuCaso = (() => {
       };
     },
 
+    // En intermedias y tendencia, d (estado) puede faltar si solo aporta el municipio (edición del mismo estado).
     intermedias(m, ctx, d) {
       const t = T();
-      const { local } = ctx.perfil;
+      const { local, municipio } = ctx.perfil;
       const anios = local.anios;
+      const partes = d ? [`${apertura(d.relacion, ctx.lugar)} ${t.intermedias(d, pct)}`] : [];
+      const mun = fraseMunicipio(m, ctx, (x) => t.intermedias(x, pct));
+      if (mun) partes.push(mun.texto);
+      // El color de cada columna dice si fue presidencial o intermedia (mismo orden que la gráfica nacional).
+      const colores = m.grafica.series[0].colores;
+      const tipo = (a) => (colores[anios.indexOf(a)] === "datos" ? t.presidencial : t.intermedia);
       return {
-        texto: `${apertura(d.relacion, ctx.lugar)} ${t.intermedias(d, pct)}`,
-        grafica: {
-          tipo: "columnas", titulo: t.tituloElecciones(ctx.lugar),
-          x: anios.map(String),
-          series: [{
-            nombre: TEXTOS.graficas.participacion,
-            valores: anios.map((a) => local.total[a]),
-            colores: m.grafica.series[0].colores, // mismos años y tipos que la gráfica nacional
-          }],
-          leyenda: [{ nombre: t.presidencial, color: "datos" }, { nombre: t.intermedia, color: "base" }],
-        },
+        texto: partes.join(" "),
+        grafica: mun && mun.valido
+          ? graficaConMunicipio(t.tituloEleccionesMunicipio(municipio.nombre, ctx.lugar), anios, local, municipio, tipo)
+          : {
+            tipo: "columnas", titulo: t.tituloElecciones(ctx.lugar),
+            x: anios.map(String),
+            series: [{
+              nombre: TEXTOS.graficas.participacion,
+              valores: anios.map((a) => local.total[a]),
+              colores,
+            }],
+            leyenda: [{ nombre: t.presidencial, color: "datos" }, { nombre: t.intermedia, color: "base" }],
+          },
         anio: `${anios[0]}–${anios.at(-1)}`,
       };
     },
 
     tendencia(m, ctx, d) {
       const t = T();
+      const { local, municipio } = ctx.perfil;
+      const anios = m.grafica.x.map(Number); // las intermedias, igual que la gráfica nacional
+      const partes = d ? [`${apertura(d.relacion, ctx.lugar)} ${t.tendencia(d, pct)}`] : [];
+      const mun = fraseMunicipio(m, ctx, (x) => t.tendencia(x, pct));
+      if (mun) partes.push(mun.texto);
       return {
-        texto: `${apertura(d.relacion, ctx.lugar)} ${t.tendencia(d, pct)}`,
-        grafica: {
-          tipo: "columnas", titulo: t.tituloIntermedias(ctx.lugar),
-          x: d.intermedias.map((x) => String(x[0])),
-          series: [{ nombre: TEXTOS.graficas.participacion, valores: d.intermedias.map((x) => x[1]), color: "datos" }],
-        },
-        anio: d.intermedias.map((x) => x[0]).join(", "),
+        texto: partes.join(" "),
+        grafica: mun && mun.valido
+          ? graficaConMunicipio(t.tituloIntermediasMunicipio(municipio.nombre, ctx.lugar), anios, local, municipio)
+          : {
+            tipo: "columnas", titulo: t.tituloIntermedias(ctx.lugar),
+            x: anios.map(String),
+            series: [{ nombre: TEXTOS.graficas.participacion, valores: anios.map((a) => local.total[a]), color: "datos" }],
+          },
+        anio: anios.join(", "),
       };
     },
 
@@ -204,6 +246,8 @@ const EnTuCaso = (() => {
 
   // Mitos que dependen de la edad: se muestran aunque la persona no haya dicho su estado.
   const POR_EDAD = new Set(["primer-voto", "jovenes", "sesentas", "mayores"]);
+  // Mitos que responde la participación total del municipio (municipios.json).
+  const POR_MUNICIPIO = new Set(["intermedias", "tendencia"]);
 
   /*
    * Devuelve { texto, grafica, fuente, lugar } o null si no aplica.
@@ -217,10 +261,14 @@ const EnTuCaso = (() => {
     // El estado de la persona aporta algo solo si es distinto del ámbito del juego.
     const conEstado = perfil.entidad != null && perfil.entidad !== ctx.ambitoClave && perfil.local.en_tu_caso;
     const d = conEstado ? perfil.local.en_tu_caso[m.id] : null;
-    if (!d && !(POR_EDAD.has(m.id) && perfil.edad != null)) return null;
+    // El municipio aporta aunque su estado sea el del juego.
+    const conMunicipio = POR_MUNICIPIO.has(m.id) && perfil.municipio && perfil.municipio.en_tu_caso;
+    if (!d && !conMunicipio && !(POR_EDAD.has(m.id) && perfil.edad != null)) return null;
     const lugar = conEstado ? perfil.nombre : (perfil.nombre || P().pais);
     const r = armador(m, { ...ctx, lugar }, d);
-    return { texto: r.texto, grafica: r.grafica, fuente: fuente(r.anio), lugar };
+    // Nombre del botón del selector: el municipio si es lo único que aporta.
+    const etiqueta = !d && conMunicipio ? perfil.municipio.nombre : lugar;
+    return { texto: r.texto, grafica: r.grafica, fuente: fuente(r.anio), lugar: etiqueta };
   }
 
   return { armar };
