@@ -42,6 +42,10 @@ const TEXTOS = {
     error: "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.",
   },
   voz: { detener: "Detener" },
+  lectura: {
+    boton: "Opciones de lectura",
+    botonConVoz: "Opciones de lectura (voz activada)",
+  },
   graficas: {
     sinDato: "sin dato",
     grupo: "Grupo",

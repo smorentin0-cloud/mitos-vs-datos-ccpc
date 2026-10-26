@@ -521,3 +521,34 @@ kbd {
 
 .perfil-municipio { font-weight: 700; padding-left: 0.75rem; border-left: 6px solid var(--azul); }
 .campo .opcional { font-weight: 400; color: var(--tinta-suave); }
+
+/* ---------------------------------------------------------------- encabezado en un renglón */
+.barra { flex-wrap: nowrap; }
+.lectura { position: relative; display: flex; align-items: center; gap: 0.5rem; }
+.lectura-btn {
+  min-width: 48px; min-height: 48px; padding: 0 12px;
+  font: 700 20px var(--fuente);
+  background: var(--papel); color: var(--tinta);
+  border: 2px solid var(--tinta); border-radius: 4px; cursor: pointer;
+}
+.lectura-btn[aria-expanded="true"] { background: var(--tinta); color: var(--papel); }
+.voz-indicador {
+  padding: 2px 8px; border-radius: 999px;
+  font: 700 14px var(--fuente); background: var(--azul); color: var(--papel);
+}
+.panel-lectura {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 20;
+  width: min(18rem, calc(100vw - 2rem));
+  display: grid; gap: 12px; padding: 16px;
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.18);
+}
+.panel-titulo { margin: 0; font: 700 16px var(--fuente); }
+.panel-nota { margin: 0; font: 400 15px var(--fuente); color: var(--tinta-suave); }
+.panel-lectura .voz-btn { justify-content: flex-start; }
+.panel-lectura .tamano { justify-self: start; }
+/* El encabezado no crece con A+/A++: así el botón «Aa» siempre queda a la vista. */
+.barra .marca { font-size: 18px; min-width: 0; flex: 1 1 auto; }
+.barra .marca span { overflow: hidden; text-overflow: ellipsis; }
+.barra .marca-icono { width: 28px; height: 28px; }
+.lectura { flex: none; }

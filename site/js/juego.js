@@ -133,6 +133,37 @@
   document.querySelectorAll(".tamano-btn").forEach((b) =>
     b.addEventListener("click", () => ponerTamano(b.dataset.tamano)));
 
+  // ---------- panel «Opciones de lectura» (voz y tamaño de letra)
+
+  const botonLectura = $("#lectura-btn");
+  const panelLectura = $("#panel-lectura");
+
+  function abrirLectura(abrir, devolverFoco = true) {
+    botonLectura.setAttribute("aria-expanded", String(abrir));
+    panelLectura.hidden = !abrir;
+    if (abrir) panelLectura.querySelector("button:not([hidden])").focus();
+    else if (devolverFoco) botonLectura.focus();
+  }
+
+  botonLectura.addEventListener("click", () => abrirLectura(panelLectura.hidden));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panelLectura.hidden) {
+      e.stopPropagation();
+      abrirLectura(false);
+    }
+  }, true);
+  document.addEventListener("click", (e) => {
+    if (!panelLectura.hidden && !e.target.closest(".lectura")) abrirLectura(false, false);
+  });
+
+  // Indicador discreto junto a «Aa» cuando la voz está activa.
+  function pintarIndicadorVoz() {
+    const activa = $("#voz-auto").getAttribute("aria-pressed") === "true";
+    $("#voz-indicador").hidden = !activa;
+    botonLectura.setAttribute("aria-label", activa ? TEXTOS.lectura.botonConVoz : TEXTOS.lectura.boton);
+  }
+  $("#voz-auto").addEventListener("click", () => setTimeout(pintarIndicadorVoz, 0));
+
   // ---------- juego
 
   function iniciar() {

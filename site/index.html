@@ -37,15 +37,21 @@
       </svg>
       <span>Mitos vs. Datos</span>
     </a>
-    <div class="controles">
-    <button id="voz-auto" class="voz-btn" aria-pressed="false" aria-label="Voz: leer en voz alta" hidden>
-      <svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Voz</span>
-    </button>
-    <div class="tamano" role="group" aria-label="Tamaño de la letra">
-      <button class="tamano-btn" data-tamano="1" aria-pressed="true" aria-label="Letra normal">A</button>
-      <button class="tamano-btn" data-tamano="2" aria-pressed="false" aria-label="Letra grande">A</button>
-      <button class="tamano-btn" data-tamano="3" aria-pressed="false" aria-label="Letra muy grande">A</button>
-    </div>
+    <div class="lectura">
+      <span id="voz-indicador" class="voz-indicador" hidden>Voz</span>
+      <button id="lectura-btn" class="lectura-btn" aria-expanded="false" aria-controls="panel-lectura" aria-label="Opciones de lectura">Aa</button>
+      <div id="panel-lectura" class="panel-lectura" role="group" aria-labelledby="t-lectura" hidden>
+        <p id="t-lectura" class="panel-titulo">Opciones de lectura</p>
+        <button id="voz-auto" class="voz-btn" aria-pressed="false" hidden>
+          <svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Leer en voz alta</span>
+        </button>
+        <div class="tamano" role="group" aria-label="Tamaño de la letra">
+          <button class="tamano-btn" data-tamano="1" aria-pressed="true" aria-label="Letra normal">A</button>
+          <button class="tamano-btn" data-tamano="2" aria-pressed="false" aria-label="Letra grande">A</button>
+          <button class="tamano-btn" data-tamano="3" aria-pressed="false" aria-label="Letra muy grande">A</button>
+        </div>
+        <p class="panel-nota">El juego no depende del sonido. La voz es opcional.</p>
+      </div>
     </div>
   </header>
 
@@ -82,7 +88,7 @@
           <a class="boton secundario enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
         </div>
       </div>
-      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024. El juego no depende del sonido; si lo prefieres, activa el botón «Voz» para escuchar las preguntas.</p>
+      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024.</p>
     </section>
 
     <!-- 2. Instrucciones -->
@@ -102,7 +108,7 @@
           <span><strong>Mira los datos.</strong> Un sello te dice la respuesta y una gráfica te muestra por qué.</span>
         </li>
       </ol>
-      <p class="voz-aviso" hidden>¿Prefieres escuchar? Activa el botón <strong>Voz</strong> de arriba y el juego te leerá cada pregunta y cada respuesta.</p>
+      <p class="voz-aviso" hidden>¿Prefieres escuchar? En el botón <strong>Aa</strong> de arriba activa «Leer en voz alta» y el juego te leerá cada pregunta y cada respuesta.</p>
       <div class="nota-papel">
         <p><strong>¿Qué es la participación?</strong> Es cuántas personas de cada 100 fueron a votar. Si dice 60%, votaron 60 de cada 100.</p>
       </div>
