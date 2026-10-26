@@ -54,3 +54,23 @@ Se eliminó la opción "Parcialmente cierto". Las frases ambiguas o compuestas s
 | Las personas de 85 años o más son las que menos votan. | "Las personas mayores son las que menos votan" (Parcialmente cierto) | 85+ es el grupo más bajo en las 6 | Cierto |
 
 Quedan fuera del juego los mitos 7, 9 y 10; el 7 (diferencias entre estados) se puede consultar en "Explora los datos".
+
+## Datos locales para personalizar (ronda «tu historia»)
+
+`scripts/procesar.py` genera `site/data/entidad/<clave>/personal.json` para el país (clave 0) y las 32 entidades. El sitio solo descarga el del estado que elige la persona.
+
+- **Misma fórmula:** participación = SV / (SV + NV), por edad simple (18 a 84 y 85 o más), grupo quinquenal, sexo, tipo de sección (rural y urbana) y total, en las 6 elecciones.
+- **Umbral de celdas pequeñas: 1,000 personas en la lista nominal.** Si una combinación (por ejemplo, 83 años en Baja California Sur en 2009) tiene menos, su participación no se publica y el sitio usa el grupo quinquenal; si el grupo tampoco llega, usa el dato nacional, y lo dice en el texto. Con este umbral quedan vacías 47 de 13,056 celdas de edad simple, todas entre 77 y 84 años en estados pequeños. Se eligió 1,000 porque con menos personas una sola sección o un cuadernillo no disponible mueve varios puntos la cifra, y porque ninguna celda de 18 a 76 años queda por debajo.
+- **Empate:** diferencias menores a 1 punto se describen como empate.
+- **«Y en tu caso…»:** para cada mito se compara el dato del estado con el veredicto nacional y se guarda si coincide, si es empate o si pasó al revés. El veredicto nacional (el sello) nunca cambia; el dato local solo lo complementa.
+- **Próxima elección:** se configura en un solo lugar (`PROXIMA_ELECCION` en `procesar.py`): intermedia de **junio de 2027**. La fecha exacta la fija el INE.
+
+### Estados donde el dato local va contra el veredicto nacional (2024 o la serie de 6 elecciones)
+
+| Mito | Pasó al revés en | Empate en |
+|---|---|---|
+| A los 18 años se vota menos que el promedio (nacional: Falso) | Baja California Sur, Sinaloa | 9 estados |
+| En las intermedias vota menos gente (nacional: Cierto) | Colima, Michoacán, Nuevo León, Sonora, Tlaxcala, Veracruz | Campeche, Chiapas, Guerrero, Yucatán |
+| Las de 85 años o más son las que menos votan (nacional: Cierto) | 9 estados, entre ellos Colima, Estado de México, Morelos, Nayarit, Oaxaca y Quintana Roo | — |
+| La participación en las intermedias ha ido bajando (nacional: Falso) | 15 estados en los que alguna intermedia bajó, entre ellos Aguascalientes, Baja California Sur y Colima | 9 estados |
+| En el campo siempre se vota menos (nacional: Falso) | ninguno | 6 estados empatados en 2024; Ciudad de México no tiene secciones rurales suficientes |

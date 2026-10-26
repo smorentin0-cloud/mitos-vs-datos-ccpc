@@ -13,6 +13,7 @@ Salidas:
     data/processed/evidencia_mitos.json   (cifras usadas para evaluar cada mito)
     site/data/*.json                      (datos que consume el sitio)
     site/data/entidad/<clave>/mitos.json  (con --entidad: el juego de ese estado)
+    site/data/entidad/<clave>/personal.json  (datos locales para personalizar; 0 = el país)
 
 Definición de participación (igual que la plataforma CCPC):
     participación = SV / (SV + NV)
@@ -62,6 +63,20 @@ ETAPAS = [
 
 # Archivos que consume el sitio (site/data/).
 PUBLICAR = ["mitos", "explora", "entidades"]
+
+# Próxima elección federal: el único lugar donde se configura. La fecha exacta la fija el INE;
+# mientras no se confirme se usa solo el mes.
+PROXIMA_ELECCION = {"anio": 2027, "fecha": "junio de 2027", "tipo": "intermedia", "cada_cuantos_anios": 3}
+
+# Celdas pequeñas: si una combinación (estado x edad x año, etc.) tiene menos personas en la
+# lista nominal que este umbral, no se publica su participación y el sitio usa un grupo más amplio.
+UMBRAL_LISTA_NOMINAL = 1000
+
+# Diferencia en puntos por debajo de la cual dos participaciones se tratan como empate.
+EMPATE_PUNTOS = 1.0
+
+# Edades simples del final personalizado: 18 a 84 y el grupo de 85 años o más.
+EDADES_PERSONAL = list(range(18, 85))
 
 COLUMNAS = ["EDOCVE", "TIPOSEC", "SEXO", "EDAD", "LN", "SV", "NV", "NS"]
 LLAVES = ["AELEC", "EDOCVE", "TIPOSEC", "SEXO", "EDAD"]
@@ -765,14 +780,156 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
         "niveles": niveles,
         "cierre": {"titulo": "Que tu primer voto no sea el último", "texto": texto_cierre},
         "omitidos": omitidos,
+        "proxima_eleccion": PROXIMA_ELECCION,
     }
 
 
-def guardar_json(ruta: Path, datos: dict) -> None:
+# ---------------------------------------------------------------- datos para personalizar
+
+def celda(g: pd.DataFrame, por: list[str]) -> dict:
+    """Participación por `por`, vacía (None) si la lista nominal no llega al umbral."""
+    p = participacion(g, por)
+    return {
+        (k if len(por) > 1 else (k[0] if isinstance(k, tuple) else k)):
+        (r1(fila.PART) if fila.LN >= UMBRAL_LISTA_NOMINAL and fila.SV + fila.NV > 0 else None)
+        for k, fila in p.set_index(por).iterrows()
+    }
+
+
+def relacion(a: float | None, b: float | None) -> str | None:
+    """Compara a contra b: 'mayor', 'menor' o 'empate' (diferencia menor a EMPATE_PUNTOS)."""
+    if a is None or b is None:
+        return None
+    if abs(a - b) < EMPATE_PUNTOS:
+        return "empate"
+    return "mayor" if a > b else "menor"
+
+
+def datos_personales(d: pd.DataFrame, clave: int) -> dict:
+    """Participación local por edad, grupo, sexo y tipo de sección, y los «Y en tu caso…» de cada mito."""
+    d = d.assign(EDAD85=d["EDAD"].clip(upper=85))
+    por_edad_c = celda(d, ["AELEC", "EDAD85"])
+    por_grupo_c = celda(d, ["AELEC", "GRUPO85"])
+    total_c = celda(d, ["AELEC"])
+    sexo_c = celda(d[d["SEXO"].isin([0, 1])], ["AELEC", "SEXO"])
+    tipo_c = celda(d, ["AELEC", "TIPOSEC"])
+    rango = lambda desde, hasta: celda(d[(d["EDAD"] >= desde) & (d["EDAD"] <= hasta)], ["AELEC"])
+    v18, v18_29, v60_69 = rango(18, 18), rango(18, 29), rango(60, 69)
+
+    edades = EDADES_PERSONAL + [85]
+    datos = {
+        "clave": clave,
+        "nombre": "México" if clave == 0 else ENTIDADES[clave],
+        "anios": ANIOS,
+        "umbral": UMBRAL_LISTA_NOMINAL,
+        "edades": [str(e) for e in EDADES_PERSONAL] + ["85+"],
+        "grupos": [etiqueta_grupo(g) for g in GRUPOS_85],
+        "por_edad": {str(a): [por_edad_c.get((a, e)) for e in edades] for a in ANIOS},
+        "por_grupo": {str(a): [por_grupo_c.get((a, g)) for g in GRUPOS_85] for a in ANIOS},
+        "total": {str(a): total_c.get(a) for a in ANIOS},
+        "sexo": {str(a): {"mujeres": sexo_c.get((a, 1)), "hombres": sexo_c.get((a, 0))} for a in ANIOS},
+        "tipo": {str(a): {"rural": tipo_c.get((a, "R")), "urbana": tipo_c.get((a, "U"))} for a in ANIOS},
+        "estimar": {str(a): {"18": v18.get(a), "18_29": v18_29.get(a), "60_69": v60_69.get(a)} for a in ANIOS},
+    }
+    if clave:
+        datos["en_tu_caso"] = en_tu_caso(datos)
+    return datos
+
+
+def en_tu_caso(p: dict) -> dict:
+    """Para cada mito, el dato del estado y si coincide con el veredicto nacional.
+    'coincide' = el estado va en el mismo sentido que el veredicto; 'contrario' = pasó al revés;
+    'empate' = diferencia menor a EMPATE_PUNTOS; 'sin_datos' = celdas bajo el umbral."""
+    a = str(ANIOS[-1])
+    total = {int(x): v for x, v in p["total"].items()}
+    out = {}
+
+    m, h = p["sexo"][a]["mujeres"], p["sexo"][a]["hombres"]
+    rel = relacion(m, h)
+    out["sexo"] = {"anio": int(a), "mujeres": m, "hombres": h,
+                   "relacion": "sin_datos" if rel is None else {"mayor": "coincide", "empate": "empate", "menor": "contrario"}[rel]}
+
+    rural = [p["tipo"][str(x)]["rural"] for x in ANIOS]
+    urbana = [p["tipo"][str(x)]["urbana"] for x in ANIOS]
+    if any(v is None for v in rural + urbana):
+        out["campo"] = {"anio": int(a), "relacion": "sin_datos"}
+    else:
+        siempre_menos = all(relacion(r, u) == "menor" for r, u in zip(rural, urbana))
+        rel24 = relacion(rural[-1], urbana[-1])
+        out["campo"] = {"anio": int(a), "rural": rural[-1], "urbana": urbana[-1],
+                        "relacion": "contrario" if siempre_menos else ("empate" if rel24 == "empate" else "coincide")}
+
+    inter = {x: total[x] for x in ANIOS if x not in PRESIDENCIALES}
+    pres = {x: total[x] for x in ANIOS if x in PRESIDENCIALES}
+    mi, mp = max(inter, key=inter.get), min(pres, key=pres.get)
+    rel = relacion(inter[mi], pres[mp])
+    out["intermedias"] = {"intermedia": [mi, inter[mi]], "presidencial": [mp, pres[mp]],
+                          "relacion": {"menor": "coincide", "empate": "empate", "mayor": "contrario"}[rel]}
+
+    v18, prom = p["estimar"][a]["18"], total[int(a)]
+    rel = relacion(v18, prom)
+    out["primer-voto"] = {"anio": int(a), "v18": v18, "promedio": prom,
+                          "relacion": "sin_datos" if rel is None else {"mayor": "coincide", "empate": "empate", "menor": "contrario"}[rel]}
+
+    j = p["estimar"][a]["18_29"]
+    out["jovenes"] = {"anio": int(a), "v18_29": j, "promedio": prom,
+                      "relacion": "sin_datos" if j is None else ("coincide" if j >= 100 / 3 else "contrario")}
+
+    grupos = p["por_grupo"][a]
+    validos = [(g, v) for g, v in zip(p["grupos"], grupos) if v is not None]
+    g_max = max(validos, key=lambda x: x[1])
+    g_min = min(validos, key=lambda x: x[1])
+    out["sesentas"] = {"anio": int(a), "grupo": g_max[0], "valor": g_max[1],
+                       "relacion": "coincide" if g_max[0] in ("60–64", "65–69") else "contrario"}
+    out["mayores"] = {"anio": int(a), "grupo": g_min[0], "valor": g_min[1], "v85": grupos[-1],
+                      "relacion": "coincide" if g_min[0] == p["grupos"][-1] else "contrario"}
+
+    serie = [[x, inter[x]] for x in inter]
+    subidas = [relacion(b[1], a_[1]) for a_, b in zip(serie, serie[1:])]
+    out["tendencia"] = {"intermedias": serie,
+                        "relacion": "coincide" if all(s == "mayor" for s in subidas)
+                        else ("empate" if all(s in ("mayor", "empate") for s in subidas) else "contrario")}
+    return out
+
+
+def construir_personal(df: pd.DataFrame) -> dict:
+    """personal.json del país (clave 0) y de las 32 entidades."""
+    salida = {0: datos_personales(df, 0)}
+    for clave in ENTIDADES:
+        salida[clave] = datos_personales(df[df["EDOCVE"] == clave], clave)
+    return salida
+
+
+def validar_personal(rutas: dict) -> None:
+    """Se detiene si falta un archivo, una cifra clave o hay valores fuera de 0 a 100."""
+    faltan = [c for c in [0, *ENTIDADES] if c not in rutas or not rutas[c].exists()]
+    if faltan:
+        raise SystemExit(f"Faltan archivos personal.json de las claves {faltan}.")
+    for clave, ruta in rutas.items():
+        p = json.loads(ruta.read_text(encoding="utf-8"))
+        valores = [v for a in p["por_edad"].values() for v in a] + [v for a in p["por_grupo"].values() for v in a]
+        valores += list(p["total"].values())
+        valores += [v for s in p["sexo"].values() for v in s.values()]
+        valores += [v for s in p["tipo"].values() for v in s.values()]
+        valores += [v for s in p["estimar"].values() for v in s.values()]
+        fuera = [v for v in valores if v is not None and not 0 <= v <= 100]
+        if fuera:
+            raise SystemExit(f"personal.json de la clave {clave} tiene valores fuera de 0 a 100: {fuera[:5]}")
+        for a in map(str, ANIOS):
+            if p["total"][a] is None or any(v is None for v in p["por_grupo"][a][:13]):
+                raise SystemExit(f"personal.json de la clave {clave} no tiene datos suficientes en {a}.")
+            if any(v is None for v in p["por_edad"][a][: EDADES_PERSONAL.index(60)]):
+                raise SystemExit(f"personal.json de la clave {clave}: falta participación de 18 a 59 años en {a}.")
+
+
+
+
+def guardar_json(ruta: Path, datos: dict, silencioso: bool = False) -> None:
     ruta.parent.mkdir(parents=True, exist_ok=True)
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(datos, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"  {ruta.relative_to(RAIZ)} ({ruta.stat().st_size / 1024:.1f} KB)")
+    if not silencioso:
+        print(f"  {ruta.relative_to(RAIZ)} ({ruta.stat().st_size / 1024:.1f} KB)")
 
 
 def main() -> None:
@@ -791,6 +948,12 @@ def main() -> None:
     print("Escribiendo salidas:")
     for nombre in PUBLICAR:
         guardar_json(SITIO_DATOS / f"{nombre}.json", salidas[nombre])
+    rutas = {}
+    for clave, datos in construir_personal(df).items():
+        rutas[clave] = SITIO_DATOS / "entidad" / str(clave) / "personal.json"
+        guardar_json(rutas[clave], datos, silencioso=clave not in (0, 6))
+    validar_personal(rutas)
+    print(f"  personal.json de 33 ámbitos validados (umbral: {UMBRAL_LISTA_NOMINAL:,} personas por celda)")
     with open(PROCESADOS / "evidencia_mitos.json", "w", encoding="utf-8") as f:
         json.dump(ev, f, ensure_ascii=False, indent=2)
     print(f"  {(PROCESADOS / 'evidencia_mitos.json').relative_to(RAIZ)}")
