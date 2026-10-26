@@ -124,6 +124,7 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - Ronda «reducir la saturación visual»: encabezado con panel «Aa», portada con una acción, perfil compacto, revelación en secuencia, resultado en 4 pasos, limpieza visual y documentación. Incluye «Adivina antes de ver» en una pantalla y barras con etiqueta en el mismo renglón cuando hay más de 8 categorías.
 - Mascota «Boleta» (PR #1): se asoma en cada pregunta, reacciona al sello y festeja el resultado; la cifra clave cuenta hasta su valor. Es decorativa (`aria-hidden`) y se detiene con «reducir movimiento». Revisada a 390 px, normal y A++: sin scroll lateral y sin tapar texto.
 - «Adivina antes de ver»: una estimación exacta dice «¡Le atinaste!»; a 3 puntos o menos, «¡Casi le atinas!».
+- «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
 
 **En curso:**
 - Verificación final de la ronda de saturación. Faltan:

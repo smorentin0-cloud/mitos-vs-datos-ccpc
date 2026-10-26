@@ -25,6 +25,7 @@ Los registros NS (no especificados) se excluyen del cálculo.
 import argparse
 import json
 import zipfile
+from collections import Counter
 from pathlib import Path
 
 import pandas as pd
@@ -914,12 +915,7 @@ def en_tu_caso(p: dict) -> dict:
         out["campo"] = {"anio": int(a), "rural": rural[-1], "urbana": urbana[-1],
                         "relacion": "contrario" if siempre_menos else ("empate" if rel24 == "empate" else "coincide")}
 
-    inter = {x: total[x] for x in ANIOS if x not in PRESIDENCIALES}
-    pres = {x: total[x] for x in ANIOS if x in PRESIDENCIALES}
-    mi, mp = max(inter, key=inter.get), min(pres, key=pres.get)
-    rel = relacion(inter[mi], pres[mp])
-    out["intermedias"] = {"intermedia": [mi, inter[mi]], "presidencial": [mp, pres[mp]],
-                          "relacion": {"menor": "coincide", "empate": "empate", "mayor": "contrario"}[rel]}
+    out["intermedias"] = caso_intermedias(total)
 
     v18, prom = p["estimar"][a]["18"], total[int(a)]
     rel = relacion(v18, prom)
@@ -939,12 +935,27 @@ def en_tu_caso(p: dict) -> dict:
     out["mayores"] = {"anio": int(a), "grupo": g_min[0], "valor": g_min[1], "v85": grupos[-1],
                       "relacion": "coincide" if g_min[0] == p["grupos"][-1] else "contrario"}
 
-    serie = [[x, inter[x]] for x in inter]
-    subidas = [relacion(b[1], a_[1]) for a_, b in zip(serie, serie[1:])]
-    out["tendencia"] = {"intermedias": serie,
-                        "relacion": "coincide" if all(s == "mayor" for s in subidas)
-                        else ("empate" if all(s in ("mayor", "empate") for s in subidas) else "contrario")}
+    out["tendencia"] = caso_tendencia(total)
     return out
+
+
+def caso_intermedias(total: dict) -> dict:
+    """Intermedia más alta contra presidencial más baja. total: {año: participación} de las 6 elecciones."""
+    inter = {x: total[x] for x in ANIOS if x not in PRESIDENCIALES}
+    pres = {x: total[x] for x in ANIOS if x in PRESIDENCIALES}
+    mi, mp = max(inter, key=inter.get), min(pres, key=pres.get)
+    rel = relacion(inter[mi], pres[mp])
+    return {"intermedia": [mi, inter[mi]], "presidencial": [mp, pres[mp]],
+            "relacion": {"menor": "coincide", "empate": "empate", "mayor": "contrario"}[rel]}
+
+
+def caso_tendencia(total: dict) -> dict:
+    """Si la participación subió de una intermedia a la siguiente. total: {año: participación}, al menos las intermedias."""
+    serie = [[x, total[x]] for x in ANIOS if x not in PRESIDENCIALES]
+    subidas = [relacion(b[1], a[1]) for a, b in zip(serie, serie[1:])]
+    return {"intermedias": serie,
+            "relacion": "coincide" if all(s == "mayor" for s in subidas)
+            else ("empate" if all(s in ("mayor", "empate") for s in subidas) else "contrario")}
 
 
 def construir_personal(df: pd.DataFrame) -> dict:
@@ -967,18 +978,36 @@ def construir_municipios() -> dict | None:
         lista = []
         for (mpio, nombre), g in e.groupby(["MPIOCVE", "MPIONOM"]):
             g = g.set_index("AELEC")
+            part = {
+                a: (r1(g.loc[a, "PART"]) if a in g.index and g.loc[a, "LN"] >= UMBRAL_LISTA_NOMINAL
+                    and g.loc[a, "SV"] + g.loc[a, "NV"] > 0 else None)
+                for a in ANIOS
+            }
             lista.append({
                 "clave": int(mpio),
                 "nombre": str(nombre).strip(),
-                "participacion": {
-                    str(a): (r1(g.loc[a, "PART"]) if a in g.index and g.loc[a, "LN"] >= UMBRAL_LISTA_NOMINAL
-                             and g.loc[a, "SV"] + g.loc[a, "NV"] > 0 else None)
-                    for a in ANIOS
-                },
+                "participacion": {str(a): v for a, v in part.items()},
+                "en_tu_caso": en_tu_caso_municipio(part, set(g.index)),
             })
         lista.sort(key=lambda x: x["nombre"])
         salida[clave] = {"clave": clave, "anios": ANIOS, "umbral": UMBRAL_LISTA_NOMINAL, "municipios": lista}
     return salida
+
+
+def en_tu_caso_municipio(part: dict, con_conteo: set) -> dict:
+    """«Y en tu caso…» del municipio, solo en los mitos que responde su participación total.
+    Mismas reglas que el estado. 'sin_datos' dice el motivo: 'faltan' = no tiene conteo en alguna elección
+    (p. ej. municipio creado después de 2009); 'umbral' = algún año bajo UMBRAL_LISTA_NOMINAL."""
+    out = {}
+    for mito, anios, calcular in (("intermedias", ANIOS, caso_intermedias),
+                                  ("tendencia", [a for a in ANIOS if a not in PRESIDENCIALES], caso_tendencia)):
+        if any(a not in con_conteo for a in anios):
+            out[mito] = {"relacion": "sin_datos", "motivo": "faltan"}
+        elif any(part[a] is None for a in anios):
+            out[mito] = {"relacion": "sin_datos", "motivo": "umbral"}
+        else:
+            out[mito] = calcular(part)
+    return out
 
 
 def validar_municipios(rutas: dict) -> None:
@@ -992,6 +1021,20 @@ def validar_municipios(rutas: dict) -> None:
         valores = [v for x in d["municipios"] for v in x["participacion"].values() if v is not None]
         if any(not 0 <= v <= 100 for v in valores):
             raise SystemExit(f"municipios.json de la clave {clave} tiene valores fuera de 0 a 100.")
+        for x in d["municipios"]:
+            for mito in ("intermedias", "tendencia"):
+                rel = x["en_tu_caso"][mito]["relacion"]
+                if rel not in ("coincide", "empate", "contrario", "sin_datos"):
+                    raise SystemExit(f"municipios.json de la clave {clave}: «{mito}» de {x['nombre']} sin relación válida.")
+
+
+def resumen_municipios(municipios: dict) -> str:
+    """Cuántos municipios coinciden con el veredicto nacional en cada mito con dato municipal."""
+    lineas = []
+    for mito in ("intermedias", "tendencia"):
+        cuenta = Counter(x["en_tu_caso"][mito]["relacion"] for d in municipios.values() for x in d["municipios"])
+        lineas.append(f"    {mito}: " + ", ".join(f"{k} {cuenta[k]:,}" for k in ("coincide", "empate", "contrario", "sin_datos")))
+    return "\n".join(lineas)
 
 
 def validar_personal(rutas: dict) -> None:
@@ -1059,6 +1102,7 @@ def main() -> None:
         validar_municipios(rutas_m)
         total = sum(len(d["municipios"]) for d in municipios.values())
         print(f"  municipios.json de 32 entidades validados ({total:,} municipios)")
+        print("  «Y en tu caso…» municipal contra el veredicto nacional:\n" + resumen_municipios(municipios))
     with open(PROCESADOS / "evidencia_mitos.json", "w", encoding="utf-8") as f:
         json.dump(ev, f, ensure_ascii=False, indent=2)
     print(f"  {(PROCESADOS / 'evidencia_mitos.json').relative_to(RAIZ)}")

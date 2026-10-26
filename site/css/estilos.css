@@ -636,6 +636,8 @@ main:has(> #portada:not([hidden])) { padding-top: 1.25rem; padding-bottom: 1.25r
 .vista-btn + .vista-btn { border-left: 2px solid var(--tinta); }
 .vista-btn[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
 .g-local { margin: 0 0 var(--esp-3); font-weight: 700; }
+/* «Y en tu caso…» sobre la figura, como el folio de la boleta: etiqueta, no titular. */
+.g-caso { margin: 0 0 var(--esp-1); font-size: 1rem; font-weight: 700; color: var(--azul); }
 .mas-contexto { margin: var(--esp-4) 0 0; }
 .mas-contexto > summary {
   cursor: pointer; min-height: 44px; display: flex; align-items: center;
