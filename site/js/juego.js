@@ -84,9 +84,11 @@
   function textoResultado() {
     const g = $("#perfil-g-lienzo").dataset.spec ? JSON.parse($("#perfil-g-lienzo").dataset.spec) : null;
     const est = $("#estimaciones").hidden ? "" : `${$("#t-estimaciones").textContent}. ${$("#est-resumen").textContent} `;
+    const hist = $("#historia").hidden ? ""
+      : `${$("#t-historia").textContent}. ${$("#historia-intro").textContent} ${[...$("#historia-lista").children].map((li) => li.textContent.trim()).join(" ")} `;
     return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ${est}` +
       `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
-      (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent}` : "");
+      (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent} ` : "") + hist;
   }
 
   // Al activar "Voz" se lee lo que está en pantalla en ese momento.
@@ -457,6 +459,7 @@
     }));
     $("#aviso-compartir").textContent = "";
     pintarPerfil();
+    pintarHistoria();
     pintarEstimaciones();
     mostrar("resultado");
     const g = JSON.parse($("#perfil-g-lienzo").dataset.spec);
@@ -640,6 +643,100 @@
     $("#perfil-g-fuente").textContent = T.fuente(anio);
     $("#perfil-g-tabla").replaceChildren(Graficas.tabla(spec));
     $("#perfil-g-lienzo").dataset.spec = JSON.stringify(spec);
+  }
+
+  // ---------- tu historia como votante
+
+  // Línea de tiempo 2009–2024 con la participación de su edad (o grupo, según el umbral) y la próxima elección.
+  function pintarHistoria() {
+    const H = TEXTOS.historiaVotante;
+    const P = TEXTOS.perfil;
+    const { edad, entidad, nombre, local, pais } = estado.perfil;
+    const seccion = $("#historia");
+    seccion.hidden = edad == null && entidad == null;
+    if (seccion.hidden) return;
+    const anios = estado.aniosHistoria;
+    const prox = estado.proxima;
+    const lugar = nombre || P.pais;
+    const filas = [];
+    let intro;
+    let ultima;
+    let anioFinal = prox.anio;
+
+    if (edad == null) {
+      intro = H.introSinEdad(lugar);
+      anios.forEach((a) => filas.push({ anio: a, edadEntonces: null, texto: H.valorTotal(Math.round(local.total[a]), lugar), valor: local.total[a] }));
+      ultima = H.proxima(prox.fecha);
+    } else {
+      const vividas = Personal.eleccionesVividas(edad, anios);
+      if (!vividas.length) {
+        intro = H.introMenor(lugar);
+        anios.forEach((a) => {
+          const res = Personal.participacionEdad(local, pais, a, 18);
+          filas.push({ anio: a, edadEntonces: 18, texto: H.valor(Math.round(res.valor), P.quien(res), res.nivel === "pais" ? P.pais : lugar), valor: res.valor });
+        });
+        const primera = Personal.primeraEleccion(edad, prox);
+        anioFinal = primera;
+        ultima = H.primera(primera, primera === prox.anio, prox.fecha);
+      } else {
+        intro = H.intro(lugar);
+        vividas.forEach((a) => {
+          const e = Personal.edadEn(edad, a);
+          const res = Personal.participacionEdad(local, pais, a, e);
+          const donde = res.nivel === "pais" ? P.pais : lugar;
+          filas.push({
+            anio: a, edadEntonces: e,
+            texto: `${H.tenias(e)} ${H.valor(Math.round(res.valor), P.quien(res), donde)}${P.nota(res, lugar)}`,
+            valor: res.valor,
+          });
+        });
+        ultima = H.proxima(prox.fecha);
+      }
+    }
+
+    $("#historia-intro").textContent = intro;
+    const items = filas.map((f) => {
+      const li = document.createElement("li");
+      li.className = "hito";
+      const tipo = H.tipo(estado.presidenciales.includes(f.anio));
+      li.innerHTML = `<span class="hito-anio"></span><span class="hito-cuerpo"><span class="hito-tipo"></span>
+        <span class="hito-texto"></span><span class="hito-barra" aria-hidden="true"><span></span></span></span>`;
+      li.querySelector(".hito-anio").textContent = String(f.anio);
+      li.querySelector(".hito-tipo").textContent = `${tipo}.`;
+      li.querySelector(".hito-texto").textContent = f.texto;
+      li.querySelector(".hito-barra span").style.width = `${f.valor}%`;
+      return li;
+    });
+    const fin = document.createElement("li");
+    fin.className = "hito hito-proxima";
+    fin.innerHTML = `<span class="hito-anio"></span><span class="hito-cuerpo"><span class="hito-texto"></span>
+      <span class="hito-casilla" aria-hidden="true"></span><span class="hito-tipo"></span></span>`;
+    fin.querySelector(".hito-anio").textContent = String(anioFinal);
+    fin.querySelector(".hito-texto").textContent = ultima;
+    fin.querySelector(".hito-tipo").textContent = H.porMarcar;
+    $("#historia-lista").replaceChildren(...items, fin);
+
+    // Tabla para lectores de pantalla y para quien prefiera los números.
+    const t = document.createElement("table");
+    const cab = t.createTHead().insertRow();
+    H.columnas.forEach((c, i) => {
+      const th = document.createElement("th");
+      th.textContent = c;
+      if (i === 3) th.className = "num";
+      cab.appendChild(th);
+    });
+    const cuerpo = t.createTBody();
+    filas.forEach((f) => {
+      const r = cuerpo.insertRow();
+      r.insertCell().textContent = String(f.anio);
+      r.insertCell().textContent = H.tipo(estado.presidenciales.includes(f.anio));
+      r.insertCell().textContent = f.edadEntonces == null ? "—" : String(f.edadEntonces);
+      const c = r.insertCell();
+      c.textContent = f.valor.toFixed(1);
+      c.className = "num";
+    });
+    $("#historia-tabla").replaceChildren(t);
+    $("#historia-fuente").textContent = H.fuente(anios[0], anios.at(-1));
   }
 
   // Dirección para compartir; conserva la versión estatal (?entidad=6) si se está jugando una.
@@ -882,6 +979,7 @@
     estado.datosPerfil = { edad, entidades };
     estado.personalAmbito = await Personal.cargar(datos.ambito ? datos.ambito.clave : 0).catch(() => null);
     estado.proxima = datos.proxima_eleccion;
+    estado.presidenciales = datos.presidenciales;
     estado.aniosHistoria = edad.anios;
     llenarEstados("");
     pintarPortada(datos, respaldo);

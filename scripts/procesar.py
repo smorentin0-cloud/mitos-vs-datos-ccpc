@@ -781,6 +781,7 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
         "cierre": {"titulo": "Que tu primer voto no sea el último", "texto": texto_cierre},
         "omitidos": omitidos,
         "proxima_eleccion": PROXIMA_ELECCION,
+        "presidenciales": sorted(PRESIDENCIALES),
     }
 
 

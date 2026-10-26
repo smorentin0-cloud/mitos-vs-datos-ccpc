@@ -198,6 +198,21 @@ const TEXTOS = {
     anios: (g) => TEXTOS.perfil.grupoLegible(g),
     tituloGrupos: (lugar, anio) => `Participación por grupo de edad en ${lugar}, ${anio}`,
   },
+  historiaVotante: {
+    titulo: "Tu historia como votante",
+    intro: (lugar) => `Estas son las elecciones federales en las que ya tenías edad para votar, y cómo votó la gente de tu edad en ${lugar}.`,
+    introMenor: (lugar) => `Todavía no te ha tocado votar. Así votaron las personas de 18 años en ${lugar} en cada elección.`,
+    introSinEdad: (lugar) => `Así votó ${lugar} en cada elección federal.`,
+    tipo: (presidencial) => (presidencial ? "Elección presidencial" : "Elección intermedia"),
+    tenias: (edad) => `Tenías ${edad} años.`,
+    valor: (v, quien, lugar) => `Votaron ${v} de cada 100 ${quien} en ${lugar}.`,
+    valorTotal: (v, lugar) => `Votaron ${v} de cada 100 personas en ${lugar}.`,
+    proxima: (fecha) => `Tu próxima elección: ${fecha}.`,
+    primera: (anio, esProxima, fecha) => `Tu primera elección federal: ${esProxima ? fecha : `la de ${anio}`}.`,
+    porMarcar: "Esta casilla está vacía. ¿La vas a marcar?",
+    columnas: ["Elección", "Tipo", "Edad", "Participación (de cada 100)"],
+    fuente: (desde, hasta) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${desde}–${hasta}.`,
+  },
   perfil: {
     titulo: "¿Cómo vota alguien como tú?",
     // grupo: "25 a 29 años", "85 años o más"
