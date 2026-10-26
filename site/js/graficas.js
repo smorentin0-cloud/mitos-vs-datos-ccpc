@@ -151,24 +151,28 @@ const Graficas = (() => {
 
   function barras(contenedor, spec) {
     const k = escala();
-    const fila = (spec.compacto ? 42 : 50) * k;
-    const grosor = (spec.compacto ? 12 : 16) * k;
+    // Con muchas categorías (p. ej. grupos de edad) la etiqueta va a la izquierda de su barra, en el mismo renglón.
+    const enLinea = spec.items.length > 8;
+    const izq = enLinea ? (Math.max(...spec.items.map((it) => it.etiqueta.length)) * 9 + 12) * k : 0;
+    const fila = (enLinea ? 28 : (spec.compacto ? 42 : 50)) * k;
+    const grosor = (enLinea ? 14 : (spec.compacto ? 12 : 16)) * k;
+    const yBarra = enLinea ? (fila - grosor) / 2 : 24 * k;
     const alto = spec.items.length * fila + 4;
     const { svg, ancho } = lienzo(contenedor, spec, alto);
     const espacioValor = 58 * k;
-    const largo = ancho - espacioValor;
+    const largo = ancho - espacioValor - izq;
     const pausa = spec.items.length > 12 ? 15 : 60;
     spec.items.forEach((item, i) => {
       const y = i * fila;
-      texto(svg, 0, y + 17 * k, item.etiqueta, { class: "etiqueta", "font-weight": item.color === "acento" ? 700 : 400 });
-      el("rect", { x: 0, y: y + 24 * k, width: largo, height: grosor, rx: 2, fill: COLORES.pista }, svg);
+      texto(svg, 0, enLinea ? y + yBarra + grosor - 1 : y + 17 * k, item.etiqueta, { class: "etiqueta", "font-weight": item.color === "acento" ? 700 : 400 });
+      el("rect", { x: izq, y: y + yBarra, width: largo, height: grosor, rx: 2, fill: COLORES.pista }, svg);
       const w = (largo * (item.valor || 0)) / 100;
       el("rect", {
-        x: 0, y: y + 24 * k, width: w, height: grosor, rx: 2,
+        x: izq, y: y + yBarra, width: w, height: grosor, rx: 2,
         fill: COLORES[item.color || "datos"], class: "crece-x",
         style: `transition-delay:${i * pausa}ms`,
       }, svg);
-      texto(svg, w + 6, y + 24 * k + grosor - 2, fmt(item.valor), { class: "valor aparece" });
+      texto(svg, izq + w + 6, y + yBarra + grosor - 2, fmt(item.valor), { class: "valor aparece" });
     });
     return svg;
   }
