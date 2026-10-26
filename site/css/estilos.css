@@ -518,3 +518,6 @@ kbd {
 }
 .compromiso-btn:hover { background: var(--mesa); }
 .compromiso-btn[aria-pressed="true"] { border-width: 4px; }
+
+.perfil-municipio { font-weight: 700; padding-left: 0.75rem; border-left: 6px solid var(--azul); }
+.campo .opcional { font-weight: 400; color: var(--tinta-suave); }

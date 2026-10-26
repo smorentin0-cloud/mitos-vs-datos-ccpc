@@ -10,10 +10,12 @@ Uso:
 Entradas (data/raw/):  ccpc_2009.zip, ccpc_2012.zip, ..., ccpc_2024.zip
 Salidas:
     data/processed/conteos_agregados.csv  (entidad x tipo de sección x sexo x edad)
+    data/processed/municipios.csv         (con --rehacer: participación total por municipio y año)
     data/processed/evidencia_mitos.json   (cifras usadas para evaluar cada mito)
     site/data/*.json                      (datos que consume el sitio)
     site/data/entidad/<clave>/mitos.json  (con --entidad: el juego de ese estado)
     site/data/entidad/<clave>/personal.json  (datos locales para personalizar; 0 = el país)
+    site/data/entidad/<clave>/municipios.json  (participación por municipio, si hay agregado municipal)
 
 Definición de participación (igual que la plataforma CCPC):
     participación = SV / (SV + NV)
@@ -32,6 +34,7 @@ RAW = RAIZ / "data" / "raw"
 PROCESADOS = RAIZ / "data" / "processed"
 SITIO_DATOS = RAIZ / "site" / "data"
 AGREGADO = PROCESADOS / "conteos_agregados.csv"
+MUNICIPIOS = PROCESADOS / "municipios.csv"
 
 ANIOS = [2009, 2012, 2015, 2018, 2021, 2024]
 PRESIDENCIALES = {2012, 2018, 2024}
@@ -107,26 +110,33 @@ def etapa_de_vida(edad: int) -> str:
     raise ValueError(edad)
 
 
-def leer_anio(anio: int) -> pd.DataFrame:
-    """Lee todos los CSV estatales de un año y los agrega por las LLAVES."""
+def leer_anio(anio: int) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Lee todos los CSV estatales de un año. Devuelve el agregado por las LLAVES y el total por municipio.
+    Los nombres de municipio se toman solo del año más reciente (los archivos viejos traen otra codificación)."""
     ruta = RAW / f"ccpc_{anio}.zip"
-    partes = []
+    con_nombre = anio == ANIOS[-1]
+    columnas = COLUMNAS + ["MPIOCVE"] + (["MPIONOM"] if con_nombre else [])
+    partes, municipales = [], []
     with zipfile.ZipFile(ruta) as zf:
         for nombre in sorted(n for n in zf.namelist() if n.lower().endswith(".csv")):
             with zf.open(nombre) as f:
                 df = pd.read_csv(
                     f,
-                    usecols=COLUMNAS,
-                    dtype={"TIPOSEC": "string"},
+                    usecols=columnas,
+                    dtype={"TIPOSEC": "string", "MPIONOM": "string"},
                     encoding="utf-8-sig",
                     encoding_errors="replace",
                 )
             df["TIPOSEC"] = df["TIPOSEC"].str.strip().str.upper().str[0]
             partes.append(df.groupby(COLUMNAS[:4], dropna=False)[CONTEOS].sum().reset_index())
+            llaves_m = ["EDOCVE", "MPIOCVE"] + (["MPIONOM"] if con_nombre else [])
+            municipales.append(df.groupby(llaves_m, dropna=False)[CONTEOS].sum().reset_index())
             print(f"  {anio} {nombre.split('/')[-1]}: {len(df):,} filas")
     agregado = pd.concat(partes, ignore_index=True)
     agregado.insert(0, "AELEC", anio)
-    return agregado
+    municipal = pd.concat(municipales, ignore_index=True)
+    municipal.insert(0, "AELEC", anio)
+    return agregado, municipal
 
 
 def cargar(rehacer: bool) -> pd.DataFrame:
@@ -138,11 +148,20 @@ def cargar(rehacer: bool) -> pd.DataFrame:
         raise SystemExit(
             f"Faltan los archivos {faltantes} en data/raw/. Consulta el README para descargarlos."
         )
-    df = pd.concat([leer_anio(a) for a in ANIOS], ignore_index=True)
+    leidos = [leer_anio(a) for a in ANIOS]
+    df = pd.concat([x[0] for x in leidos], ignore_index=True)
     df = df.groupby(LLAVES, dropna=False)[CONTEOS].sum().reset_index()
     PROCESADOS.mkdir(parents=True, exist_ok=True)
     df.to_csv(AGREGADO, index=False)
     print(f"Guardado {AGREGADO.relative_to(RAIZ)} ({len(df):,} filas)")
+
+    # Municipios: nombres del año más reciente para todos los años.
+    mun = pd.concat([x[1] for x in leidos], ignore_index=True)
+    nombres = mun.dropna(subset=["MPIONOM"]).groupby(["EDOCVE", "MPIOCVE"])["MPIONOM"].first()
+    mun = mun.groupby(["AELEC", "EDOCVE", "MPIOCVE"])[CONTEOS].sum().reset_index()
+    mun["MPIONOM"] = [nombres.get((e, m)) for e, m in zip(mun["EDOCVE"], mun["MPIOCVE"])]
+    mun.to_csv(MUNICIPIOS, index=False)
+    print(f"Guardado {MUNICIPIOS.relative_to(RAIZ)} ({len(mun):,} filas)")
     return df
 
 
@@ -901,6 +920,45 @@ def construir_personal(df: pd.DataFrame) -> dict:
     return salida
 
 
+def construir_municipios() -> dict | None:
+    """municipios.json por entidad: participación total por municipio y año (vacía bajo el umbral)."""
+    if not MUNICIPIOS.exists():
+        return None
+    m = pd.read_csv(MUNICIPIOS, dtype={"MPIONOM": "string"})
+    m["PART"] = 100 * m["SV"] / (m["SV"] + m["NV"])
+    salida = {}
+    for clave in ENTIDADES:
+        e = m[(m["EDOCVE"] == clave) & m["MPIONOM"].notna()]
+        lista = []
+        for (mpio, nombre), g in e.groupby(["MPIOCVE", "MPIONOM"]):
+            g = g.set_index("AELEC")
+            lista.append({
+                "clave": int(mpio),
+                "nombre": str(nombre).strip(),
+                "participacion": {
+                    str(a): (r1(g.loc[a, "PART"]) if a in g.index and g.loc[a, "LN"] >= UMBRAL_LISTA_NOMINAL
+                             and g.loc[a, "SV"] + g.loc[a, "NV"] > 0 else None)
+                    for a in ANIOS
+                },
+            })
+        lista.sort(key=lambda x: x["nombre"])
+        salida[clave] = {"clave": clave, "anios": ANIOS, "umbral": UMBRAL_LISTA_NOMINAL, "municipios": lista}
+    return salida
+
+
+def validar_municipios(rutas: dict) -> None:
+    faltan = [c for c in ENTIDADES if c not in rutas or not rutas[c].exists()]
+    if faltan:
+        raise SystemExit(f"Faltan archivos municipios.json de las claves {faltan}.")
+    for clave, ruta in rutas.items():
+        d = json.loads(ruta.read_text(encoding="utf-8"))
+        if not d["municipios"]:
+            raise SystemExit(f"municipios.json de la clave {clave} no tiene municipios.")
+        valores = [v for x in d["municipios"] for v in x["participacion"].values() if v is not None]
+        if any(not 0 <= v <= 100 for v in valores):
+            raise SystemExit(f"municipios.json de la clave {clave} tiene valores fuera de 0 a 100.")
+
+
 def validar_personal(rutas: dict) -> None:
     """Se detiene si falta un archivo, una cifra clave o hay valores fuera de 0 a 100."""
     faltan = [c for c in [0, *ENTIDADES] if c not in rutas or not rutas[c].exists()]
@@ -955,6 +1013,17 @@ def main() -> None:
         guardar_json(rutas[clave], datos, silencioso=clave not in (0, 6))
     validar_personal(rutas)
     print(f"  personal.json de 33 ámbitos validados (umbral: {UMBRAL_LISTA_NOMINAL:,} personas por celda)")
+    municipios = construir_municipios()
+    if municipios is None:
+        print("  Sin agregado municipal: para generar municipios.json ejecuta --rehacer con los ZIP del INE.")
+    else:
+        rutas_m = {}
+        for clave, datos in municipios.items():
+            rutas_m[clave] = SITIO_DATOS / "entidad" / str(clave) / "municipios.json"
+            guardar_json(rutas_m[clave], datos, silencioso=clave != 6)
+        validar_municipios(rutas_m)
+        total = sum(len(d["municipios"]) for d in municipios.values())
+        print(f"  municipios.json de 32 entidades validados ({total:,} municipios)")
     with open(PROCESADOS / "evidencia_mitos.json", "w", encoding="utf-8") as f:
         json.dump(ev, f, ensure_ascii=False, indent=2)
     print(f"  {(PROCESADOS / 'evidencia_mitos.json').relative_to(RAIZ)}")

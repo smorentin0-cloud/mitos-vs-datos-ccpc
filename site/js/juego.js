@@ -12,7 +12,8 @@
     mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [],
     // Perfil opcional: vive solo en memoria y nunca sale del navegador.
     // edad: número o null; entidad: clave o null; local/pais: personal.json cargados.
-    perfil: { edad: null, entidad: null, nombre: null, local: null, pais: null },
+    perfil: { edad: null, entidad: null, nombre: null, local: null, pais: null, municipio: null },
+    municipiosEstado: null, // lista del estado elegido en el perfil
     proxima: null,
     aniosHistoria: [],
     lugar: "México",
@@ -92,6 +93,7 @@
       : `${$("#t-historia").textContent}. ${$("#historia-intro").textContent} ${[...$("#historia-lista").children].map((li) => li.textContent.trim()).join(" ")} `;
     return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ${est}` +
       `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
+      ($("#perfil-municipio").hidden ? "" : `${$("#perfil-municipio").textContent} `) +
       (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent} ` : "") + hist;
   }
 
@@ -486,6 +488,7 @@
       edicion.hidden = false;
       estado.entidadVersion = datos.ambito.clave; // el perfil empieza en ese estado
       llenarEstados("");
+      cambiarEstadoPerfil();
     } else if (respaldo) {
       edicion.textContent = P.sinEdicion;
       edicion.hidden = false;
@@ -521,6 +524,38 @@
     $("#buscar-ayuda").textContent = visibles.length ? T.estadosVisibles(visibles.length) : T.ninguno;
   }
 
+  // Municipio: depende del estado y es opcional.
+  async function cambiarEstadoPerfil() {
+    const clave = $("#p-entidad").value;
+    estado.municipiosEstado = null;
+    $("#campo-municipio").hidden = true;
+    if (!clave) return;
+    const datos = await Personal.cargarMunicipios(clave);
+    if (!datos || $("#p-entidad").value !== clave) return;
+    estado.municipiosEstado = datos;
+    $("#p-buscar-mun").value = "";
+    llenarMunicipios("");
+    $("#campo-municipio").hidden = false;
+  }
+
+  function llenarMunicipios(filtro) {
+    const M = TEXTOS.municipio;
+    const f = sinAcentos(filtro.trim());
+    const visibles = estado.municipiosEstado.municipios.filter((m) => sinAcentos(m.nombre).includes(f));
+    const lista = $("#p-municipio");
+    const elegido = lista.value;
+    lista.replaceChildren(...[{ clave: "", nombre: M.sinMunicipio }, ...visibles].map((m) => {
+      const o = document.createElement("option");
+      o.value = String(m.clave);
+      o.textContent = m.nombre;
+      return o;
+    }));
+    if (visibles.length === 1 && f) lista.value = String(visibles[0].clave);
+    else if ([...lista.options].some((o) => o.value === elegido)) lista.value = elegido;
+    else lista.value = "";
+    $("#mun-ayuda").textContent = visibles.length ? M.visibles(visibles.length) : M.ninguno;
+  }
+
   function cambiarEdad(paso) {
     const campo = $("#p-edad");
     const actual = campo.value === "" ? 18 - paso : Number(campo.value);
@@ -545,7 +580,12 @@
     }
     try {
       const [pais, local] = await Promise.all([Personal.cargar(0), Personal.cargar(clave ?? 0)]);
-      estado.perfil = { edad, entidad: clave, nombre: clave ? local.nombre : null, local, pais };
+      const claveMun = clave && estado.municipiosEstado ? $("#p-municipio").value : "";
+      const municipio = claveMun ? estado.municipiosEstado.municipios.find((m) => String(m.clave) === claveMun) : null;
+      estado.perfil = {
+        edad, entidad: clave, nombre: clave ? local.nombre : null, local, pais,
+        municipio: municipio ? { ...municipio, umbral: estado.municipiosEstado.umbral } : null,
+      };
     } catch {
       error.textContent = T.errorDatos;
       return;
@@ -557,7 +597,7 @@
   }
 
   function prefieroNoDecir() {
-    estado.perfil = { edad: null, entidad: null, nombre: null, local: null, pais: null };
+    estado.perfil = { edad: null, entidad: null, nombre: null, local: null, pais: null, municipio: null };
     iniciar();
   }
 
@@ -632,6 +672,16 @@
       items = datosEdad.grupos.map((g, i) => ({
         etiqueta: T.grupoLegible(g), valor: datosEdad.datos[anio]["0"][i], color: "datos",
       }));
+    }
+
+    // Línea del municipio, si la persona lo eligió.
+    const mun = estado.perfil.municipio;
+    $("#perfil-municipio").hidden = !mun;
+    if (mun) {
+      const v = mun.participacion[anio];
+      $("#perfil-municipio").textContent = v == null
+        ? TEXTOS.municipio.sinDato(mun.nombre, mun.umbral)
+        : TEXTOS.municipio.final(mun.nombre, Math.round(v), anio);
     }
 
     estado.textoPerfil = mensaje;
@@ -1101,7 +1151,12 @@
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
   $("#edad-mas").addEventListener("click", () => cambiarEdad(1));
   $("#p-edad").addEventListener("input", () => { $("#perfil-error").textContent = ""; });
-  $("#p-buscar").addEventListener("input", (e) => llenarEstados(e.target.value));
+  $("#p-buscar").addEventListener("input", (e) => { llenarEstados(e.target.value); cambiarEstadoPerfil(); });
+  $("#p-entidad").addEventListener("change", cambiarEstadoPerfil);
+  $("#p-buscar-mun").addEventListener("input", (e) => llenarMunicipios(e.target.value));
+  $("#p-buscar-mun").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); $("#p-municipio").focus(); }
+  });
   // Enter en el buscador pasa a la lista para elegir con las flechas.
   $("#p-buscar").addEventListener("keydown", (e) => {
     if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); $("#p-entidad").focus(); }

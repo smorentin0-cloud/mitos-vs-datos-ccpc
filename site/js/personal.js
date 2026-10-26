@@ -16,6 +16,16 @@ const Personal = (() => {
     return archivos[k];
   }
 
+  // Municipios de un estado (archivo opcional: solo existe si se generó el agregado municipal).
+  const municipios = {};
+  async function cargarMunicipios(clave) {
+    const k = String(clave);
+    if (!municipios[k]) {
+      municipios[k] = fetch(`data/entidad/${k}/municipios.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    }
+    return municipios[k];
+  }
+
   const anioActual = () => new Date().getFullYear();
   // Edad aproximada en una elección pasada, a partir de la edad de hoy.
   const edadEn = (edad, anio) => edad - (anioActual() - anio);
@@ -56,5 +66,5 @@ const Personal = (() => {
     return anio;
   }
 
-  return { cargar, anioActual, edadEn, participacionEdad, eleccionesVividas, primeraEleccion, indiceGrupo };
+  return { cargar, cargarMunicipios, anioActual, edadEn, participacionEdad, eleccionesVividas, primeraEleccion, indiceGrupo };
 })();

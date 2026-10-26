@@ -125,6 +125,13 @@ const TEXTOS = {
     errorVacio: "Escribe tu edad o elige tu estado. Si prefieres no decir, usa el botón «Prefiero no decir».",
     errorDatos: "No pudimos cargar los datos de tu estado. Revisa tu conexión o elige «Prefiero no decir».",
   },
+  municipio: {
+    sinMunicipio: "Sin municipio",
+    visibles: (n) => (n === 1 ? "1 municipio coincide." : `${n} municipios en la lista. Escribe para buscar.`),
+    ninguno: "Ningún municipio coincide.",
+    final: (nombre, v, anio) => `En tu municipio, ${nombre}, votaron ${v} de cada 100 personas en ${anio}.`,
+    sinDato: (nombre, umbral) => `En ${nombre} hay menos de ${umbral.toLocaleString("es-MX")} personas en la lista nominal; es muy poco para dar un dato confiable.`,
+  },
   historia: {
     // Primer momento de la historia, antes de la primera pregunta.
     titulo: (edad, lugar) => (edad != null ? `Tienes ${edad} años${lugar ? ` y vives en ${lugar}` : ""}.` : `Vives en ${lugar}.`),
