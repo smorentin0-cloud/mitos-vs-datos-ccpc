@@ -9,7 +9,12 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
 ## Qué incluye
 
 - **Juego de Cierto o Falso** con 8 frases en 3 niveles que siguen un arco: un panorama de quién vota, **el primer voto** al centro (a los 18 años se vota más que el promedio, pero después la participación cae hasta cerca de los 25) y lo que pasa con los años. El cierre retoma la idea: que el primer voto no sea el último.
-- **Final personalizado, «¿Cómo vota alguien como tú?»:** pregunta opcional de edad y estado, que se puede saltar con un botón. Al final muestra cuántas personas de ese grupo votaron en 2024 en ese estado, comparado con el estado y el país. No se guarda ni se envía nada.
+- **Tu historia, de principio a fin:** antes de la primera pregunta, la persona dice su edad exacta, su estado y, si quiere, su municipio («Prefiero no decir» siempre está disponible). Un primer momento de historia le dice desde qué elección pudo votar y cuántas le han tocado.
+- **«Y en tu caso…»:** después de cada veredicto nacional, el mismo dato para su estado o su edad, con su mini gráfica y su tabla. Si el dato local va en contra del veredicto, lo dice con claridad («En México es falso, pero en Sinaloa, en 2024, pasó al revés»), sin cambiar el sello.
+- **«Adivina antes de ver»:** en 3 preguntas, la persona estima cuántas de cada 100 personas votaron antes de responder; al final se resume qué tan cerca estuvo.
+- **Pictograma «100 personas como tú»:** 100 casillas de boleta con X en las que votaron, en el final, en la pregunta de jóvenes y en la tarjeta.
+- **Tu historia como votante:** línea de tiempo de las elecciones 2009–2024 en las que tenía edad para votar, con la participación de su edad en su estado, y la próxima elección (junio de 2027) como una casilla vacía por marcar.
+- **Compromiso y reto entre generaciones:** en el cierre se elige un compromiso que aparece en la tarjeta, y se puede retar a alguien de otra generación. El enlace de reto solo lleva el puntaje.
 - **Tarjeta para compartir** (PNG 1080 × 1350) con el puntaje, el dato personalizado, un código QR al sitio y el reto «¿Me ganas?». Vista previa para WhatsApp y redes (Open Graph).
 - **Modo salón** para talleres con proyector: letra muy grande, el grupo vota a mano alzada, la persona facilitadora revela con un botón o con el teclado y cada pregunta trae una pregunta para conversar.
 - **Versión para imprimir** (`imprimible.html`): tarjetas en tamaño carta con la frase al frente y la respuesta atrás, legibles en blanco y negro.
@@ -85,6 +90,15 @@ python -m http.server 8000 --directory site
 
 y abre http://localhost:8000.
 
+## Personalización y privacidad
+
+- **Nada sale del navegador.** La edad, el estado, el municipio, las estimaciones y el compromiso viven solo en la memoria de la página: no hay `localStorage`, `sessionStorage`, cookies ni analítica, y no se envían a ningún servidor. Al cerrar la pestaña se pierden.
+- **Nada personal en la dirección.** El enlace de reto solo lleva el puntaje (`?reto=5-8`). Por esa regla, el reto compartido desde una versión estatal abre la versión nacional.
+- **Datos por estado bajo demanda.** `procesar.py` genera `site/data/entidad/<clave>/personal.json` (edad simple, grupos, sexo, tipo de sección y las comparaciones de «Y en tu caso…») y `municipios.json`. El sitio solo descarga el del estado que se elige.
+- **Umbral de celdas pequeñas: 1,000 personas en la lista nominal.** Si una celda (por ejemplo, 83 años en un estado pequeño en 2009) tiene menos, no se publica: el sitio usa el grupo quinquenal o el dato nacional y lo dice en el texto. Con este umbral quedan vacías 47 de 13,056 celdas de edad simple y 175 municipios en 2024. Detalle en [`data/processed/hallazgos.md`](data/processed/hallazgos.md).
+- **Edad en cada elección:** se calcula con la edad de hoy y el año del dispositivo, así que puede variar un año según el cumpleaños.
+- **Próxima elección:** se configura en un solo lugar (`PROXIMA_ELECCION` en `procesar.py`).
+
 ## Versión por estado
 
 Cualquier Junta Local puede generar el juego con los datos de su estado con un solo comando, usando la clave INE de la entidad (de 1 a 32):
@@ -113,6 +127,7 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── raw/                  # ZIP del INE (no se suben; ver arriba)
 │   └── processed/
 │       ├── conteos_agregados.csv   # entidad × tipo de sección × sexo × edad × año
+│       ├── municipios.csv          # participación total por municipio y año (con --rehacer)
 │       ├── evidencia_mitos.json    # cifras usadas para evaluar cada mito
 │       └── hallazgos.md            # tabla de mitos, cifras y veredictos
 ├── docs/
@@ -130,11 +145,13 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── js/textos.js          # textos que arma JavaScript (para traducir)
 │   ├── js/datos.js           # rutas de datos y versión por estado (?entidad=)
 │   ├── js/graficas.js        # gráficas SVG accesibles
-│   ├── js/juego.js           # juego, final personalizado, modo salón y tarjeta PNG
+│   ├── js/juego.js           # juego, perfil, estimaciones, modo salón, final y tarjeta PNG
+│   ├── js/personal.js        # carga de datos por estado y respaldo edad → grupo → país
+│   ├── js/caso.js            # «Y en tu caso…» de cada mito
 │   ├── js/voz.js             # lectura en voz alta
 │   ├── js/explora.js         # sección «Explora los datos»
 │   ├── js/imprimible.js      # arma las tarjetas para imprimir
-│   ├── data/                 # mitos.json, explora.json, entidades.json, entidad/<clave>/mitos.json
+│   ├── data/                 # mitos.json, explora.json, entidades.json y entidad/<clave>/ (mitos, personal, municipios)
 │   ├── fonts/                # Lexend 400 y 700 en woff2, con su licencia OFL
 │   └── img/                  # vista previa, código QR e íconos
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
@@ -171,7 +188,7 @@ El proyecto es un **kit de educación cívica** listo para usarse en Juntas Loca
 - **Niñas, niños y jóvenes:** mecánica de marcar la boleta, casillas de progreso que se llenan y tarjeta de resultado para retar a otras personas.
 - Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación.
 - **Sin internet y sin servicios externos:** la fuente Lexend está alojada en `site/fonts/` (licencia OFL) y un service worker (`site/sw.js`) guarda el sitio en el dispositivo después de la primera visita, así funciona sin conexión en talleres. El workflow de publicación cambia la versión de la caché en cada commit, así que las actualizaciones llegan solas.
-- **Peso:** el sitio completo pesa unos 231 KB; lo que se guarda para usar sin conexión son unos 173 KB (código 79 KB, datos 33 KB, fuentes 33 KB). La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
+- **Peso:** la carga inicial es de unos 215 KB (código, fuentes y los datos nacionales). Los datos de cada estado se descargan solo si la persona lo elige: `personal.json` pesa unos 5 KB y `municipios.json` hasta 76 KB (Oaxaca). Con los datos de las 32 entidades, el sitio completo pesa unos 760 KB. Sin conexión funcionan el país y la demo de Colima; otros estados se guardan en cuanto se visitan con internet. La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
 - Paleta neutral, sin colores asociados a partidos: texto `#1F2937`, datos `#2563EB`, base `#E5E7EB`, acento `#D97706`, blanco y grises.
 - Sin `localStorage`: el estado del juego vive en memoria.
 

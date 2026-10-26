@@ -110,6 +110,9 @@ const TEXTOS = {
     paraConversar: 'Para conversar:',
     listas: (n) => `Listas ${n} tarjetas. Usa el botón Imprimir o el menú de tu navegador.`,
     error: 'No se pudieron cargar las tarjetas. Recarga la página para intentarlo de nuevo.',
+    estimacionPregunta: (quien, lugar, anio) => `Antes de responder: ¿cuántas de cada 100 ${quien} en ${lugar} crees que votaron en ${anio}?`,
+    estimacionEspacio: "Mi estimación: ______ de cada 100",
+    datoReal: (v, quien, lugar, anio) => `Dato real: ${v} de cada 100 ${quien} en ${lugar} votaron en ${anio}.`,
   },
   salon: {
     votar: "Levanten la mano: ¿cierto o falso?",

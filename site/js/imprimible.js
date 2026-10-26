@@ -27,7 +27,19 @@
     return caja;
   }
 
-  function frente(m, i, total) {
+  // «Adivina antes de ver» en papel: mismas preguntas que en el juego, con los datos del ámbito.
+  const ESTIMAR = { "primer-voto": ["18", "de18"], jovenes: ["18_29", "de18a29"], sesentas: ["60_69", "de60a69"] };
+
+  function estimacion(m, personal) {
+    if (!personal || !ESTIMAR[m.id]) return null;
+    const [clave, quien] = ESTIMAR[m.id];
+    const anio = String(personal.anios.at(-1));
+    const valor = personal.estimar[anio][clave];
+    if (valor == null) return null;
+    return { quien: TEXTOS.estimar[quien], lugar: personal.nombre, anio, valor: Math.round(valor) };
+  }
+
+  function frente(m, i, total, est) {
     const hoja = nodo("section", "hoja tarjeta-frente");
     hoja.setAttribute("aria-label", T.frente(i + 1, total));
     hoja.append(
@@ -35,13 +47,18 @@
       nodo("p", "imp-pregunta", T.pregunta),
       nodo("h2", "imp-mito", m.enunciado),
     );
+    if (est) {
+      const caja = nodo("div", "imp-estimar");
+      caja.append(nodo("p", "", T.estimacionPregunta(est.quien, est.lugar, est.anio)), nodo("p", "imp-espacio", T.estimacionEspacio));
+      hoja.append(caja);
+    }
     const opciones = nodo("div", "imp-opciones");
     opciones.append(recuadro(NOMBRES.cierto), recuadro(NOMBRES.falso));
     hoja.append(opciones, nodo("p", "hoja-nota", T.instruccionFrente));
     return hoja;
   }
 
-  function reverso(m, i, total) {
+  function reverso(m, i, total, est) {
     const hoja = nodo("section", "hoja tarjeta-reverso");
     hoja.setAttribute("aria-label", T.reverso(i + 1, total));
     const veredicto = nodo("p", "imp-veredicto");
@@ -51,8 +68,9 @@
       nodo("p", "hoja-marca", T.folio(i + 1, total, m.nivel, m.nombreNivel)),
       nodo("h2", "imp-mito-reverso", m.enunciado),
       veredicto,
-      nodo("p", "imp-explicacion", m.explicacion),
     );
+    if (est) hoja.append(nodo("p", "imp-dato-real", T.datoReal(est.valor, est.quien, est.lugar, est.anio)));
+    hoja.append(nodo("p", "imp-explicacion", m.explicacion));
 
     const figura = nodo("figure", "grafica imp-grafica");
     const lienzo = nodo("div", "g-lienzo");
@@ -71,13 +89,16 @@
 
   async function armar() {
     const { datos } = await Datos.mitos();
+    const clave = datos.ambito ? datos.ambito.clave : 0;
+    const personal = await fetch(`data/entidad/${clave}/personal.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     const mitos = datos.niveles.flatMap((n, i) =>
       n.mitos.map((m) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre })));
     const contenedor = $("#tarjetas");
     const lienzos = [];
     mitos.forEach((m, i) => {
-      contenedor.append(frente(m, i, mitos.length));
-      const { hoja, lienzo } = reverso(m, i, mitos.length);
+      const est = estimacion(m, personal);
+      contenedor.append(frente(m, i, mitos.length, est));
+      const { hoja, lienzo } = reverso(m, i, mitos.length, est);
       contenedor.append(hoja);
       lienzos.push([lienzo, m.grafica]);
     });

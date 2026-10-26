@@ -33,6 +33,10 @@
 }
 
 .imp-mito-reverso { font-size: 1.25rem; margin: 0 0 0.75rem; }
+.imp-estimar { margin: 0 0 2rem; padding: 0.75rem 1rem; border: 2px dashed var(--tinta); border-radius: 4px; }
+.imp-estimar p { margin: 0 0 0.5rem; font-weight: 700; }
+.imp-espacio { font-size: 1.5rem; }
+.imp-dato-real { margin: 0 0 0.75rem; font-weight: 700; }
 .imp-veredicto {
   display: inline-flex; align-items: center; gap: 0.5rem;
   margin: 0 0 1rem; padding: 0.25rem 0.875rem;
