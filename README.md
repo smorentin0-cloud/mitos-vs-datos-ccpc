@@ -118,7 +118,9 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 - Si alguien abre un estado que no se ha generado, el sitio muestra la versión nacional con un aviso.
 - Para que ese estado funcione sin conexión desde la primera visita, agrega su ruta a la lista `ARCHIVOS` de `site/sw.js` (si no, se guarda en cuanto se visita con internet).
 
-**Demo:** Colima (clave 6) ya está publicada en [`?entidad=6`](https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=6). Con sus datos se sostienen 4 de los 8 mitos; el script omite los otros 4, por ejemplo porque la intermedia de 2015 en Colima (59.3%) superó a la presidencial de 2024 (56.4%).
+**Demo principal: San Luis Potosí** (clave 24), en [`?entidad=24`](https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=24). Con sus datos se sostienen los 8 mitos nacionales.
+
+**Segunda demo: Colima** (clave 6), en [`?entidad=6`](https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=6). Con sus datos se sostienen 4 de los 8 mitos.
 
 ## Estructura del repositorio
 
@@ -158,6 +160,15 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 ```
 
 ## Aprovechamiento institucional
+
+**Por qué hacen falta versiones por estado.** Un dato nacional no siempre describe a cada estado. En Colima, 4 de los 8 mitos nacionales no se cumplen con sus propios datos, y el script lo detecta solo:
+
+- En las intermedias no siempre votó menos gente: la intermedia de 2015 (59.3%) superó a la presidencial de 2024 (56.4%).
+- La participación en las intermedias no subió cada vez: 57.7% en 2009, 59.3% en 2015 y 51.9% en 2021.
+- En 2024 el grupo que menos votó fue el de 25 a 29 años, no el de 85 años o más.
+- En 2024, por décadas de edad, la que más votó fue la de 70 a 79 años, no la de 60 a 69.
+
+Si una Junta Local de Colima usara la versión nacional, enseñaría cuatro afirmaciones que en su estado no son ciertas. Con `--entidad` cada estado recibe solo las frases que sus datos sostienen.
 
 El proyecto es un **kit de educación cívica** listo para usarse en Juntas Locales y Distritales, escuelas y talleres:
 

@@ -305,9 +305,10 @@
     if (m.id === "primer-voto") return { quien: E.de18, real: datos.estimar[anio]["18"], lugar, anio };
     if (m.id === "sesentas") return { quien: E.de60a69, real: datos.estimar[anio]["60_69"], lugar, anio };
     if (m.id === "jovenes") {
-      if (perfil.edad != null && perfil.edad >= 18 && !estado.salon) {
-        const res = Personal.participacionEdad(datos, perfil.pais || estado.personalAmbito, anio, perfil.edad);
-        if (res.nivel === "edad") return { quien: E.deTuEdad(perfil.edad), real: res.valor, lugar, anio };
+      const edadEleccion = perfil.edad != null ? Personal.edadEn(perfil.edad, Number(anio)) : null;
+      if (edadEleccion != null && edadEleccion >= 18 && !estado.salon) {
+        const res = Personal.participacionEdad(datos, perfil.pais || estado.personalAmbito, anio, edadEleccion);
+        if (res.nivel === "edad") return { quien: E.deTuEdad(edadEleccion, anio), real: res.valor, lugar, anio };
       }
       return { quien: E.de18a29, real: datos.estimar[anio]["18_29"], lugar, anio };
     }
@@ -643,10 +644,14 @@
     let unidad = null;
 
     if (edad !== null) {
-      const res = Personal.participacionEdad(local, pais, anio, edad);
+      // Edad que tenía en la elección de referencia, igual que en «Tu historia como votante».
+      const edadEleccion = Personal.edadEn(edad, Number(anio));
+      const res = Personal.participacionEdad(local, pais, anio, edadEleccion);
       const lugar = res.nivel === "pais" ? T.pais : (nombre || T.pais);
       unidad = { valor: res.valor, quien: T.quien(res), lugar };
-      mensaje = T.mensaje({ lugar, grupo: T.quien(res).replace(/^personas de /, ""), valor: r(res.valor), anio, menor: edad < 18 })
+      mensaje = (edadEleccion < 18
+        ? T.mensaje({ lugar, grupo: T.quien(res).replace(/^personas de /, ""), valor: r(res.valor), anio, menor: true })
+        : T.mensajeEdad({ edad: edadEleccion, lugar, quien: T.quien(res), valor: r(res.valor), anio }))
         + T.nota(res, nombre || T.pais);
       items = [{ etiqueta: T.etiquetaGrupoLugar(T.quien(res).replace(/^personas de /, ""), lugar), valor: res.valor, color: "datos" }];
       if (entidad) {
@@ -799,8 +804,10 @@
   }
 
   // Enlace de reto: solo lleva el puntaje (nunca edad, estado ni compromiso).
+  // La edición (nacional o de un estado) es la página pública, no un dato de la persona.
   function urlReto() {
-    return `${urlJuego()}?reto=${estado.puntos}-${estado.mitos.length}`;
+    const edicion = estado.ambitoClave ? `entidad=${estado.ambitoClave}&` : "";
+    return `${urlJuego()}?${edicion}reto=${estado.puntos}-${estado.mitos.length}`;
   }
 
   // Si se llega con un reto válido, la portada lo dice.
@@ -810,7 +817,9 @@
     if (!m) return;
     const [puntos, de] = [Number(m[1]), Number(m[2])];
     if (de < 1 || de > Math.max(total, 20) || puntos > de) return;
-    $("#reto-aviso").textContent = TEXTOS.reto.aviso(puntos, de);
+    $("#reto-aviso").textContent = estado.ambitoClave
+      ? TEXTOS.reto.avisoEstado(puntos, de, estado.lugar)
+      : TEXTOS.reto.aviso(puntos, de);
     $("#reto-aviso").hidden = false;
   }
 
