@@ -552,3 +552,8 @@ kbd {
 .barra .marca span { overflow: hidden; text-overflow: ellipsis; }
 .barra .marca-icono { width: 28px; height: 28px; }
 .lectura { flex: none; }
+
+/* ---------------------------------------------------------------- nota de método */
+.como-calcula { margin: 2.5rem 0 0; font-size: 1rem; color: var(--tinta-suave); }
+.como-calcula summary { cursor: pointer; color: var(--azul); min-height: 44px; display: flex; align-items: center; }
+.como-calcula p { margin: 0.5rem 0 0; }

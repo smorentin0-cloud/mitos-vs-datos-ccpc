@@ -44,6 +44,11 @@
     Voz.detener();
     if (id === "portada" && estado.salon) salirSalon();
     document.querySelectorAll(".pantalla").forEach((p) => { p.hidden = p.id !== id; });
+    // El pie completo solo en la portada y en Explora; en lo demás, «¿Cómo se calcula?».
+    const conPie = id === "portada" || id === "explora";
+    $("#pie").hidden = !conPie;
+    $("#como-calcula").hidden = conPie;
+    $("#como-calcula").open = false;
     window.scrollTo(0, 0);
     const titulo = document.querySelector(`#${id} h1, #${id} h2`);
     if (titulo) {
@@ -1169,6 +1174,7 @@
       $("#cierre-texto").textContent = datos.cierre.texto;
     }
     $("#nota-metodo").textContent = datos.nota_metodo;
+    $("#nota-metodo-corta").textContent = datos.nota_metodo;
   }
 
   Voz.iniciar({ alActivar: leerPantallaActual });
