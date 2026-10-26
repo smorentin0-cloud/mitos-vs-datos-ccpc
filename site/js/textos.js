@@ -114,6 +114,58 @@ const TEXTOS = {
     lugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente como tú en ${lugar}.`,
     soloLugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente de ${lugar}.`,
   },
+  enTuCaso: {
+    titulo: "Y en tu caso…",
+    // Aperturas según cómo se compara el dato local con el veredicto del juego.
+    igual: (lugar) => `En ${lugar} pasa lo mismo.`,
+    empate: (lugar, anio) => `En ${lugar}, en ${anio}, fue casi un empate.`,
+    alReves: (veredicto, ambito, lugar, anio) => (veredicto === "falso"
+      ? `En ${ambito} es falso, pero en ${lugar}, en ${anio}, pasó al revés.`
+      : `En ${ambito} es cierto, pero en ${lugar}, en ${anio}, no se cumplió.`),
+    noAsi: (veredicto, ambito, lugar) => (veredicto === "falso"
+      ? `En ${ambito} es falso, pero en ${lugar} sí se cumplió.`
+      : `En ${ambito} es cierto, pero en ${lugar} no se cumplió.`),
+    campoTampoco: (lugar) => `En ${lugar} tampoco fue siempre así: en alguna elección el campo votó igual o más que la ciudad.`,
+    tendenciaNoSiempre: (ambito, lugar) => `En ${ambito} subió en cada intermedia, pero en ${lugar} no: en alguna bajó.`,
+    // Datos de cada mito (las cifras llegan de personal.json)
+    sexo: (m, h, anio, pct) => `En ${anio} votó el ${pct(m)} de las mujeres y el ${pct(h)} de los hombres.`,
+    mujeres: "Mujeres",
+    hombres: "Hombres",
+    tituloSexo: (lugar, anio) => `Participación por sexo en ${lugar}, ${anio}`,
+    campoSinDatos: (lugar) => `En ${lugar} hay muy pocas secciones rurales en la lista nominal para comparar el campo con la ciudad.`,
+    campo: (d, pct) => (d.relacion === "contrario"
+      ? `En las 6 elecciones el campo votó menos que la ciudad. En ${d.anio}: ${pct(d.rural)} en secciones rurales y ${pct(d.urbana)} en urbanas.`
+      : `En ${d.anio} votó el ${pct(d.rural)} en secciones rurales y el ${pct(d.urbana)} en urbanas.`),
+    rural: "Rural",
+    urbana: "Urbana",
+    tituloCampo: (lugar, anio) => `Participación por tipo de sección en ${lugar}, ${anio}`,
+    intermedias: (d, pct) => (d.relacion === "contrario"
+      ? `La intermedia de ${d.intermedia[0]} (${pct(d.intermedia[1])}) superó a la presidencial de ${d.presidencial[0]} (${pct(d.presidencial[1])}).`
+      : `Su intermedia con más participación (${d.intermedia[0]}, ${pct(d.intermedia[1])}) quedó ${d.relacion === "empate" ? "muy cerca de" : "debajo de"} su presidencial con menos (${d.presidencial[0]}, ${pct(d.presidencial[1])}).`),
+    presidencial: "Presidencial",
+    intermedia: "Intermedia",
+    tituloElecciones: (lugar) => `Participación en ${lugar} por elección`,
+    tendencia: (serie, pct) => `En sus intermedias votó ${serie.map(([a, v]) => `el ${pct(v)} en ${a}`).join(", ").replace(/, ([^,]*)$/, " y $1")}.`,
+    tituloIntermedias: (lugar) => `Participación en las intermedias en ${lugar}`,
+    primerVoto: (v18, prom, lugar, pct) => `A los 18 años votó el ${pct(v18)}; el promedio de ${lugar} fue de ${pct(prom)}.`,
+    tuEdad: (edad, lugar, valor, quien, anio) => `A tus ${edad} años: en ${lugar}, de cada 100 ${quien}, votaron ${valor} en ${anio}.`,
+    cuandoCumplas: (lugar, valor, anio) => `Cuando cumplas 18: en ${lugar}, de cada 100 personas de 18 años, votaron ${valor} en ${anio}.`,
+    a18: (lugar) => `18 años en ${lugar}`,
+    aTuEdad: (quien, lugar) => `${quien.replace(/^personas de /, "")} en ${lugar}`,
+    promedio: (lugar) => `Promedio de ${lugar}`,
+    tituloEdad: (lugar, anio) => `Participación por edad en ${lugar}, ${anio}`,
+    jovenes: (j, lugar, anio, pct) => `En ${anio} votó el ${pct(j)} de las personas de 18 a 29 años en ${lugar}.`,
+    jovenesQuien: "personas de 18 a 29 años",
+    tituloUnidades: (quien, lugar, anio) => `100 ${quien} en ${lugar}: cuántas votaron en ${anio}`,
+    sesentas: (grupo, v, pct) => `El grupo que más votó fue el de ${grupo} años (${pct(v)}).`,
+    gruposSesentas: ["60–64", "65–69"],
+    mayores: (d, pct) => (d.relacion === "coincide"
+      ? `El grupo que menos votó fue el de ${TEXTOS.perfil.grupoLegible(d.grupo)} (${pct(d.valor)}).`
+      : `El grupo que menos votó fue el de ${TEXTOS.perfil.grupoLegible(d.grupo)} (${pct(d.valor)}); el de 85 años o más votó ${pct(d.v85)}.`),
+    tuGrupo: (g, v, lugar, pct) => `Tu grupo, de ${TEXTOS.perfil.grupoLegible(g)}, votó ${pct(v)} en ${lugar}.`,
+    anios: (g) => TEXTOS.perfil.grupoLegible(g),
+    tituloGrupos: (lugar, anio) => `Participación por grupo de edad en ${lugar}, ${anio}`,
+  },
   perfil: {
     titulo: "¿Cómo vota alguien como tú?",
     // grupo: "25 a 29 años", "85 años o más"

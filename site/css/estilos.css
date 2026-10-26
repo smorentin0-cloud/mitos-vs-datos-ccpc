@@ -456,3 +456,13 @@ kbd {
 
 .momento-boleta { padding-bottom: 1.5rem; }
 .momento-titulo { font-size: 1.75rem; margin: 0 0 0.75rem; }
+
+/* ---------------------------------------------------------------- «Y en tu caso…» */
+.en-tu-caso {
+  margin: 1.5rem 0 1rem; padding: 1rem 1.25rem 0.25rem;
+  background: var(--papel);
+  border: 2px solid var(--tinta); border-left: 10px solid var(--azul); border-radius: 4px;
+}
+.en-tu-caso-titulo { font-size: 1.375rem; margin: 0 0 0.5rem; }
+.etc-texto { margin: 0 0 0.75rem; font-size: 1.125rem; }
+.en-tu-caso .grafica { border-width: 1px; }

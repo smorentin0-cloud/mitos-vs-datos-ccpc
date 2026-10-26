@@ -16,6 +16,8 @@
     proxima: null,
     aniosHistoria: [],
     lugar: "México",
+    ambitoClave: 0,
+    caso: null, // «Y en tu caso…» de la pregunta actual
     datosPerfil: null,
     textoPerfil: "",
     // Modo salón: una pregunta por pantalla, sin puntos, la persona facilitadora revela.
@@ -65,8 +67,12 @@
     const m = estado.mitos[estado.indice];
     const aviso = estado.salon ? "" : `${$("#resultado-respuesta").textContent} `;
     const discusion = estado.salon ? ` ${TEXTOS.salon.paraConversar} ${m.discusion}` : "";
+    const caso = estado.caso
+      ? ` ${TEXTOS.enTuCaso.titulo} ${estado.caso.texto}` +
+        (estado.caso.grafica ? ` ${J.graficaMuestra} ${Graficas.describir(estado.caso.grafica)} ${estado.caso.fuente}` : "")
+      : "";
     return `${aviso}${J.respuesta(NOMBRES[m.veredicto])}. ` +
-      `${m.explicacion} ${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}`;
+      `${m.explicacion} ${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}${caso}`;
   }
 
   function textoResultado() {
@@ -224,6 +230,7 @@
     $("#explicacion").textContent = m.explicacion;
     $("#discusion").hidden = !estado.salon;
     $("#discusion-texto").textContent = m.discusion || "";
+    pintarEnTuCaso(m);
     const ultima = estado.indice === estado.mitos.length - 1;
     $("#siguiente").textContent = estado.salon
       ? (ultima ? TEXTOS.salon.terminar : J.siguiente)
@@ -238,10 +245,32 @@
     estado.temporizador = setTimeout(() => {
       $("#revelacion").hidden = false;
       Graficas.dibujar($("#g-lienzo"), g);
+      if (estado.caso && estado.caso.grafica) Graficas.dibujar($("#etc-lienzo"), estado.caso.grafica);
       $("#t-veredicto").focus({ preventScroll: true });
       (estado.salon ? $("#t-veredicto") : aviso)
         .scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
     }, sinMovimiento() ? 0 : 700);
+  }
+
+  // Bloque «Y en tu caso…»: el mismo dato para el estado o la edad de la persona.
+  function pintarEnTuCaso(m) {
+    const caso = estado.salon ? null : EnTuCaso.armar(m, {
+      perfil: estado.perfil,
+      ambito: estado.lugar,
+      ambitoClave: estado.ambitoClave,
+      anio: String(estado.aniosHistoria.at(-1)),
+    });
+    estado.caso = caso;
+    $("#en-tu-caso").hidden = !caso;
+    if (!caso) return;
+    $("#etc-texto").textContent = caso.texto;
+    $("#etc-figura").hidden = !caso.grafica;
+    $("#etc-lienzo").replaceChildren();
+    if (caso.grafica) {
+      $("#etc-titulo").textContent = caso.grafica.titulo;
+      $("#etc-fuente").textContent = caso.fuente;
+      $("#etc-tabla").replaceChildren(Graficas.tabla(caso.grafica));
+    }
   }
 
   function siguiente() {
@@ -336,6 +365,7 @@
     const P = TEXTOS.portada;
     const total = datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0);
     estado.lugar = datos.ambito ? datos.ambito.nombre : "México";
+    estado.ambitoClave = datos.ambito ? datos.ambito.clave : 0;
     if (datos.titulo) $("#t-portada").textContent = datos.titulo;
     $("#portada-entrada").textContent = P.entrada(total);
     const edicion = $("#edicion");
