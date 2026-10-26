@@ -23,6 +23,7 @@
     estimacion: null,
     estimaciones: [],
     personalAmbito: null, // personal.json del ámbito del juego (país o estado de la versión)
+    compromiso: null, // clave del compromiso elegido en el cierre
     datosPerfil: null,
     textoPerfil: "",
     // Modo salón: una pregunta por pantalla, sin puntos, la persona facilitadora revela.
@@ -50,14 +51,17 @@
     }
     if (id === "explora") Explora.abrir();
     if (id === "resultado") Voz.anunciar(textoResultado());
-    if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
+    if (id === "cierre") {
+      $("#compromiso").hidden = estado.salon || !estado.aciertos.length;
+      Voz.anunciar(textoPantalla("cierre"));
+    }
   }
 
   // ---------- textos para leer en voz alta
 
   function textoPantalla(id) {
     const s = document.getElementById(id);
-    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .nota-papel, .campo-titulo, .ayuda, .privacidad, .llamado li")]
+    return [...s.querySelectorAll("h1, h2, h3:not([hidden] *), .entrada, .pasos li, .nota-papel, .campo-titulo, .ayuda, .privacidad, .llamado li, .reto-aviso:not([hidden])")]
       .map((n) => n.textContent.trim()).join(". ");
   }
 
@@ -739,9 +743,63 @@
     $("#historia-fuente").textContent = H.fuente(anios[0], anios.at(-1));
   }
 
-  // Dirección para compartir; conserva la versión estatal (?entidad=6) si se está jugando una.
+  // Dirección del juego, sin parámetros.
   function urlJuego() {
-    return location.origin + Datos.conEntidad(location.pathname.replace(/index\.html$/, ""));
+    return location.origin + location.pathname.replace(/index\.html$/, "");
+  }
+
+  // Enlace de reto: solo lleva el puntaje (nunca edad, estado ni compromiso).
+  function urlReto() {
+    return `${urlJuego()}?reto=${estado.puntos}-${estado.mitos.length}`;
+  }
+
+  // Si se llega con un reto válido, la portada lo dice.
+  function leerReto(total) {
+    const valor = new URLSearchParams(location.search).get("reto") || "";
+    const m = valor.match(/^(\d{1,2})-(\d{1,2})$/);
+    if (!m) return;
+    const [puntos, de] = [Number(m[1]), Number(m[2])];
+    if (de < 1 || de > Math.max(total, 20) || puntos > de) return;
+    $("#reto-aviso").textContent = TEXTOS.reto.aviso(puntos, de);
+    $("#reto-aviso").hidden = false;
+  }
+
+  // ---------- compromiso y reto entre generaciones
+
+  function textoCompromiso(clave) {
+    const o = TEXTOS.compromiso.opciones[clave];
+    return typeof o === "function" ? o(estado.proxima.anio) : o;
+  }
+
+  function elegirCompromiso(clave) {
+    estado.compromiso = clave;
+    document.querySelectorAll(".compromiso-btn").forEach((b) => {
+      const activo = b.dataset.compromiso === clave;
+      b.setAttribute("aria-pressed", String(activo));
+      b.querySelector(".casilla").classList.toggle("marcada", activo);
+    });
+    $("#compromiso-aviso").textContent = TEXTOS.compromiso.elegido(textoCompromiso(clave));
+    dibujarTarjeta();
+  }
+
+  async function retarGeneracion() {
+    const R = TEXTOS.reto;
+    const datos = estado.personalAmbito;
+    const anio = String(estado.aniosHistoria.at(-1));
+    const texto = R.generacion(estado.puntos, estado.mitos.length,
+      Math.round(datos.estimar[anio]["18_29"]), Math.round(datos.estimar[anio]["60_69"]), anio, datos.nombre);
+    const url = urlReto();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: TEXTOS.compartir.titulo, text: texto, url });
+        return;
+      }
+      await navigator.clipboard.writeText(`${texto} ${url}`);
+      $("#reto-aviso-cierre").textContent = R.copiado;
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      $("#reto-aviso-cierre").textContent = TEXTOS.compartir.copiaManual(`${texto} ${url}`);
+    }
   }
 
   function envolver(ctx, txt, ancho) {
@@ -835,17 +893,17 @@
 
     ctx.fillStyle = C.suave;
     ctx.font = `400 40px ${F}`;
-    ctx.fillText(T.miResultado, izq, y0 + 240);
+    ctx.fillText(T.miResultado, izq, y0 + 225);
 
     ctx.fillStyle = C.tinta;
-    ctx.font = `700 200px ${F}`;
-    ctx.fillText(T.marcador(estado.puntos, total), izq - 8, y0 + 430);
+    ctx.font = `700 180px ${F}`;
+    ctx.fillText(T.marcador(estado.puntos, total), izq - 8, y0 + 395);
 
     // Casillas marcadas, una por pregunta
-    const lado = 70, sep = 20;
+    const lado = 64, sep = 18;
     estado.aciertos.forEach((ok, i) => {
       const x = izq + i * (lado + sep);
-      const y = y0 + 480;
+      const y = y0 + 430;
       ctx.lineWidth = 6;
       ctx.strokeStyle = ok ? C.azul : C.gris;
       ctx.fillStyle = ok ? C.azul : "#FFFFFF";
@@ -868,16 +926,38 @@
     // Dato personalizado (o el del país si la persona prefirió no decir)
     ctx.fillStyle = C.suave;
     ctx.font = `400 32px ${F}`;
-    ctx.fillText(T.perfil, izq, y0 + 640);
+    ctx.fillText(T.perfil, izq, y0 + 570);
     // Pictograma de 100 personas como tú, a la derecha del dato.
     const unidad = estado.unidadPerfil;
-    const ladoGrid = 230;
-    if (unidad) dibujarUnidades(ctx, x0 + w - 60 - ladoGrid, y0 + 610, ladoGrid, Math.round(unidad.valor), C);
+    const ladoGrid = 210;
+    if (unidad) dibujarUnidades(ctx, x0 + w - 60 - ladoGrid, y0 + 540, ladoGrid, Math.round(unidad.valor), C);
     ctx.fillStyle = C.tinta;
-    ctx.font = `700 42px ${F}`;
-    envolver(ctx, estado.textoPerfil, unidad ? anchoTexto - ladoGrid - 40 : anchoTexto).slice(0, 5).forEach((l, i) => {
-      ctx.fillText(l, izq, y0 + 700 + i * 54);
+    ctx.font = `700 38px ${F}`;
+    envolver(ctx, estado.textoPerfil, unidad ? anchoTexto - ladoGrid - 40 : anchoTexto).slice(0, 4).forEach((l, i) => {
+      ctx.fillText(l, izq, y0 + 625 + i * 48);
     });
+
+    // Compromiso elegido en el cierre
+    if (estado.compromiso) {
+      ctx.fillStyle = C.suave;
+      ctx.font = `400 30px ${F}`;
+      ctx.fillText(TEXTOS.compromiso.tarjeta, izq, y0 + 805);
+      const cx = izq, cy = y0 + 818, cl = 40;
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = C.tinta;
+      ctx.strokeRect(cx, cy, cl, cl);
+      ctx.strokeStyle = C.azul;
+      ctx.lineWidth = 6;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(cx + 10, cy + 10); ctx.lineTo(cx + cl - 10, cy + cl - 10);
+      ctx.moveTo(cx + cl - 10, cy + 10); ctx.lineTo(cx + 10, cy + cl - 10);
+      ctx.stroke();
+      ctx.fillStyle = C.tinta;
+      ctx.font = `700 34px ${F}`;
+      envolver(ctx, textoCompromiso(estado.compromiso), anchoTexto - 300).slice(0, 2)
+        .forEach((l, i) => ctx.fillText(l, cx + cl + 18, cy + 31 + i * 40));
+    }
 
     // Sello
     ctx.save();
@@ -901,17 +981,17 @@
     if (qr) ctx.drawImage(qr, xQr, yQr, ladoQr, ladoQr);
     ctx.textAlign = "left";
     ctx.fillStyle = C.tinta;
-    ctx.font = `700 64px ${F}`;
-    ctx.fillText(T.meGanas, izq, yQr + 50);
+    ctx.font = `700 56px ${F}`;
+    ctx.fillText(T.meGanas, izq, yQr + 76);
     ctx.font = `400 30px ${F}`;
-    ctx.fillText(T.juegaEn, izq, yQr + 100);
+    ctx.fillText(T.juegaEn, izq, yQr + 114);
     // La dirección se parte después del dominio para que quepa junto al QR.
     const url = urlJuego().replace(/^https?:\/\//, "");
     const corte = url.indexOf("/") + 1;
     ctx.fillStyle = C.azul;
     ctx.font = `700 30px ${F}`;
     [url.slice(0, corte), url.slice(corte)].filter(Boolean)
-      .forEach((l, i) => ctx.fillText(l, izq, yQr + 142 + i * 38));
+      .forEach((l, i) => ctx.fillText(l, izq, yQr + 152 + i * 36));
     ctx.fillStyle = C.suave;
     ctx.font = `400 24px ${F}`;
     if (qr) ctx.fillText(T.qr, izq, yQr + 230);
@@ -919,7 +999,8 @@
     envolver(ctx, T.fuente(anios[0], anios.at(-1)), w - 80)
       .forEach((l, i) => ctx.fillText(l, x0 + w / 2, y0 + h + 50 + i * 30));
 
-    c.setAttribute("aria-label", T.descripcion(estado.puntos, total, estado.textoPerfil));
+    c.setAttribute("aria-label", T.descripcion(estado.puntos, total, estado.textoPerfil)
+      + (estado.compromiso ? ` ${TEXTOS.compromiso.tarjeta} ${textoCompromiso(estado.compromiso)}.` : ""));
   }
 
   function blobTarjeta() {
@@ -941,7 +1022,7 @@
 
   async function compartir() {
     const C = TEXTOS.compartir;
-    const datos = { title: C.titulo, text: C.reto(estado.puntos, estado.mitos.length, estado.lugar), url: urlJuego() };
+    const datos = { title: C.titulo, text: C.reto(estado.puntos, estado.mitos.length, estado.lugar), url: urlReto() };
     try {
       const archivo = new File([await blobTarjeta()], "mitos-vs-datos-resultado.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
@@ -959,7 +1040,7 @@
   // Copia el reto completo con el enlace, no solo la dirección.
   async function copiar() {
     const C = TEXTOS.compartir;
-    const texto = C.retoConEnlace(estado.puntos, estado.mitos.length, estado.lugar, urlJuego());
+    const texto = C.retoConEnlace(estado.puntos, estado.mitos.length, estado.lugar, urlReto());
     const aviso = $("#aviso-compartir");
     try {
       await navigator.clipboard.writeText(texto);
@@ -978,11 +1059,18 @@
     ]);
     estado.datosPerfil = { edad, entidades };
     estado.personalAmbito = await Personal.cargar(datos.ambito ? datos.ambito.clave : 0).catch(() => null);
-    estado.proxima = datos.proxima_eleccion;
-    estado.presidenciales = datos.presidenciales;
+    // Una versión estatal generada con un script anterior puede no traer estos datos: se usan los nacionales.
+    const config = datos.proxima_eleccion && datos.presidenciales ? datos
+      : await fetch("data/mitos.json").then((r) => r.json());
+    estado.proxima = config.proxima_eleccion;
+    estado.presidenciales = config.presidenciales;
+    document.querySelectorAll(".compromiso-btn").forEach((b) => {
+      b.querySelector(".compromiso-texto").textContent = textoCompromiso(b.dataset.compromiso);
+    });
     estado.aniosHistoria = edad.anios;
     llenarEstados("");
     pintarPortada(datos, respaldo);
+    leerReto(datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0));
     estado.totalNiveles = datos.niveles.length;
     estado.mitos = datos.niveles.flatMap((n, i) =>
       n.mitos.map((m, j) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));
@@ -1003,6 +1091,12 @@
   $("#est-menos").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) - 1));
   $("#est-mas").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) + 1));
   $("#est-ver").addEventListener("click", verDato);
+  document.querySelectorAll(".compromiso-btn").forEach((b) => {
+    b.querySelector(".compromiso-texto").textContent = "";
+    b.addEventListener("click", () => elegirCompromiso(b.dataset.compromiso));
+  });
+  $("#descargar-cierre").addEventListener("click", descargar);
+  $("#reto-generacion").addEventListener("click", retarGeneracion);
   $("#perfil-no-decir").addEventListener("click", prefieroNoDecir);
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
   $("#edad-mas").addEventListener("click", () => cambiarEdad(1));

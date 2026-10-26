@@ -69,6 +69,7 @@
       <h2 id="t-portada" class="titular">¿Cuánto sabes de cómo vota México?</h2>
       <p id="portada-entrada" class="entrada">Todo mundo repite frases sobre quién vota y quién no. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.</p>
       <p id="edicion" class="edicion" hidden></p>
+      <p id="reto-aviso" class="reto-aviso" hidden></p>
       <div class="acciones">
         <button class="boton primario" data-ir="instrucciones">Jugar</button>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>
@@ -307,6 +308,23 @@
         <li><strong>Revisa</strong> que tu credencial para votar esté vigente y que tus datos estén al día.</li>
         <li><strong>Participa</strong> en cada elección, sea presidencial o intermedia.</li>
       </ul>
+
+      <section id="compromiso" class="compromiso" aria-labelledby="t-compromiso">
+        <h3 id="t-compromiso">Elige tu compromiso</h3>
+        <p class="ayuda">Elige uno. Aparecerá en tu tarjeta junto a tu resultado.</p>
+        <div class="compromisos" role="group" aria-labelledby="t-compromiso">
+          <button class="compromiso-btn" data-compromiso="credencial" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+          <button class="compromiso-btn" data-compromiso="votar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+          <button class="compromiso-btn" data-compromiso="invitar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+        </div>
+        <p id="compromiso-aviso" class="aviso" role="status"></p>
+        <div class="acciones">
+          <button class="boton primario" id="descargar-cierre">Descargar mi tarjeta</button>
+          <button class="boton secundario" id="reto-generacion">Reta a alguien de otra generación</button>
+        </div>
+        <p id="reto-aviso-cierre" class="aviso" role="status"></p>
+      </section>
+
       <div class="acciones">
         <a class="boton primario" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
         <button class="boton secundario" data-ir="explora">Ver los datos</button>

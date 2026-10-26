@@ -62,6 +62,22 @@ const TEXTOS = {
     edicion: (lugar) => `Esta versión usa solo datos de ${lugar}. Las frases que no se cumplen con los datos de este estado no aparecen.`,
     sinEdicion: 'Todavía no hay una versión para ese estado; estás jugando la versión de todo el país.',
   },
+  compromiso: {
+    opciones: {
+      credencial: "Revisar que mi credencial esté vigente",
+      votar: (anio) => `Votar en ${anio}`,
+      invitar: "Invitar a alguien de otra generación a jugar",
+    },
+    elegido: (texto) => `Tu compromiso: ${texto}. Ya está en tu tarjeta.`,
+    tarjeta: "Mi compromiso:",
+  },
+  reto: {
+    // El enlace de reto solo lleva el puntaje; nunca edad, estado ni compromiso.
+    aviso: (puntos, total) => `Alguien te retó: sacó ${puntos} de ${total}. ¿Le ganas?`,
+    generacion: (puntos, total, j, s, anio, lugar) =>
+      `Saqué ${puntos} de ${total} en «Mitos vs. Datos». ¿Sabías que en ${anio}, en ${lugar}, votaron ${j} de cada 100 personas de 18 a 29 años y ${s} de cada 100 de 60 a 69? Juega y compara tu generación con la mía:`,
+    copiado: "Copiamos el reto con el enlace. Mándaselo a alguien de otra generación.",
+  },
   compartir: {
     titulo: "Mitos vs. Datos",
     // Lo que se comparte o se copia siempre lleva el reto.
