@@ -133,10 +133,7 @@ const EnTuCaso = (() => {
       const lugar = e ? e.lugar : ctx.lugar;
       return {
         texto: partes.join(" "),
-        grafica: {
-          tipo: "barras", titulo: t.tituloUnidades(quien, lugar, anio),
-          items: [{ etiqueta: quien, valor, color: "datos" }, { etiqueta: t.promedio(ctx.lugar), valor: datos.total[anio], color: "base" }],
-        },
+        grafica: { tipo: "unidades", titulo: t.tituloUnidades(quien, lugar, anio), valor, etiqueta: quien },
         anio,
       };
     },

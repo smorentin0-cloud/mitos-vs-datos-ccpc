@@ -48,6 +48,12 @@ const TEXTOS = {
     participacion: "Participación",
     anio: "Año",
     tipo: "Tipo",
+    deCada100: "De cada 100",
+    votaron: "Votaron",
+    noVotaron: "No votaron",
+    unidades: (titulo, quien, si, no) => `${titulo}. De cada 100 ${quien}, votaron ${si} y no votaron ${no}.`,
+    leyendaSi: (n) => `Votaron: ${n}`,
+    leyendaNo: (n) => `No votaron: ${n}`,
     resumenSerie: (desde, x0, hasta, x1, min, xMin, max, xMax) =>
       `de ${desde} en ${x0} a ${hasta} en ${x1}; mínimo de ${min} en ${xMin} y máximo de ${max} en ${xMax}`,
   },
@@ -197,6 +203,8 @@ const TEXTOS = {
     // grupo: "25 a 29 años", "85 años o más"
     grupoLegible: (g) => (g.includes("más") ? `${g.replace(" y más", "")} años o más` : `${g.replace("–", " a ")} años`),
     edadLegible: (e) => (e >= 85 ? "85 años o más" : `${e} años`),
+    personas: "personas",
+    tituloUnidades: (quien, lugar, anio) => `100 ${quien} en ${lugar}: cuántas votaron en ${anio}`,
     // A quién se refiere la cifra según el nivel que alcanzó el umbral de lista nominal.
     quien: (r) => (r.nivel === "grupo"
       ? `personas de ${TEXTOS.perfil.grupoLegible(r.grupo)}`

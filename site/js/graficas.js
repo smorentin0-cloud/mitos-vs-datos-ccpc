@@ -31,6 +31,10 @@ const Graficas = (() => {
   // ---------- descripción accesible y tabla
 
   function describir(spec) {
+    if (spec.tipo === "unidades") {
+      const si = Math.round(spec.valor);
+      return TEXTOS.graficas.unidades(spec.titulo, spec.etiqueta, si, 100 - si);
+    }
     if (spec.tipo === "barras") {
       return `${spec.titulo}. ` + spec.items.map((i) => `${i.etiqueta}: ${fmt(i.valor)}`).join("; ") + ".";
     }
@@ -58,6 +62,19 @@ const Graficas = (() => {
       if (num) c.className = "num";
       fila.appendChild(c);
     };
+    if (spec.tipo === "unidades") {
+      th(cab, spec.etiqueta[0].toUpperCase() + spec.etiqueta.slice(1));
+      th(cab, TEXTOS.graficas.deCada100, true);
+      const si = Math.round(spec.valor);
+      [[TEXTOS.graficas.votaron, si], [TEXTOS.graficas.noVotaron, 100 - si]].forEach(([n, v]) => {
+        const f = filas.insertRow();
+        f.insertCell().textContent = n;
+        const c = f.insertCell();
+        c.textContent = String(v);
+        c.className = "num";
+      });
+      return t;
+    }
     if (spec.tipo === "barras") {
       th(cab, TEXTOS.graficas.grupo);
       th(cab, TEXTOS.graficas.participacion, true);
@@ -228,6 +245,47 @@ const Graficas = (() => {
     return svg;
   }
 
+  // ---------- unidades: 100 casillas de boleta, con X en las que votaron
+
+  function unidades(contenedor, spec) {
+    const k = escala();
+    const ancho = Math.max(280, contenedor.clientWidth || 320);
+    const sep = 4 * k;
+    const lado = Math.min(30 * k, (ancho - 9 * sep) / 10);
+    const rejilla = lado * 10 + sep * 9;
+    const altoLeyenda = 34 * k;
+    const { svg } = lienzo(contenedor, spec, rejilla + altoLeyenda + 8);
+    const si = Math.round(spec.valor);
+    const trazo = Math.max(2, lado / 8);
+    for (let i = 0; i < 100; i += 1) {
+      const x = (i % 10) * (lado + sep);
+      const y = Math.floor(i / 10) * (lado + sep);
+      const voto = i < si;
+      el("rect", {
+        x, y, width: lado, height: lado, rx: 2, fill: "#FFFFFF",
+        stroke: voto ? "#1F2937" : COLORES.base, "stroke-width": voto ? trazo * 0.8 : trazo * 0.6,
+      }, svg);
+      if (voto) {
+        const m = lado * 0.24;
+        el("path", {
+          d: `M${x + m},${y + m} L${x + lado - m},${y + lado - m} M${x + lado - m},${y + m} L${x + m},${y + lado - m}`,
+          stroke: COLORES.datos, "stroke-width": trazo, "stroke-linecap": "round", fill: "none",
+          class: "aparece", style: `transition-delay:${0.2 + i * 0.012}s`,
+        }, svg);
+      }
+    }
+    // Leyenda con texto: no depende del color.
+    const yl = rejilla + altoLeyenda - 8 * k;
+    const caja = 16 * k;
+    el("rect", { x: 0, y: yl - caja + 3, width: caja, height: caja, rx: 2, fill: "#FFFFFF", stroke: "#1F2937", "stroke-width": 2 }, svg);
+    el("path", { d: `M3,${yl - caja + 6} L${caja - 3},${yl} M${caja - 3},${yl - caja + 6} L3,${yl}`, stroke: COLORES.datos, "stroke-width": 2.5, fill: "none" }, svg);
+    texto(svg, caja + 8, yl, TEXTOS.graficas.leyendaSi(si), { class: "etiqueta", "font-weight": 700 });
+    const x2 = rejilla / 2 + 8;
+    el("rect", { x: x2, y: yl - caja + 3, width: caja, height: caja, rx: 2, fill: "#FFFFFF", stroke: COLORES.base, "stroke-width": 2 }, svg);
+    texto(svg, x2 + caja + 8, yl, TEXTOS.graficas.leyendaNo(100 - si), { class: "etiqueta" });
+    return svg;
+  }
+
   // ---------- líneas
 
   function linea(contenedor, spec) {
@@ -306,7 +364,7 @@ const Graficas = (() => {
 
   // ---------- API pública
 
-  const dibujantes = { barras, columnas, linea };
+  const dibujantes = { barras, columnas, linea, unidades };
   const observados = new WeakMap();
   const activos = new Set();
 

@@ -593,10 +593,12 @@
     let comparacion;
     let items;
     let titulo = T.graficaTitulo(anio);
+    let unidad = null;
 
     if (edad !== null) {
       const res = Personal.participacionEdad(local, pais, anio, edad);
       const lugar = res.nivel === "pais" ? T.pais : (nombre || T.pais);
+      unidad = { valor: res.valor, quien: T.quien(res), lugar };
       mensaje = T.mensaje({ lugar, grupo: T.quien(res).replace(/^personas de /, ""), valor: r(res.valor), anio, menor: edad < 18 })
         + T.nota(res, nombre || T.pais);
       items = [{ etiqueta: T.etiquetaGrupoLugar(T.quien(res).replace(/^personas de /, ""), lugar), valor: res.valor, color: "datos" }];
@@ -609,6 +611,7 @@
       items.push({ etiqueta: T.todoPais, valor: promPais, color: "base" });
     } else if (entidad) {
       mensaje = T.mensaje({ lugar: nombre, grupo: null, valor: r(local.total[anio]), anio, menor: false });
+      unidad = { valor: local.total[anio], quien: T.personas, lugar: nombre };
       comparacion = T.comparaPais(r(promPais));
       items = [
         { etiqueta: T.todo(nombre), valor: local.total[anio], color: "datos" },
@@ -627,7 +630,12 @@
     estado.textoPerfil = mensaje;
     $("#perfil-mensaje").textContent = mensaje;
     $("#perfil-comparacion").textContent = comparacion;
-    const spec = { tipo: "barras", titulo, items };
+    // Con perfil, el dato se ve como 100 personas como tú; sin perfil, la gráfica por grupos de edad.
+    const spec = unidad
+      ? { tipo: "unidades", titulo: T.tituloUnidades(unidad.quien, unidad.lugar, anio), valor: unidad.valor, etiqueta: unidad.quien }
+      : { tipo: "barras", titulo, items };
+    estado.unidadPerfil = unidad;
+    titulo = spec.titulo;
     $("#perfil-g-titulo").textContent = titulo;
     $("#perfil-g-fuente").textContent = T.fuente(anio);
     $("#perfil-g-tabla").replaceChildren(Graficas.tabla(spec));
@@ -662,6 +670,31 @@
       img.onerror = () => ok(null);
       img.src = src;
     });
+  }
+
+  // 10 x 10 casillas de boleta en el canvas, con X azul en las que votaron.
+  function dibujarUnidades(ctx, x0, y0, lado, si, C) {
+    const sep = 4;
+    const celda = (lado - 9 * sep) / 10;
+    for (let i = 0; i < 100; i += 1) {
+      const x = x0 + (i % 10) * (celda + sep);
+      const y = y0 + Math.floor(i / 10) * (celda + sep);
+      ctx.fillStyle = "#FFFFFF";
+      ctx.fillRect(x, y, celda, celda);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = i < si ? C.tinta : C.gris;
+      ctx.strokeRect(x, y, celda, celda);
+      if (i < si) {
+        const m = celda * 0.22;
+        ctx.strokeStyle = C.azul;
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.beginPath();
+        ctx.moveTo(x + m, y + m); ctx.lineTo(x + celda - m, y + celda - m);
+        ctx.moveTo(x + celda - m, y + m); ctx.lineTo(x + m, y + celda - m);
+        ctx.stroke();
+      }
+    }
   }
 
   // Tarjeta 1080 x 1350 con forma de boleta: marcador, dato personalizado, reto y código QR.
@@ -739,10 +772,14 @@
     ctx.fillStyle = C.suave;
     ctx.font = `400 32px ${F}`;
     ctx.fillText(T.perfil, izq, y0 + 640);
+    // Pictograma de 100 personas como tú, a la derecha del dato.
+    const unidad = estado.unidadPerfil;
+    const ladoGrid = 230;
+    if (unidad) dibujarUnidades(ctx, x0 + w - 60 - ladoGrid, y0 + 610, ladoGrid, Math.round(unidad.valor), C);
     ctx.fillStyle = C.tinta;
     ctx.font = `700 42px ${F}`;
-    envolver(ctx, estado.textoPerfil, anchoTexto).slice(0, 4).forEach((l, i) => {
-      ctx.fillText(l, izq, y0 + 700 + i * 56);
+    envolver(ctx, estado.textoPerfil, unidad ? anchoTexto - ladoGrid - 40 : anchoTexto).slice(0, 5).forEach((l, i) => {
+      ctx.fillText(l, izq, y0 + 700 + i * 54);
     });
 
     // Sello
