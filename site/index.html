@@ -279,25 +279,33 @@
         </div>
       </div>
     </section>
-        <div class="acciones">
-          <button class="boton primario" id="siguiente">Siguiente pregunta</button>
+
+    <!-- 4. Resultado y cierre: un recorrido de 4 pasos -->
+    <section id="resultado" class="pantalla" aria-labelledby="t-resultado" hidden>
+      <div class="progreso">
+        <ol id="pasos-res" class="casillas pasos-res" aria-hidden="true">
+          <li>1</li><li>2</li><li>3</li><li>4</li>
+        </ol>
+        <div class="progreso-fila">
+          <p id="paso-contador" class="contador" aria-live="polite"></p>
+          <button class="escuchar escuchar-icono" data-leer="resultado" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span class="sr">Escuchar este paso</span></button>
         </div>
       </div>
-    </section>
 
-    <!-- 4. Resultado -->
-    <section id="resultado" class="pantalla" aria-labelledby="t-resultado" hidden>
-      <h2 id="t-resultado" tabindex="-1"></h2>
-      <p id="mensaje" class="entrada"></p>
-      <button class="escuchar" data-leer="resultado" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar resultado</span></button>
+      <div class="paso" id="paso-1">
+        <h2 id="t-resultado" tabindex="-1"></h2>
+        <p id="mensaje" class="entrada"></p>
+        <details class="plegable">
+          <summary>Tus respuestas</summary>
+          <ol id="resumen" class="resumen"></ol>
+        </details>
+      </div>
 
-      <section id="perfil-resultado" class="perfil-resultado" aria-labelledby="t-perfil">
-        <h3 id="t-perfil">¿Cómo vota alguien como tú?</h3>
+      <div class="paso" id="paso-2" hidden>
+        <h2 id="t-paso-2" tabindex="-1"></h2>
         <p id="perfil-mensaje" class="perfil-dato"></p>
-        <p id="perfil-comparacion"></p>
-        <p id="perfil-municipio" class="perfil-municipio" hidden></p>
         <figure class="grafica">
-          <figcaption id="perfil-g-titulo" class="g-titulo"></figcaption>
+          <figcaption id="perfil-g-titulo" class="g-titulo sr"></figcaption>
           <div id="perfil-g-lienzo" class="g-lienzo"></div>
           <p id="perfil-g-fuente" class="g-fuente"></p>
           <details class="g-tabla">
@@ -305,44 +313,67 @@
             <div id="perfil-g-tabla"></div>
           </details>
         </figure>
-      </section>
-
-      <section id="historia" class="historia" aria-labelledby="t-historia" hidden>
-        <h3 id="t-historia">Tu historia como votante</h3>
-        <p id="historia-intro"></p>
-        <ol id="historia-lista" class="linea-tiempo"></ol>
-        <p id="historia-fuente" class="g-fuente"></p>
-        <details class="g-tabla">
-          <summary>Ver los datos en una tabla</summary>
-          <div id="historia-tabla"></div>
-        </details>
-      </section>
-
-      <div class="tarjeta-contenedor">
-        <canvas id="tarjeta" width="1080" height="1350" role="img" aria-label=""></canvas>
+        <p id="perfil-comparacion"></p>
+        <p id="perfil-municipio" class="perfil-municipio" hidden></p>
       </div>
-      <div class="acciones">
-        <button class="boton primario" id="descargar">Descargar tarjeta</button>
-        <button class="boton secundario" id="compartir">Compartir</button>
-        <button class="boton secundario" id="copiar">Copiar enlace</button>
+
+      <div class="paso" id="paso-3" hidden>
+        <h2 id="t-paso-3" tabindex="-1"></h2>
+        <section id="historia" class="historia" aria-label="Tu historia como votante" hidden>
+          <p id="historia-intro"></p>
+          <ol id="historia-lista" class="linea-tiempo"></ol>
+          <p id="historia-fuente" class="g-fuente"></p>
+          <details class="g-tabla">
+            <summary>Ver los datos en una tabla</summary>
+            <div id="historia-tabla"></div>
+          </details>
+        </section>
+        <section id="estimaciones" class="estimaciones" aria-labelledby="t-estimaciones" hidden>
+          <h3 id="t-estimaciones" class="sr">Tus estimaciones</h3>
+          <p id="est-resumen"></p>
+          <details class="plegable">
+            <summary>Ver cada estimación</summary>
+            <ul id="est-lista" class="est-lista"></ul>
+          </details>
+        </section>
       </div>
-      <p id="aviso-compartir" class="aviso" role="status"></p>
 
-      <section id="estimaciones" class="estimaciones" aria-labelledby="t-estimaciones" hidden>
-        <h3 id="t-estimaciones">Tus estimaciones</h3>
-        <p id="est-resumen" class="entrada"></p>
-        <ul id="est-lista" class="est-lista"></ul>
-      </section>
+      <div class="paso" id="paso-4" hidden>
+        <h2 id="t-paso-4" tabindex="-1">Tu compromiso y tu tarjeta</h2>
+        <p id="cierre-paso" class="entrada"></p>
+        <div class="compromisos" role="group" aria-labelledby="t-compromiso">
+          <p id="t-compromiso" class="campo-titulo">Elige un compromiso para tu tarjeta:</p>
+          <button class="compromiso-btn" data-compromiso="credencial" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+          <button class="compromiso-btn" data-compromiso="votar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+          <button class="compromiso-btn" data-compromiso="invitar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
+        </div>
+        <p id="compromiso-aviso" class="aviso" role="status"></p>
+        <div class="tarjeta-bloque">
+          <div class="tarjeta-contenedor">
+            <canvas id="tarjeta" width="1080" height="1350" role="img" aria-label=""></canvas>
+          </div>
+          <div class="tarjeta-acciones">
+            <button class="boton primario" id="compartir">Compartir mi tarjeta</button>
+            <button class="boton secundario" id="descargar">Descargar</button>
+            <button class="boton secundario" id="reto-generacion">Reta a alguien de otra generación</button>
+            <button class="boton secundario" id="copiar">Copiar enlace</button>
+          </div>
+        </div>
+        <p id="aviso-compartir" class="aviso" role="status"></p>
+        <p class="enlaces-portada en-linea">
+          <a class="enlace-texto" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
+          <button class="enlace-texto" data-ir="explora">Ver los datos</button>
+          <button class="enlace-texto jugar-otra">Jugar otra vez</button>
+        </p>
+      </div>
 
-      <h3 class="subtitulo">Tus respuestas</h3>
-      <ol id="resumen" class="resumen"></ol>
-
-      <div class="acciones">
-        <button class="boton secundario" data-ir="cierre">Seguir</button>
+      <div class="acciones pasos-nav">
+        <button class="boton secundario" id="paso-atras">Atrás</button>
+        <button class="boton primario" id="paso-siguiente">Siguiente</button>
       </div>
     </section>
 
-    <!-- 5. Cierre -->
+    <!-- 5. Cierre del modo salón (sin puntaje individual) -->
     <section id="cierre" class="pantalla" aria-labelledby="t-cierre" hidden>
       <h2 id="t-cierre" tabindex="-1">Los datos cuentan otra historia</h2>
       <p id="cierre-texto" class="entrada">Muchas frases que repetimos sobre el voto no coinciden con los datos. La participación cambia con la edad, el lugar y el tipo de elección. Cada persona cuenta.</p>
@@ -351,29 +382,14 @@
         <li><strong>Revisa</strong> que tu credencial para votar esté vigente y que tus datos estén al día.</li>
         <li><strong>Participa</strong> en cada elección, sea presidencial o intermedia.</li>
       </ul>
-
-      <section id="compromiso" class="compromiso" aria-labelledby="t-compromiso">
-        <h3 id="t-compromiso">Elige tu compromiso</h3>
-        <p class="ayuda">Elige uno. Aparecerá en tu tarjeta junto a tu resultado.</p>
-        <div class="compromisos" role="group" aria-labelledby="t-compromiso">
-          <button class="compromiso-btn" data-compromiso="credencial" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
-          <button class="compromiso-btn" data-compromiso="votar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
-          <button class="compromiso-btn" data-compromiso="invitar" aria-pressed="false"><span class="casilla" aria-hidden="true"><svg viewBox="0 0 40 40"><path class="trazo" d="M9 9 L31 31"/><path class="trazo t2" d="M31 9 L9 31"/></svg></span><span class="compromiso-texto"></span></button>
-        </div>
-        <p id="compromiso-aviso" class="aviso" role="status"></p>
-        <div class="acciones">
-          <button class="boton primario" id="descargar-cierre">Descargar mi tarjeta</button>
-          <button class="boton secundario" id="reto-generacion">Reta a alguien de otra generación</button>
-        </div>
-        <p id="reto-aviso-cierre" class="aviso" role="status"></p>
-      </section>
-
       <div class="acciones">
         <a class="boton primario" href="https://ine.mx/" rel="noopener">Ir al sitio del INE</a>
-        <button class="boton secundario" data-ir="explora">Ver los datos</button>
-        <a class="boton secundario enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
-        <button class="boton secundario" id="otra-vez">Jugar otra vez</button>
       </div>
+      <p class="enlaces-portada">
+        <button class="enlace-texto" data-ir="explora">Ver los datos</button>
+        <a class="enlace-texto enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
+        <button class="enlace-texto jugar-otra">Jugar otra vez</button>
+      </p>
     </section>
 
     <!-- Explora los datos -->

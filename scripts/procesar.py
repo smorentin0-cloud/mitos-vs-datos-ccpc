@@ -814,9 +814,8 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
     # El cierre retoma la caída solo si los datos la sostienen en este ámbito.
     if m["primer-voto"] is not None and serie[hasta - 1] > minimo:
         texto_cierre = (
-            f"El primer voto entusiasma: a los 18 años se vota más que el {promedio}. "
-            f"Después la participación baja y llega a su punto más bajo cerca de los {edad_min} años. "
-            "Con los años vuelve a subir. El reto es que tu primer voto no sea el último."
+            f"A los 18 años se vota más que el {promedio}, pero después la participación baja hasta "
+            f"cerca de los {edad_min} años. El reto es que tu primer voto no sea el último."
         )
     else:
         texto_cierre = (

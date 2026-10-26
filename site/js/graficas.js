@@ -251,7 +251,7 @@ const Graficas = (() => {
     const k = escala();
     const ancho = Math.max(280, contenedor.clientWidth || 320);
     const sep = 4 * k;
-    const lado = Math.min(30 * k, (ancho - 9 * sep) / 10);
+    const lado = Math.min((spec.compacto ? 22 : 30) * k, (ancho - 9 * sep) / 10);
     const rejilla = lado * 10 + sep * 9;
     const altoLeyenda = 34 * k;
     const { svg } = lienzo(contenedor, spec, rejilla + altoLeyenda + 8);

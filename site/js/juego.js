@@ -56,11 +56,7 @@
       titulo.focus({ preventScroll: true });
     }
     if (id === "explora") Explora.abrir();
-    if (id === "resultado") Voz.anunciar(textoResultado());
-    if (id === "cierre") {
-      $("#compromiso").hidden = estado.salon || !estado.aciertos.length;
-      Voz.anunciar(textoPantalla("cierre"));
-    }
+    if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
   }
 
   // ---------- textos para leer en voz alta
@@ -91,15 +87,17 @@
       `${m.explicacion} ${TEXTOS.salon.paraConversar} ${m.discusion}`;
   }
 
-  function textoResultado() {
-    const g = $("#perfil-g-lienzo").dataset.spec ? JSON.parse($("#perfil-g-lienzo").dataset.spec) : null;
-    const est = $("#estimaciones").hidden ? "" : `${$("#t-estimaciones").textContent}. ${$("#est-resumen").textContent} `;
-    const hist = $("#historia").hidden ? ""
-      : `${$("#t-historia").textContent}. ${$("#historia-intro").textContent} ${[...$("#historia-lista").children].map((li) => li.textContent.trim()).join(" ")} `;
-    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ${est}` +
-      `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
-      ($("#perfil-municipio").hidden ? "" : `${$("#perfil-municipio").textContent} `) +
-      (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent} ` : "") + hist;
+  // Lo que se lee del paso actual del resultado, incluido lo plegado.
+  function textoPaso() {
+    const paso = $(`#paso-${estado.paso}`);
+    const visibles = [...paso.querySelectorAll("h2, h3, p, li, summary + *")]
+      .filter((n) => !n.closest("[hidden]") && !n.closest(".tarjeta-contenedor") && !n.matches(".aviso"));
+    const partes = [$("#paso-contador").textContent, ...visibles.map((n) => n.textContent.trim())];
+    if (estado.paso === 2 && $("#perfil-g-lienzo").dataset.spec) {
+      partes.push(`${J.graficaMuestra} ${Graficas.describir(JSON.parse($("#perfil-g-lienzo").dataset.spec))}`);
+    }
+    if (estado.paso === 4) partes.push($("#tarjeta").getAttribute("aria-label"));
+    return [...new Set(partes.filter(Boolean))].join(" ");
   }
 
   // Al activar "Voz" se lee lo que está en pantalla en ese momento.
@@ -109,13 +107,13 @@
     if (visible.id === "juego") {
       Voz.anunciar($("#revelacion").hidden ? textoPregunta() : textoRevelacion());
     } else if (visible.id === "resultado") {
-      Voz.anunciar(textoResultado());
+      Voz.anunciar(textoPaso());
     } else {
       Voz.anunciar(textoPantalla(visible.id));
     }
   }
 
-  const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoResultado };
+  const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoPaso };
   document.querySelectorAll(".escuchar").forEach((b) =>
     b.addEventListener("click", () => Voz.alternar(LECTURAS[b.dataset.leer](), b)));
 
@@ -503,15 +501,16 @@
   // ---------- resultado
 
   function pintarResultado() {
+    const R = TEXTOS.resultado;
     const total = estado.mitos.length;
-    $("#t-resultado").textContent = TEXTOS.resultado.titulo(estado.puntos, total);
-    $("#mensaje").textContent = TEXTOS.resultado.mensaje(estado.puntos, total, estado.lugar);
+    $("#t-resultado").textContent = R.titulo(estado.puntos, total);
+    $("#mensaje").textContent = R.mensaje(estado.puntos, total, estado.lugar);
     $("#resumen").replaceChildren(...estado.mitos.map((m, i) => {
       const li = document.createElement("li");
       const ok = estado.aciertos[i];
       li.innerHTML = `<span class="marca-resumen ${ok ? "bien" : ""}">${icono(ok ? TRAZOS.bien : TRAZOS.mal)}</span>`;
       const txt = document.createElement("span");
-      txt.textContent = TEXTOS.resultado.resumen(m.enunciado, NOMBRES[m.veredicto], ok);
+      txt.textContent = R.resumen(m.enunciado, NOMBRES[m.veredicto], ok);
       li.appendChild(txt);
       return li;
     }));
@@ -519,10 +518,42 @@
     pintarPerfil();
     pintarHistoria();
     pintarEstimaciones();
+    const conPerfil = estado.perfil.edad != null || estado.perfil.entidad != null;
+    $("#t-paso-2").textContent = conPerfil ? R.paso2 : R.paso2Pais;
+    $("#t-paso-3").textContent = $("#historia").hidden ? R.paso3Estimaciones : R.paso3;
+    // Si no hay historia ni estimaciones, el paso 3 se omite.
+    estado.pasos = [1, 2, ...($("#historia").hidden && $("#estimaciones").hidden ? [] : [3]), 4];
     mostrar("resultado");
-    const g = JSON.parse($("#perfil-g-lienzo").dataset.spec);
-    Graficas.dibujar($("#perfil-g-lienzo"), g);
+    irPaso(1);
     dibujarTarjeta();
+  }
+
+  // Recorrido de pasos del resultado: una idea por paso, con Atrás y Siguiente.
+  function irPaso(numero) {
+    const R = TEXTOS.resultado;
+    estado.paso = numero;
+    const posicion = estado.pasos.indexOf(numero);
+    [1, 2, 3, 4].forEach((n) => { $(`#paso-${n}`).hidden = n !== numero; });
+    [...$("#pasos-res").children].forEach((li, i) => {
+      const n = i + 1;
+      li.hidden = !estado.pasos.includes(n);
+      li.className = n === numero ? "actual" : (estado.pasos.indexOf(n) < posicion ? "hecho" : "");
+    });
+    $("#paso-contador").textContent = R.pasoContador(posicion + 1, estado.pasos.length);
+    $("#paso-atras").hidden = posicion === 0;
+    // En el último paso el botón principal es «Compartir mi tarjeta».
+    $("#paso-siguiente").hidden = posicion === estado.pasos.length - 1;
+    if (numero === 2 && $("#perfil-g-lienzo").dataset.spec) {
+      Graficas.dibujar($("#perfil-g-lienzo"), JSON.parse($("#perfil-g-lienzo").dataset.spec));
+    }
+    window.scrollTo(0, 0);
+    $(`#paso-${numero} h2`).focus({ preventScroll: true });
+    Voz.anunciar(textoPaso());
+  }
+
+  function moverPaso(delta) {
+    const i = estado.pasos.indexOf(estado.paso) + delta;
+    if (i >= 0 && i < estado.pasos.length) irPaso(estado.pasos[i]);
   }
 
   // ---------- portada según la versión (nacional o de un estado)
@@ -733,8 +764,8 @@
     $("#perfil-comparacion").textContent = comparacion;
     // Con perfil, el dato se ve como 100 personas como tú; sin perfil, la gráfica por grupos de edad.
     const spec = unidad
-      ? { tipo: "unidades", titulo: T.tituloUnidades(unidad.quien, unidad.lugar, anio), valor: unidad.valor, etiqueta: unidad.quien }
-      : { tipo: "barras", titulo, items };
+      ? { tipo: "unidades", compacto: true, titulo: T.tituloUnidades(unidad.quien, unidad.lugar, anio), valor: unidad.valor, etiqueta: unidad.quien }
+      : { tipo: "linea", titulo, x: datosEdad.grupos, x_titulo: TEXTOS.explora.ejeEdad, series: [{ nombre: T.todoPais, valores: items.map((i) => i.valor), color: "datos" }] };
     estado.unidadPerfil = unidad;
     titulo = spec.titulo;
     $("#perfil-g-titulo").textContent = titulo;
@@ -786,6 +817,7 @@
             anio: a, edadEntonces: e,
             texto: `${H.tenias(e)} ${H.valor(Math.round(res.valor), P.quien(res), donde)}${P.nota(res, lugar)}`,
             valor: res.valor,
+            marca: res.nivel === "grupo" ? H.hitoGrupo(P.grupoLegible(res.grupo)) : (res.nivel === "pais" ? H.hitoPais : ""),
           });
         });
         ultima = H.proxima(prox.fecha);
@@ -793,25 +825,29 @@
     }
 
     $("#historia-intro").textContent = intro;
+    // Cada hito en un renglón: año y tipo, edad, barra y cifra. La frase completa va oculta para lectores de pantalla.
     const items = filas.map((f) => {
       const li = document.createElement("li");
       li.className = "hito";
       const tipo = H.tipo(estado.presidenciales.includes(f.anio));
-      li.innerHTML = `<span class="hito-anio"></span><span class="hito-cuerpo"><span class="hito-tipo"></span>
-        <span class="hito-texto"></span><span class="hito-barra" aria-hidden="true"><span></span></span></span>`;
-      li.querySelector(".hito-anio").textContent = String(f.anio);
-      li.querySelector(".hito-tipo").textContent = `${tipo}.`;
-      li.querySelector(".hito-texto").textContent = f.texto;
+      li.innerHTML = `<span class="sr"></span><span class="hito-visual" aria-hidden="true">
+        <span class="hito-anio"><b></b><small></small></span>
+        <span class="hito-edad"></span>
+        <span class="hito-barra"><span></span></span>
+        <span class="hito-valor"></span></span>`;
+      li.querySelector(".sr").textContent = `${f.anio}, ${tipo.toLowerCase()}. ${f.texto}`;
+      li.querySelector(".hito-anio b").textContent = String(f.anio);
+      li.querySelector(".hito-anio small").textContent = tipo.replace("Elección ", "");
+      li.querySelector(".hito-edad").textContent = f.edadEntonces == null ? "" : H.hitoEdad(f.edadEntonces) + (f.marca ? ` ${f.marca}` : "");
       li.querySelector(".hito-barra span").style.width = `${f.valor}%`;
+      li.querySelector(".hito-valor").textContent = H.hitoValor(Math.round(f.valor));
       return li;
     });
     const fin = document.createElement("li");
     fin.className = "hito hito-proxima";
-    fin.innerHTML = `<span class="hito-anio"></span><span class="hito-cuerpo"><span class="hito-texto"></span>
-      <span class="hito-casilla" aria-hidden="true"></span><span class="hito-tipo"></span></span>`;
-    fin.querySelector(".hito-anio").textContent = String(anioFinal);
-    fin.querySelector(".hito-texto").textContent = ultima;
-    fin.querySelector(".hito-tipo").textContent = H.porMarcar;
+    fin.innerHTML = `<span class="hito-anio"><b></b></span><span class="hito-casilla" aria-hidden="true"></span><span class="hito-texto"></span>`;
+    fin.querySelector(".hito-anio b").textContent = String(anioFinal);
+    fin.querySelector(".hito-texto").textContent = `${ultima} ${H.porMarcar}`;
     $("#historia-lista").replaceChildren(...items, fin);
 
     // Tabla para lectores de pantalla y para quien prefiera los números.
@@ -893,10 +929,10 @@
         return;
       }
       await navigator.clipboard.writeText(`${texto} ${url}`);
-      $("#reto-aviso-cierre").textContent = R.copiado;
+      $("#aviso-compartir").textContent = R.copiado;
     } catch (err) {
       if (err.name === "AbortError") return;
-      $("#reto-aviso-cierre").textContent = TEXTOS.compartir.copiaManual(`${texto} ${url}`);
+      $("#aviso-compartir").textContent = TEXTOS.compartir.copiaManual(`${texto} ${url}`);
     }
   }
 
@@ -1125,13 +1161,11 @@
       const archivo = new File([await blobTarjeta()], "mitos-vs-datos-resultado.png", { type: "image/png" });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
         await navigator.share({ ...datos, files: [archivo] });
-      } else if (navigator.share) {
-        await navigator.share(datos);
       } else {
-        await copiar();
+        await descargar();
       }
     } catch (err) {
-      if (err.name !== "AbortError") await copiar();
+      if (err.name !== "AbortError") await descargar();
     }
   }
 
@@ -1175,6 +1209,7 @@
     if (datos.cierre) {
       $("#t-cierre").textContent = datos.cierre.titulo;
       $("#cierre-texto").textContent = datos.cierre.texto;
+      $("#cierre-paso").textContent = datos.cierre.texto;
     }
     $("#nota-metodo").textContent = datos.nota_metodo;
     $("#nota-metodo-corta").textContent = datos.nota_metodo;
@@ -1196,7 +1231,8 @@
     b.querySelector(".compromiso-texto").textContent = "";
     b.addEventListener("click", () => elegirCompromiso(b.dataset.compromiso));
   });
-  $("#descargar-cierre").addEventListener("click", descargar);
+  $("#paso-atras").addEventListener("click", () => moverPaso(-1));
+  $("#paso-siguiente").addEventListener("click", () => moverPaso(1));
   $("#reto-generacion").addEventListener("click", retarGeneracion);
   $("#perfil-no-decir").addEventListener("click", prefieroNoDecir);
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
@@ -1205,7 +1241,7 @@
   $("#agregar-municipio").addEventListener("click", () =>
     mostrarMunicipio($("#agregar-municipio").getAttribute("aria-expanded") !== "true"));
   // "Jugar otra vez" conserva el perfil que se haya elegido.
-  $("#otra-vez").addEventListener("click", () => iniciar());
+  document.querySelectorAll(".jugar-otra").forEach((b) => b.addEventListener("click", () => iniciar()));
   $("#siguiente").addEventListener("click", siguiente);
   $("#descargar").addEventListener("click", descargar);
   $("#compartir").addEventListener("click", compartir);

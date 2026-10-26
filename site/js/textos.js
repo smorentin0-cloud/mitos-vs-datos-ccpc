@@ -27,6 +27,11 @@ const TEXTOS = {
   },
   resultado: {
     titulo: (puntos, total) => `Acertaste ${puntos} de ${total}`,
+    paso2: "100 personas como tú",
+    paso2Pais: "Cómo votó el país",
+    paso3: "Tu historia como votante",
+    paso3Estimaciones: "Tus estimaciones",
+    pasoContador: (n, total) => `Paso ${n} de ${total}`,
     mensaje: (puntos, total, lugar) => {
       if (puntos === total) return "¡Todas bien! Los mitos no pueden contigo. Ahora reta a alguien más.";
       if (puntos >= total - 2) return `¡Muy bien! Conoces cómo vota ${lugar}.`;
@@ -250,16 +255,21 @@ const TEXTOS = {
   },
   historiaVotante: {
     titulo: "Tu historia como votante",
-    intro: (lugar) => `Estas son las elecciones federales en las que ya tenías edad para votar, y cómo votó la gente de tu edad en ${lugar}.`,
-    introMenor: (lugar) => `Todavía no te ha tocado votar. Así votaron las personas de 18 años en ${lugar} en cada elección.`,
+    intro: (lugar) => `Cómo votó la gente de tu edad en ${lugar} en cada elección en la que ya podías votar.`,
+    introMenor: (lugar) => `Así votaron las personas de 18 años en ${lugar}, la edad de tu primer voto.`,
     introSinEdad: (lugar) => `Así votó ${lugar} en cada elección federal.`,
     tipo: (presidencial) => (presidencial ? "Elección presidencial" : "Elección intermedia"),
     tenias: (edad) => `Tenías ${edad} años.`,
+    // Hito compacto: lo visible es corto; la frase completa se lee con lector de pantalla y voz.
+    hitoEdad: (edad) => `${edad} años`,
+    hitoValor: (v) => `${v} de 100`,
+    hitoGrupo: (grupo) => `(grupo de ${grupo})`,
+    hitoPais: "(dato del país)",
     valor: (v, quien, lugar) => `Votaron ${v} de cada 100 ${quien} en ${lugar}.`,
     valorTotal: (v, lugar) => `Votaron ${v} de cada 100 personas en ${lugar}.`,
     proxima: (fecha) => `Tu próxima elección: ${fecha}.`,
-    primera: (anio, esProxima, fecha) => `Tu primera elección federal: ${esProxima ? fecha : `la de ${anio}`}.`,
-    porMarcar: "Esta casilla está vacía. ¿La vas a marcar?",
+    primera: (anio, esProxima, fecha) => `Tu primera elección: ${esProxima ? fecha : `la de ${anio}`}.`,
+    porMarcar: "¿Marcarás esta casilla?",
     columnas: ["Elección", "Tipo", "Edad", "Participación (de cada 100)"],
     fuente: (desde, hasta) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${desde}–${hasta}.`,
   },
