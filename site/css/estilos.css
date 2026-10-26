@@ -588,3 +588,21 @@ main:has(> #portada:not([hidden])) { padding-top: 1.25rem; padding-bottom: 1.25r
 @media (min-width: 40rem) { #portada .titular { font-size: 3rem; } }
 #portada .acciones { margin-top: 1rem; }
 .enlaces-portada { margin-top: 0.5rem; gap: 0; }
+
+/* ---------------------------------------------------------------- perfil compacto: combobox */
+.combo { position: relative; max-width: 26rem; }
+.combo .buscador { margin: 0; }
+.combo-lista {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 10;
+  max-height: 14rem; overflow-y: auto; margin: 0; padding: 0.25rem; list-style: none;
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
+  box-shadow: 0 6px 18px rgba(31, 41, 55, 0.18);
+}
+.combo-lista li { padding: 0.5rem 0.625rem; min-height: 44px; display: flex; align-items: center; cursor: pointer; border-radius: 3px; }
+.combo-lista li:hover { background: var(--mesa); }
+.combo-lista li[aria-selected="true"] { background: var(--azul); color: var(--papel); }
+#perfil .campo { margin-bottom: 1.25rem; }
+#perfil .acciones { margin-top: 1rem; align-items: flex-start; }
+#perfil h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+#perfil .entrada { font-size: 1.0625rem; margin-bottom: 1.25rem; }
+.como-calcula { margin-top: 1.5rem; }

@@ -524,8 +524,7 @@
       edicion.textContent = P.edicion(estado.lugar);
       edicion.hidden = false;
       estado.entidadVersion = datos.ambito.clave; // el perfil empieza en ese estado
-      llenarEstados("");
-      cambiarEstadoPerfil();
+      comboEstado.poner(datos.ambito.clave);
     } else if (respaldo) {
       edicion.textContent = P.sinEdicion;
       edicion.hidden = false;
@@ -541,56 +540,45 @@
   const EDAD_MAX = Number($("#p-edad").max);
   const sinAcentos = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-  // Lista de estados filtrada por lo que se escribe en el buscador.
-  function llenarEstados(filtro) {
+  // Estado y municipio: campos de búsqueda con sugerencias (js/combobox.js).
+  let comboEstado = null;
+  let comboMunicipio = null;
+
+  function prepararCombos() {
     const T = TEXTOS.perfilPantalla;
-    const { entidades } = estado.datosPerfil;
-    const elegido = $("#p-entidad").value || (estado.entidadVersion ? String(estado.entidadVersion) : "");
-    const f = sinAcentos(filtro.trim());
-    const visibles = entidades.entidades.filter((e) => sinAcentos(e.nombre).includes(f));
-    const lista = $("#p-entidad");
-    lista.replaceChildren(...[{ clave: "", nombre: T.sinEstado }, ...visibles].map((e) => {
-      const o = document.createElement("option");
-      o.value = String(e.clave);
-      o.textContent = e.nombre;
-      return o;
-    }));
-    if (visibles.length === 1 && f) lista.value = String(visibles[0].clave);
-    else if ([...lista.options].some((o) => o.value === elegido)) lista.value = elegido;
-    else lista.value = "";
-    $("#buscar-ayuda").textContent = visibles.length ? T.estadosVisibles(visibles.length) : T.ninguno;
+    const M = TEXTOS.municipio;
+    comboEstado = Combobox.crear({
+      input: $("#p-estado"), lista: $("#p-estado-lista"), ayuda: $("#buscar-ayuda"),
+      opciones: () => estado.datosPerfil.entidades.entidades.map((e) => ({ valor: e.clave, texto: e.nombre })),
+      alElegir: cambiarEstadoPerfil,
+      textos: { visibles: T.estadosVisibles, ninguno: T.ninguno },
+    });
+    comboMunicipio = Combobox.crear({
+      input: $("#p-municipio"), lista: $("#p-municipio-lista"), ayuda: $("#mun-ayuda"),
+      opciones: () => (estado.municipiosEstado ? estado.municipiosEstado.municipios.map((m) => ({ valor: m.clave, texto: m.nombre })) : []),
+      alElegir: () => {},
+      textos: { visibles: M.visibles, ninguno: M.ninguno },
+    });
   }
 
-  // Municipio: depende del estado y es opcional.
+  // Municipio: depende del estado, es opcional y empieza escondido.
   async function cambiarEstadoPerfil() {
-    const clave = $("#p-entidad").value;
+    const clave = comboEstado.valor();
     estado.municipiosEstado = null;
-    $("#campo-municipio").hidden = true;
+    comboMunicipio.limpiar();
+    mostrarMunicipio(false);
+    $("#bloque-municipio").hidden = true;
     if (!clave) return;
     const datos = await Personal.cargarMunicipios(clave);
-    if (!datos || $("#p-entidad").value !== clave) return;
+    if (!datos || comboEstado.valor() !== clave) return;
     estado.municipiosEstado = datos;
-    $("#p-buscar-mun").value = "";
-    llenarMunicipios("");
-    $("#campo-municipio").hidden = false;
+    $("#bloque-municipio").hidden = false;
   }
 
-  function llenarMunicipios(filtro) {
-    const M = TEXTOS.municipio;
-    const f = sinAcentos(filtro.trim());
-    const visibles = estado.municipiosEstado.municipios.filter((m) => sinAcentos(m.nombre).includes(f));
-    const lista = $("#p-municipio");
-    const elegido = lista.value;
-    lista.replaceChildren(...[{ clave: "", nombre: M.sinMunicipio }, ...visibles].map((m) => {
-      const o = document.createElement("option");
-      o.value = String(m.clave);
-      o.textContent = m.nombre;
-      return o;
-    }));
-    if (visibles.length === 1 && f) lista.value = String(visibles[0].clave);
-    else if ([...lista.options].some((o) => o.value === elegido)) lista.value = elegido;
-    else lista.value = "";
-    $("#mun-ayuda").textContent = visibles.length ? M.visibles(visibles.length) : M.ninguno;
+  function mostrarMunicipio(abrir) {
+    $("#agregar-municipio").setAttribute("aria-expanded", String(abrir));
+    $("#campo-municipio").hidden = !abrir;
+    if (abrir) $("#p-municipio").focus();
   }
 
   function cambiarEdad(paso) {
@@ -605,7 +593,7 @@
     const error = $("#perfil-error");
     const texto = $("#p-edad").value.trim();
     const edad = texto === "" ? null : Number(texto);
-    const clave = $("#p-entidad").value === "" ? null : Number($("#p-entidad").value);
+    const clave = comboEstado.valor() === "" ? null : Number(comboEstado.valor());
     if (edad !== null && (!Number.isInteger(edad) || edad < EDAD_MIN || edad > EDAD_MAX)) {
       error.textContent = T.errorEdad(EDAD_MIN, EDAD_MAX);
       $("#p-edad").focus();
@@ -617,7 +605,7 @@
     }
     try {
       const [pais, local] = await Promise.all([Personal.cargar(0), Personal.cargar(clave ?? 0)]);
-      const claveMun = clave && estado.municipiosEstado ? $("#p-municipio").value : "";
+      const claveMun = clave && estado.municipiosEstado ? comboMunicipio.valor() : "";
       const municipio = claveMun ? estado.municipiosEstado.municipios.find((m) => String(m.clave) === claveMun) : null;
       estado.perfil = {
         edad, entidad: clave, nombre: clave ? local.nombre : null, local, pais,
@@ -1163,7 +1151,7 @@
       b.querySelector(".compromiso-texto").textContent = textoCompromiso(b.dataset.compromiso);
     });
     estado.aniosHistoria = edad.anios;
-    llenarEstados("");
+    prepararCombos();
     pintarPortada(datos, respaldo);
     leerReto(datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0));
     estado.totalNiveles = datos.niveles.length;
@@ -1197,16 +1185,8 @@
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
   $("#edad-mas").addEventListener("click", () => cambiarEdad(1));
   $("#p-edad").addEventListener("input", () => { $("#perfil-error").textContent = ""; });
-  $("#p-buscar").addEventListener("input", (e) => { llenarEstados(e.target.value); cambiarEstadoPerfil(); });
-  $("#p-entidad").addEventListener("change", cambiarEstadoPerfil);
-  $("#p-buscar-mun").addEventListener("input", (e) => llenarMunicipios(e.target.value));
-  $("#p-buscar-mun").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); $("#p-municipio").focus(); }
-  });
-  // Enter en el buscador pasa a la lista para elegir con las flechas.
-  $("#p-buscar").addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); $("#p-entidad").focus(); }
-  });
+  $("#agregar-municipio").addEventListener("click", () =>
+    mostrarMunicipio($("#agregar-municipio").getAttribute("aria-expanded") !== "true"));
   // "Jugar otra vez" conserva el perfil que se haya elegido.
   $("#otra-vez").addEventListener("click", () => iniciar());
   $("#siguiente").addEventListener("click", siguiente);

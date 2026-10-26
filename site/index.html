@@ -136,7 +136,7 @@
     <!-- 2b. Perfil: quién eres en esta historia -->
     <section id="perfil" class="pantalla" aria-labelledby="t-perfil-pantalla" hidden>
       <h2 id="t-perfil-pantalla">Antes de empezar: ¿quién eres en esta historia?</h2>
-      <p class="entrada">Con tu edad y tu estado, cada respuesta te va a mostrar cómo vota la gente como tú.</p>
+      <p class="entrada">Con tu edad y tu estado, cada respuesta te mostrará cómo vota la gente como tú.</p>
 
       <div class="campo">
         <label for="p-edad" class="campo-titulo">Tu edad</label>
@@ -149,19 +149,24 @@
       </div>
 
       <div class="campo">
-        <label for="p-buscar" class="campo-titulo">Tu estado</label>
-        <input id="p-buscar" class="buscador" type="search" autocomplete="off" aria-describedby="buscar-ayuda" aria-controls="p-entidad">
-        <label for="p-entidad" class="sr">Lista de estados</label>
-        <select id="p-entidad" class="lista-estados" size="6"></select>
-        <p id="buscar-ayuda" class="ayuda" aria-live="polite"></p>
+        <label for="p-estado" class="campo-titulo">Tu estado</label>
+        <div class="combo">
+          <input id="p-estado" class="buscador" type="text" aria-describedby="buscar-ayuda">
+          <ul id="p-estado-lista" class="combo-lista"></ul>
+        </div>
+        <p id="buscar-ayuda" class="ayuda sr" aria-live="polite"></p>
       </div>
 
-      <div class="campo" id="campo-municipio" hidden>
-        <label for="p-buscar-mun" class="campo-titulo">Tu municipio <span class="opcional">(opcional)</span></label>
-        <input id="p-buscar-mun" class="buscador" type="search" autocomplete="off" aria-describedby="mun-ayuda" aria-controls="p-municipio">
-        <label for="p-municipio" class="sr">Lista de municipios</label>
-        <select id="p-municipio" class="lista-estados" size="5"></select>
-        <p id="mun-ayuda" class="ayuda" aria-live="polite"></p>
+      <div class="campo" id="bloque-municipio" hidden>
+        <button type="button" class="enlace-texto" id="agregar-municipio" aria-expanded="false" aria-controls="campo-municipio">+ Agregar mi municipio (opcional)</button>
+        <div id="campo-municipio" hidden>
+          <label for="p-municipio" class="campo-titulo">Tu municipio</label>
+          <div class="combo">
+            <input id="p-municipio" class="buscador" type="text" aria-describedby="mun-ayuda">
+            <ul id="p-municipio-lista" class="combo-lista"></ul>
+          </div>
+          <p id="mun-ayuda" class="ayuda sr" aria-live="polite"></p>
+        </div>
       </div>
 
       <p class="privacidad">
@@ -171,7 +176,7 @@
       <p id="perfil-error" class="error" role="alert"></p>
       <div class="acciones">
         <button class="boton primario" id="perfil-continuar">Continuar</button>
-        <button class="boton enlace" id="perfil-no-decir">Prefiero no decir</button>
+        <button class="enlace-texto" id="perfil-no-decir">Prefiero no decir</button>
       </div>
     </section>
 
@@ -424,6 +429,7 @@
   <script src="js/datos.js"></script>
   <script src="js/graficas.js"></script>
   <script src="js/explora.js"></script>
+  <script src="js/combobox.js"></script>
   <script src="js/personal.js"></script>
   <script src="js/caso.js"></script>
   <script src="js/voz.js"></script>

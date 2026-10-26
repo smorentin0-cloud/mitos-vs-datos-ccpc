@@ -23,6 +23,7 @@ const ARCHIVOS = [
   "js/graficas.js",
   "js/explora.js",
   "js/voz.js",
+  "js/combobox.js",
   "js/personal.js",
   "js/caso.js",
   "js/juego.js",
