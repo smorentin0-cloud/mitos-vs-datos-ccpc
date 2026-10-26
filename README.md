@@ -194,9 +194,13 @@ El proyecto es un **kit de educación cívica** listo para usarse en Juntas Loca
 
 ## Créditos
 
-Equipo: **[NOMBRE DEL EQUIPO]**
+Equipo: **Agentes FIME**
 
-Integrantes: **[INTEGRANTES]**
+Integrantes:
+
+- Efrain Alejandro Arias Meza
+- Sandra Odette Morentin Solano
+- Nain Apolinar Juárez Aguilar
 
 Datos: Instituto Nacional Electoral (INE), Conteos Censales de Participación Ciudadana 2009–2024.
 
