@@ -81,6 +81,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/combobox.js        # buscador accesible de estado y municipio
 │   ├── js/graficas.js        # gráficas SVG accesibles
 │   ├── js/voz.js             # lectura en voz alta
+│   ├── js/mascota.js         # mascota «Boleta» (SVG decorativo) y confeti
 │   ├── js/explora.js / imprimible.js
 │   ├── data/                 # mitos.json, explora.json, entidades.json, entidad/<clave>/
 │   └── fonts/, img/
@@ -120,14 +121,16 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - Datos y validación: 8 mitos binarios verificados en las 6 elecciones; datos por estado y por municipio con umbral de celdas pequeñas.
 - Juego: identidad de boleta, 3 niveles con arco narrativo, perfil con edad, estado y municipio, «Y en tu caso…», «Adivina antes de ver», pictograma, historia como votante, compromiso, tarjeta PNG con QR, reto entre generaciones.
 - Kit: modo salón, versión imprimible, pantalla «Para talleres», guía de facilitación, versión por estado (demo principal San Luis Potosí, `?entidad=24`, 8 de 8 mitos; segunda demo Colima, `?entidad=6`, 4 de 8), funciona sin conexión.
-- Ronda «reducir la saturación visual»: encabezado con panel «Aa», portada con una acción, perfil compacto, revelación en secuencia, resultado en 4 pasos, limpieza visual y documentación.
+- Ronda «reducir la saturación visual»: encabezado con panel «Aa», portada con una acción, perfil compacto, revelación en secuencia, resultado en 4 pasos, limpieza visual y documentación. Incluye «Adivina antes de ver» en una pantalla y barras con etiqueta en el mismo renglón cuando hay más de 8 categorías.
+- Mascota «Boleta» (PR #1): se asoma en cada pregunta, reacciona al sello y festeja el resultado; la cifra clave cuenta hasta su valor. Es decorativa (`aria-hidden`) y se detiene con «reducir movimiento». Revisada a 390 px, normal y A++: sin scroll lateral y sin tapar texto.
+- «Adivina antes de ver»: una estimación exacta dice «¡Le atinaste!»; a 3 puntos o menos, «¡Casi le atinas!».
 
 **En curso:**
 - Verificación final de la ronda de saturación. Faltan:
-  - medir alturas por pantalla (normal y A++);
+  - medir alturas por pantalla (normal y A++), ya con la mascota;
   - probar el reto desde ambas ediciones, el modo salón, el imprimible, «Explora», «Para talleres» y sin conexión;
+  - con la mascota: el festejo con la mitad o más de aciertos, el modo salón, Voz y teclado;
   - auditoría con axe.
-- Ajustes sin commit en `site/js/graficas.js` (barras con etiqueta en el mismo renglón cuando hay más de 8 categorías) y `site/css/estilos.css` («Adivina antes de ver» en una pantalla).
 - Entregables fuera del repositorio (sección 9).
 
 ## 8. Ideas de mejora para explorar
