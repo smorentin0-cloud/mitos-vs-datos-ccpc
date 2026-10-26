@@ -11,7 +11,10 @@
   const estado = {
     mitos: [], totalNiveles: 0, indice: 0, puntos: 0, aciertos: [],
     // Perfil opcional: vive solo en memoria y nunca sale del navegador.
-    perfil: { grupo: "", entidad: "" },
+    // edad: número o null; entidad: clave o null; local/pais: personal.json cargados.
+    perfil: { edad: null, entidad: null, nombre: null, local: null, pais: null },
+    proxima: null,
+    aniosHistoria: [],
     lugar: "México",
     datosPerfil: null,
     textoPerfil: "",
@@ -47,7 +50,7 @@
 
   function textoPantalla(id) {
     const s = document.getElementById(id);
-    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .nota-papel, .perfil legend, .perfil-ayuda, .privacidad, .llamado li")]
+    return [...s.querySelectorAll("h1, h2, .entrada, .pasos li, .nota-papel, .campo-titulo, .ayuda, .privacidad, .llamado li")]
       .map((n) => n.textContent.trim()).join(". ");
   }
 
@@ -111,12 +114,9 @@
 
   // ---------- juego
 
-  function iniciar({ conPerfil = true } = {}) {
+  function iniciar() {
     if (!estado.mitos.length) return;
     if (estado.salon) salirSalon();
-    estado.perfil = conPerfil
-      ? { grupo: $("#p-grupo").value, entidad: $("#p-entidad").value }
-      : { grupo: "", entidad: "" };
     prepararRecorrido();
     mostrar("juego");
     pintarPregunta();
@@ -342,7 +342,8 @@
     if (datos.ambito && datos.ambito.clave) {
       edicion.textContent = P.edicion(estado.lugar);
       edicion.hidden = false;
-      $("#p-entidad").value = String(datos.ambito.clave); // el perfil empieza en ese estado
+      estado.entidadVersion = datos.ambito.clave; // el perfil empieza en ese estado
+      llenarEstados("");
     } else if (respaldo) {
       edicion.textContent = P.sinEdicion;
       edicion.hidden = false;
@@ -352,73 +353,144 @@
 
   // ---------- final personalizado
 
-  function llenarPerfil() {
-    const { edad, entidades } = estado.datosPerfil;
-    const T = TEXTOS.perfil;
-    const opcion = (valor, texto) => `<option value="${valor}">${texto}</option>`;
-    $("#p-grupo").innerHTML = opcion("", T.noDecir) + opcion("menor", T.menor) +
-      edad.grupos.map((g, i) => opcion(i, T.grupoLegible(g))).join("");
-    $("#p-entidad").innerHTML = opcion("", T.noDecir) +
-      entidades.entidades.map((e) => opcion(e.clave, e.nombre)).join("");
+  // ---------- pantalla de perfil
+
+  const EDAD_MIN = Number($("#p-edad").min);
+  const EDAD_MAX = Number($("#p-edad").max);
+  const sinAcentos = (s) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  // Lista de estados filtrada por lo que se escribe en el buscador.
+  function llenarEstados(filtro) {
+    const T = TEXTOS.perfilPantalla;
+    const { entidades } = estado.datosPerfil;
+    const elegido = $("#p-entidad").value || (estado.entidadVersion ? String(estado.entidadVersion) : "");
+    const f = sinAcentos(filtro.trim());
+    const visibles = entidades.entidades.filter((e) => sinAcentos(e.nombre).includes(f));
+    const lista = $("#p-entidad");
+    lista.replaceChildren(...[{ clave: "", nombre: T.sinEstado }, ...visibles].map((e) => {
+      const o = document.createElement("option");
+      o.value = String(e.clave);
+      o.textContent = e.nombre;
+      return o;
+    }));
+    if (visibles.length === 1 && f) lista.value = String(visibles[0].clave);
+    else if ([...lista.options].some((o) => o.value === elegido)) lista.value = elegido;
+    else lista.value = "";
+    $("#buscar-ayuda").textContent = visibles.length ? T.estadosVisibles(visibles.length) : T.ninguno;
   }
+
+  function cambiarEdad(paso) {
+    const campo = $("#p-edad");
+    const actual = campo.value === "" ? 18 - paso : Number(campo.value);
+    campo.value = String(Math.min(EDAD_MAX, Math.max(EDAD_MIN, actual + paso)));
+    $("#perfil-error").textContent = "";
+  }
+
+  async function confirmarPerfil() {
+    const T = TEXTOS.perfilPantalla;
+    const error = $("#perfil-error");
+    const texto = $("#p-edad").value.trim();
+    const edad = texto === "" ? null : Number(texto);
+    const clave = $("#p-entidad").value === "" ? null : Number($("#p-entidad").value);
+    if (edad !== null && (!Number.isInteger(edad) || edad < EDAD_MIN || edad > EDAD_MAX)) {
+      error.textContent = T.errorEdad(EDAD_MIN, EDAD_MAX);
+      $("#p-edad").focus();
+      return;
+    }
+    if (edad === null && clave === null) {
+      error.textContent = T.errorVacio;
+      return;
+    }
+    try {
+      const [pais, local] = await Promise.all([Personal.cargar(0), Personal.cargar(clave ?? 0)]);
+      estado.perfil = { edad, entidad: clave, nombre: clave ? local.nombre : null, local, pais };
+    } catch {
+      error.textContent = T.errorDatos;
+      return;
+    }
+    error.textContent = "";
+    pintarMomento();
+    mostrar("momento");
+    Voz.anunciar(`${$("#t-momento").textContent} ${$("#momento-texto").textContent}`);
+  }
+
+  function prefieroNoDecir() {
+    estado.perfil = { edad: null, entidad: null, nombre: null, local: null, pais: null };
+    iniciar();
+  }
+
+  // Primer momento de la historia: desde cuándo puede votar y cuántas elecciones le tocaron.
+  function pintarMomento() {
+    const H = TEXTOS.historia;
+    const { edad, nombre } = estado.perfil;
+    const anios = estado.aniosHistoria;
+    const prox = estado.proxima;
+    const frases = [];
+    if (edad !== null) {
+      if (edad < 18) {
+        const primera = Personal.primeraEleccion(edad, prox);
+        frases.push(H.menor(primera, primera === prox.anio, prox.fecha));
+      } else {
+        const vividas = Personal.eleccionesVividas(edad, anios);
+        if (!vividas.length) frases.push(H.sinElecciones(prox.fecha));
+        else if (vividas.length === anios.length) frases.push(H.todas(anios.length, anios[0], anios.at(-1)));
+        else frases.push(H.algunas(vividas[0], vividas.length, anios.length));
+      }
+      frases.push(H.lugar(nombre || TEXTOS.perfil.pais));
+    } else {
+      frases.push(H.soloLugar(nombre));
+    }
+    $("#t-momento").textContent = H.titulo(edad, nombre);
+    $("#momento-texto").textContent = frases.join(" ");
+  }
+
+  // ---------- final personalizado
 
   // Arma el mensaje, la comparación y la gráfica con datos reales del año más reciente.
   function pintarPerfil() {
     const T = TEXTOS.perfil;
-    const { edad, entidades } = estado.datosPerfil;
-    const anio = String(Math.max(...edad.anios));
-    const { grupo, entidad } = estado.perfil;
-    const menor = grupo === "menor";
-    const iGrupo = menor ? 0 : grupo === "" ? null : Number(grupo);
-    const iEnt = entidad === "" ? null : entidades.entidades.findIndex((e) => String(e.clave) === entidad);
-    const nombreEnt = iEnt === null ? null : entidades.entidades[iEnt].nombre;
-    const pais = entidades.nacional[anio];
+    const { edad: datosEdad, entidades } = estado.datosPerfil;
+    const anio = String(Math.max(...datosEdad.anios));
+    const { edad, entidad, nombre, local, pais } = estado.perfil;
     const r = T.deCada100;
-
-    let valor;
+    const promPais = entidades.nacional[anio];
+    let mensaje;
+    let comparacion;
     let items;
     let titulo = T.graficaTitulo(anio);
-    let comparacion;
-    const grupoTxt = iGrupo === null ? null : T.grupoLegible(edad.grupos[iGrupo]);
 
-    if (iGrupo !== null && iEnt !== null) {
-      valor = edad.datos[anio][entidad][iGrupo];
-      const promEnt = entidades.participacion[anio][iEnt];
-      comparacion = T.comparaEstado(nombreEnt, r(promEnt), r(pais));
+    if (edad !== null) {
+      const res = Personal.participacionEdad(local, pais, anio, edad);
+      const lugar = res.nivel === "pais" ? T.pais : (nombre || T.pais);
+      mensaje = T.mensaje({ lugar, grupo: T.quien(res).replace(/^personas de /, ""), valor: r(res.valor), anio, menor: edad < 18 })
+        + T.nota(res, nombre || T.pais);
+      items = [{ etiqueta: T.etiquetaGrupoLugar(T.quien(res).replace(/^personas de /, ""), lugar), valor: res.valor, color: "datos" }];
+      if (entidad) {
+        items.push({ etiqueta: T.todo(nombre), valor: local.total[anio], color: "base" });
+        comparacion = T.comparaEstado(nombre, r(local.total[anio]), r(promPais));
+      } else {
+        comparacion = T.comparaPais(r(promPais));
+      }
+      items.push({ etiqueta: T.todoPais, valor: promPais, color: "base" });
+    } else if (entidad) {
+      mensaje = T.mensaje({ lugar: nombre, grupo: null, valor: r(local.total[anio]), anio, menor: false });
+      comparacion = T.comparaPais(r(promPais));
       items = [
-        { etiqueta: T.etiquetaGrupoLugar(grupoTxt, nombreEnt), valor, color: "datos" },
-        { etiqueta: T.todo(nombreEnt), valor: promEnt, color: "base" },
-        { etiqueta: T.todoPais, valor: pais, color: "base" },
-      ];
-    } else if (iGrupo !== null) {
-      valor = edad.datos[anio]["0"][iGrupo];
-      comparacion = T.comparaPais(r(pais));
-      items = [
-        { etiqueta: T.etiquetaGrupoLugar(grupoTxt, T.pais), valor, color: "datos" },
-        { etiqueta: T.todoPais, valor: pais, color: "base" },
-      ];
-    } else if (iEnt !== null) {
-      valor = entidades.participacion[anio][iEnt];
-      comparacion = T.comparaPais(r(pais));
-      items = [
-        { etiqueta: T.todo(nombreEnt), valor, color: "datos" },
-        { etiqueta: T.todoPais, valor: pais, color: "base" },
+        { etiqueta: T.todo(nombre), valor: local.total[anio], color: "datos" },
+        { etiqueta: T.todoPais, valor: promPais, color: "base" },
       ];
     } else {
       // Sin datos de la persona: el dato del país y cómo votó cada grupo de edad.
-      valor = pais;
+      mensaje = T.mensaje({ lugar: T.pais, grupo: null, valor: r(promPais), anio, menor: false });
       comparacion = T.contexto;
       titulo = T.graficaGrupos(anio);
-      items = edad.grupos.map((g, i) => ({
-        etiqueta: T.grupoLegible(g), valor: edad.datos[anio]["0"][i], color: "datos",
+      items = datosEdad.grupos.map((g, i) => ({
+        etiqueta: T.grupoLegible(g), valor: datosEdad.datos[anio]["0"][i], color: "datos",
       }));
     }
 
-    const mensajePerfil = T.mensaje({
-      lugar: nombreEnt || T.pais, grupo: grupoTxt, valor: r(valor), anio, menor,
-    });
-    estado.textoPerfil = mensajePerfil;
-    $("#perfil-mensaje").textContent = mensajePerfil;
+    estado.textoPerfil = mensaje;
+    $("#perfil-mensaje").textContent = mensaje;
     $("#perfil-comparacion").textContent = comparacion;
     const spec = { tipo: "barras", titulo, items };
     $("#perfil-g-titulo").textContent = titulo;
@@ -636,7 +708,9 @@
       ...["data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())),
     ]);
     estado.datosPerfil = { edad, entidades };
-    llenarPerfil();
+    estado.proxima = datos.proxima_eleccion;
+    estado.aniosHistoria = edad.anios;
+    llenarEstados("");
     pintarPortada(datos, respaldo);
     estado.totalNiveles = datos.niveles.length;
     estado.mitos = datos.niveles.flatMap((n, i) =>
@@ -653,7 +727,16 @@
   $("#entrar-salon").addEventListener("click", entrarSalon);
   $("#salir-salon").addEventListener("click", () => mostrar("portada"));
   $("#revelar").addEventListener("click", revelar);
-  $("#saltar").addEventListener("click", () => iniciar({ conPerfil: false }));
+  $("#perfil-continuar").addEventListener("click", confirmarPerfil);
+  $("#perfil-no-decir").addEventListener("click", prefieroNoDecir);
+  $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
+  $("#edad-mas").addEventListener("click", () => cambiarEdad(1));
+  $("#p-edad").addEventListener("input", () => { $("#perfil-error").textContent = ""; });
+  $("#p-buscar").addEventListener("input", (e) => llenarEstados(e.target.value));
+  // Enter en el buscador pasa a la lista para elegir con las flechas.
+  $("#p-buscar").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === "ArrowDown") { e.preventDefault(); $("#p-entidad").focus(); }
+  });
   // "Jugar otra vez" conserva el perfil que se haya elegido.
   $("#otra-vez").addEventListener("click", () => iniciar());
   $("#siguiente").addEventListener("click", siguiente);

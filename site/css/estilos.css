@@ -421,3 +421,38 @@ kbd {
   border-left: 6px solid var(--azul);
   font-size: 1rem; font-weight: 700;
 }
+
+/* ---------------------------------------------------------------- pantalla de perfil */
+.campo { margin: 0 0 1.5rem; }
+.campo-titulo { display: block; font-weight: 700; font-size: 1.25rem; margin-bottom: 0.5rem; }
+.ayuda { margin: 0.5rem 0 0; font-size: 1rem; color: var(--tinta-suave); }
+.error { min-height: 1.5em; margin: 0; font-weight: 700; color: var(--tinta); }
+.error:not(:empty) { padding: 0.5rem 0.75rem; border-left: 6px solid var(--ambar); background: var(--papel); }
+
+.numero { display: flex; align-items: stretch; gap: 0.5rem; max-width: 20rem; }
+.numero input {
+  width: 6rem; min-height: 4rem; text-align: center;
+  font: inherit; font-size: 2rem; font-weight: 700;
+  border: 3px solid var(--tinta); border-radius: 4px; background: var(--papel); color: var(--tinta);
+  -moz-appearance: textfield;
+}
+.numero input::-webkit-outer-spin-button, .numero input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.numero-btn {
+  min-width: 4rem; min-height: 4rem;
+  font: inherit; font-size: 2rem; font-weight: 700; line-height: 1;
+  background: var(--papel); color: var(--tinta);
+  border: 3px solid var(--tinta); border-radius: 4px; cursor: pointer;
+}
+.numero-btn:hover { background: var(--base); }
+
+.buscador, .lista-estados {
+  display: block; width: 100%; max-width: 26rem;
+  font: inherit; color: var(--tinta); background: var(--papel);
+  border: 2px solid var(--tinta); border-radius: 4px;
+}
+.buscador { min-height: 3rem; padding: 0.5rem 0.75rem; margin-bottom: 0.5rem; }
+.lista-estados { padding: 0.25rem; }
+.lista-estados option { padding: 0.35rem 0.5rem; }
+
+.momento-boleta { padding-bottom: 1.5rem; }
+.momento-titulo { font-size: 1.75rem; margin: 0 0 0.75rem; }

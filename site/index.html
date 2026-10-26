@@ -105,25 +105,55 @@
       <div class="nota-papel">
         <p><strong>¿Qué es la participación?</strong> Es cuántas personas de cada 100 fueron a votar. Si dice 60%, votaron 60 de cada 100.</p>
       </div>
-      <fieldset class="perfil">
-        <legend>¿Cómo vota alguien como tú? <span class="opcional">(opcional)</span></legend>
-        <p class="perfil-ayuda">Si nos dices tu edad y tu estado, al final te mostramos cuántas personas como tú votaron en la última elección.</p>
-        <div class="filtros">
-          <label>Tu edad
-            <select id="p-grupo"></select>
-          </label>
-          <label>Tu estado
-            <select id="p-entidad"></select>
-          </label>
-        </div>
-        <p class="privacidad">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
-          No guardamos ni enviamos tus respuestas.
-        </p>
-      </fieldset>
       <div class="acciones">
-        <button class="boton primario" id="iniciar">Empezar</button>
-        <button class="boton secundario" id="saltar">Saltar y empezar</button>
+        <button class="boton primario" data-ir="perfil">Empezar</button>
+      </div>
+    </section>
+
+    <!-- 2b. Perfil: quién eres en esta historia -->
+    <section id="perfil" class="pantalla" aria-labelledby="t-perfil-pantalla" hidden>
+      <h2 id="t-perfil-pantalla">Antes de empezar: ¿quién eres en esta historia?</h2>
+      <p class="entrada">Con tu edad y tu estado, cada respuesta te va a mostrar cómo vota la gente como tú.</p>
+
+      <div class="campo">
+        <label for="p-edad" class="campo-titulo">Tu edad</label>
+        <div class="numero">
+          <button type="button" class="numero-btn" id="edad-menos" aria-controls="p-edad" aria-label="Un año menos">−</button>
+          <input id="p-edad" type="number" inputmode="numeric" min="15" max="100" step="1" aria-describedby="edad-ayuda" autocomplete="off">
+          <button type="button" class="numero-btn" id="edad-mas" aria-controls="p-edad" aria-label="Un año más">+</button>
+        </div>
+        <p id="edad-ayuda" class="ayuda">De 15 a 100 años.</p>
+      </div>
+
+      <div class="campo">
+        <label for="p-buscar" class="campo-titulo">Tu estado</label>
+        <input id="p-buscar" class="buscador" type="search" autocomplete="off" aria-describedby="buscar-ayuda" aria-controls="p-entidad">
+        <label for="p-entidad" class="sr">Lista de estados</label>
+        <select id="p-entidad" class="lista-estados" size="6"></select>
+        <p id="buscar-ayuda" class="ayuda" aria-live="polite"></p>
+      </div>
+
+      <p class="privacidad">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="1.5"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></svg>
+        No guardamos ni enviamos tus respuestas.
+      </p>
+      <p id="perfil-error" class="error" role="alert"></p>
+      <div class="acciones">
+        <button class="boton primario" id="perfil-continuar">Continuar</button>
+        <button class="boton enlace" id="perfil-no-decir">Prefiero no decir</button>
+      </div>
+    </section>
+
+    <!-- 2c. Primer momento de la historia -->
+    <section id="momento" class="pantalla" aria-labelledby="t-momento" hidden>
+      <div class="boleta momento-boleta">
+        <p class="folio">Tu historia</p>
+        <h2 id="t-momento" class="momento-titulo"></h2>
+        <p id="momento-texto" class="entrada"></p>
+      </div>
+      <div class="acciones">
+        <button class="boton primario" id="iniciar">Empezar el juego</button>
+        <button class="boton secundario" data-ir="perfil">Cambiar mis datos</button>
       </div>
     </section>
 
@@ -294,6 +324,7 @@
   <script src="js/datos.js"></script>
   <script src="js/graficas.js"></script>
   <script src="js/explora.js"></script>
+  <script src="js/personal.js"></script>
   <script src="js/voz.js"></script>
   <script src="js/juego.js"></script>
 </body>

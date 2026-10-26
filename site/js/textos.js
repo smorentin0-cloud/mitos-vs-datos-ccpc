@@ -95,12 +95,39 @@ const TEXTOS = {
     paraConversar: "Para conversar:",
     terminar: "Terminar",
   },
+  perfilPantalla: {
+    sinEstado: "Sin estado",
+    estadosVisibles: (n) => (n === 1 ? "1 estado coincide. Elígelo en la lista." : `${n} estados en la lista. Escribe para buscar.`),
+    ninguno: "Ningún estado coincide. Revisa cómo lo escribiste.",
+    errorEdad: (min, max) => `Escribe una edad de ${min} a ${max} años, o déjala vacía.`,
+    errorVacio: "Escribe tu edad o elige tu estado. Si prefieres no decir, usa el botón «Prefiero no decir».",
+    errorDatos: "No pudimos cargar los datos de tu estado. Revisa tu conexión o elige «Prefiero no decir».",
+  },
+  historia: {
+    // Primer momento de la historia, antes de la primera pregunta.
+    titulo: (edad, lugar) => (edad != null ? `Tienes ${edad} años${lugar ? ` y vives en ${lugar}` : ""}.` : `Vives en ${lugar}.`),
+    menor: (anio, esProxima, fecha) => `Todavía no puedes votar. Tu primera elección federal será ${esProxima ? `en ${fecha}` : `la de ${anio}`}.`,
+    sinElecciones: (fecha) => `Todavía no te ha tocado una elección federal: tu primera será en ${fecha}.`,
+    todas: (n, desde, hasta) => `De las ${n} elecciones federales de esta historia (${desde} a ${hasta}), te tocaron las ${n}.`,
+    algunas: (primera, n, total) =>
+      `Pudiste votar por primera vez en la elección de ${primera}. Te ${n === 1 ? "ha tocado 1" : `han tocado ${n}`} de las ${total} elecciones de esta historia.`,
+    lugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente como tú en ${lugar}.`,
+    soloLugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente de ${lugar}.`,
+  },
   perfil: {
     titulo: "¿Cómo vota alguien como tú?",
-    noDecir: "Prefiero no decir",
-    menor: "Tengo menos de 18",
     // grupo: "25 a 29 años", "85 años o más"
     grupoLegible: (g) => (g.includes("más") ? `${g.replace(" y más", "")} años o más` : `${g.replace("–", " a ")} años`),
+    edadLegible: (e) => (e >= 85 ? "85 años o más" : `${e} años`),
+    // A quién se refiere la cifra según el nivel que alcanzó el umbral de lista nominal.
+    quien: (r) => (r.nivel === "grupo"
+      ? `personas de ${TEXTOS.perfil.grupoLegible(r.grupo)}`
+      : `personas de ${TEXTOS.perfil.edadLegible(r.edad)}`),
+    nota: (r, lugarPedido) => {
+      if (r.nivel === "grupo") return ` En ${r.lugar} hay pocas personas de ${TEXTOS.perfil.edadLegible(r.edad)} en la lista nominal; por eso usamos su grupo de edad.`;
+      if (r.nivel === "pais") return ` En ${lugarPedido} hay pocas personas de esa edad en la lista nominal; por eso usamos el dato del país.`;
+      return "";
+    },
     pais: "México",
     todoPais: "Todo el país",
     todo: (estado) => `Todo ${estado}`,
