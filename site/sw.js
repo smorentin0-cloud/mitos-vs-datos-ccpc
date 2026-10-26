@@ -26,6 +26,7 @@ const ARCHIVOS = [
   "js/combobox.js",
   "js/personal.js",
   "js/caso.js",
+  "js/mascota.js",
   "js/juego.js",
   "js/imprimible.js",
   "data/mitos.json",
