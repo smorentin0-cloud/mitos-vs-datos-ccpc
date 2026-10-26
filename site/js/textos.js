@@ -62,8 +62,8 @@ const TEXTOS = {
       `de ${desde} en ${x0} a ${hasta} en ${x1}; mínimo de ${min} en ${xMin} y máximo de ${max} en ${xMax}`,
   },
   portada: {
-    entrada: (n) => `Todo mundo repite frases sobre quién vota y quién no. Aquí hay ${n}. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.`,
-    edicion: (lugar) => `Esta versión usa solo datos de ${lugar}. Las frases que no se cumplen con los datos de este estado no aparecen.`,
+    entrada: (n) => `Todo mundo repite frases sobre quién vota. Aquí hay ${n}: marca si son ciertas o falsas y los datos del INE te dirán la respuesta.`,
+    edicion: (lugar) => `Edición ${lugar}: solo frases que se cumplen con los datos de este estado.`,
     sinEdicion: 'Todavía no hay una versión para ese estado; estás jugando la versión de todo el país.',
   },
   compromiso: {

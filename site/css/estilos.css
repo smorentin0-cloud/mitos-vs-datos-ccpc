@@ -557,3 +557,34 @@ kbd {
 .como-calcula { margin: 2.5rem 0 0; font-size: 1rem; color: var(--tinta-suave); }
 .como-calcula summary { cursor: pointer; color: var(--azul); min-height: 44px; display: flex; align-items: center; }
 .como-calcula p { margin: 0.5rem 0 0; }
+
+/* ---------------------------------------------------------------- portada con una sola acción */
+.enlace-texto {
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0;
+  font: inherit; font-weight: 700; color: var(--azul);
+  background: none; border: 0; text-decoration: underline; text-underline-offset: 0.15em; cursor: pointer;
+}
+.enlaces-portada { display: grid; justify-items: start; gap: 0.25rem; margin: 1rem 0 0; }
+.portada-boleta { margin-bottom: 1.25rem; }
+.mini-boleta { padding: 0.625rem 1rem 0.75rem; gap: 0.25rem; max-width: 16rem; }
+.mini-pregunta { font-size: 1.25rem; }
+.mini-boleta .casilla { width: 2rem; height: 2rem; }
+.opcion-taller { margin: 0 0 2rem; }
+.opcion-taller h3 { margin: 0 0 0.25rem; }
+.opcion-taller p { margin: 0 0 0.75rem; }
+
+/* Guía de facilitación (guia.html, generada desde docs/) */
+.texto-guia table { border-collapse: collapse; width: 100%; font-size: 1rem; margin: 0 0 1rem; }
+.texto-guia th, .texto-guia td { text-align: left; padding: 0.5rem; border-bottom: 1px solid var(--base); vertical-align: top; }
+.texto-guia li { margin-bottom: 0.4em; }
+.texto-guia code { font-size: 0.9em; background: var(--base); padding: 0 0.25em; border-radius: 3px; }
+.enlace-texto { text-align: left; }
+.pie { padding-top: 1rem; padding-bottom: 1.5rem; }
+.pie p { margin: 0 0 0.25rem; }
+.pie .como-calcula { margin: 0; }
+#portada .titular { font-size: 2rem; margin-bottom: 0.75rem; }
+#portada .entrada { margin-bottom: 1rem; }
+main:has(> #portada:not([hidden])) { padding-top: 1.25rem; padding-bottom: 1.25rem; }
+@media (min-width: 40rem) { #portada .titular { font-size: 3rem; } }
+#portada .acciones { margin-top: 1rem; }
+.enlaces-portada { margin-top: 0.5rem; gap: 0; }

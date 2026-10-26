@@ -67,7 +67,7 @@
 
   function textoPantalla(id) {
     const s = document.getElementById(id);
-    return [...s.querySelectorAll("h1, h2, h3:not([hidden] *), .entrada, .pasos li, .nota-papel, .campo-titulo, .ayuda, .privacidad, .llamado li, .reto-aviso:not([hidden])")]
+    return [...s.querySelectorAll("h1, h2, h3:not([hidden] *), .entrada, .pasos li, .nota-papel, .campo-titulo, .ayuda, .privacidad, .llamado li, .opcion-taller p, .reto-aviso:not([hidden])")]
       .map((n) => n.textContent.trim()).join(". ");
   }
 

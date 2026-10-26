@@ -13,6 +13,7 @@ const ARCHIVOS = [
   "./",
   "index.html",
   "imprimible.html",
+  "guia.html",
   "manifest.webmanifest",
   "favicon.svg",
   "css/estilos.css",

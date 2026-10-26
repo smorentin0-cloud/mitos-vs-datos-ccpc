@@ -73,22 +73,38 @@
         </div>
       </div>
       <h2 id="t-portada" class="titular">¿Cuánto sabes de cómo vota México?</h2>
-      <p id="portada-entrada" class="entrada">Todo mundo repite frases sobre quién vota y quién no. Marca si crees que son ciertas o falsas, y los datos del INE te dicen la respuesta.</p>
+      <p id="portada-entrada" class="entrada">Todo mundo repite frases sobre quién vota. Marca si son ciertas o falsas y los datos del INE te dirán la respuesta.</p>
       <p id="edicion" class="edicion" hidden></p>
       <p id="reto-aviso" class="reto-aviso" hidden></p>
       <div class="acciones">
         <button class="boton primario" data-ir="instrucciones">Jugar</button>
-        <button class="boton secundario" data-ir="explora">Ver los datos</button>
       </div>
-      <div class="talleres">
-        <h2 class="talleres-titulo">Para talleres</h2>
-        <p>En grupo, con proyector, o en papel si no hay dispositivos.</p>
-        <div class="acciones">
-          <button class="boton secundario" id="entrar-salon">Modo salón</button>
-          <a class="boton secundario enlace-imprimible" href="imprimible.html">Versión para imprimir</a>
-        </div>
+      <p class="enlaces-portada">
+        <button class="enlace-texto" data-ir="explora">Ver los datos</button>
+        <button class="enlace-texto" data-ir="talleres">¿Das talleres? Modo salón e imprimible →</button>
+      </p>
+    </section>
+
+    <!-- Para talleres -->
+    <section id="talleres" class="pantalla" aria-labelledby="t-talleres" hidden>
+      <h2 id="t-talleres">Para talleres</h2>
+      <p class="entrada">Para jugar en grupo con un proyector, o en papel si no hay dispositivos.</p>
+      <div class="opcion-taller">
+        <h3>Modo salón</h3>
+        <p>Una pregunta por pantalla, letra muy grande y el grupo vota a mano alzada. Tú avanzas con las flechas o la barra espaciadora.</p>
+        <button class="boton primario" id="entrar-salon">Empezar el modo salón</button>
       </div>
-      <p class="pie-fuente">Datos del INE: Conteos Censales de Participación Ciudadana 2009–2024.</p>
+      <div class="opcion-taller">
+        <h3>Versión para imprimir</h3>
+        <p>Tarjetas tamaño carta con la frase al frente y la respuesta atrás.</p>
+        <a class="boton secundario enlace-imprimible" href="imprimible.html">Abrir la versión para imprimir</a>
+      </div>
+      <div class="opcion-taller">
+        <h3>Guía de facilitación</h3>
+        <p>Un taller de 20 minutos, paso a paso.</p>
+        <a class="boton secundario" href="guia.html">Leer la guía</a>
+      </div>
+      <p><button class="enlace-texto" data-ir="portada">Volver al inicio</button></p>
     </section>
 
     <!-- 2. Instrucciones -->
@@ -397,8 +413,11 @@
   </main>
 
   <footer id="pie" class="pie">
-    <p id="nota-metodo"></p>
-    <p>Proyecto para el hackatón del INE «Hackea la participación: Datos que construyen democracia». Datos abiertos de la <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" rel="noopener">Plataforma de Conteos Censales de Participación Ciudadana</a>.</p>
+    <p>Datos: <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" rel="noopener">INE, Conteos Censales de Participación Ciudadana</a>. Por Agentes FIME.</p>
+    <details class="como-calcula">
+      <summary>¿Cómo se calcula?</summary>
+      <p id="nota-metodo"></p>
+    </details>
   </footer>
 
   <script src="js/textos.js"></script>
