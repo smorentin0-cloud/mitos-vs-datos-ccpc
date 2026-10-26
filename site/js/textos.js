@@ -114,6 +114,32 @@ const TEXTOS = {
     lugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente como tú en ${lugar}.`,
     soloLugar: (lugar) => `En cada pregunta vas a ver cómo vota la gente de ${lugar}.`,
   },
+  estimar: {
+    // «Adivina antes de ver»: se pide antes de Cierto/Falso en algunas preguntas.
+    pregunta: (quien, lugar, anio) => `Antes de responder, adivina: ¿cuántas de cada 100 ${quien} en ${lugar} crees que votaron en ${anio}?`,
+    preguntaGrupo: (quien, lugar, anio) => `Pregunta al grupo: ¿cuántas de cada 100 ${quien} en ${lugar} creen que votaron en ${anio}?`,
+    de18: "personas de 18 años",
+    deTuEdad: (edad) => `personas de tu edad (${edad} años)`,
+    de18a29: "personas de 18 a 29 años",
+    de60a69: "personas de 60 a 69 años",
+    unidad: "de cada 100",
+    valorTexto: (v) => `${v} de cada 100`,
+    resultado: (pensaste, real) => `Pensaste ${pensaste}; en realidad fueron ${real}.`,
+    diferencia: (pensaste, real) => {
+      const d = real - pensaste;
+      if (Math.abs(d) <= 3) return " ¡Le atinaste o casi!";
+      return d > 0 ? ` Votaron ${d} más de lo que pensaste.` : ` Votaron ${-d} menos de lo que pensaste.`;
+    },
+    resultadoGrupo: (real) => `En realidad fueron ${real} de cada 100.`,
+    ahora: "Ahora, ¿la frase es cierta o falsa?",
+    tuEstimacion: "Tu estimación",
+    datoReal: "Dato real",
+    tituloGrafica: (quien, lugar, anio) => `Tu estimación y el dato real: ${quien} en ${lugar}, ${anio}`,
+    resumen: (promedio) => (promedio <= 5
+      ? `Tus estimaciones quedaron, en promedio, a ${promedio} puntos del dato real. ¡Conoces bien cómo se vota!`
+      : `Tus estimaciones quedaron, en promedio, a ${promedio} puntos del dato real.`),
+    item: (quien, lugar, pensaste, real) => `${quien[0].toUpperCase()}${quien.slice(1)} en ${lugar}: pensaste ${pensaste}, fueron ${real}.`,
+  },
   enTuCaso: {
     titulo: "Y en tu caso…",
     // Aperturas según cómo se compara el dato local con el veredicto del juego.

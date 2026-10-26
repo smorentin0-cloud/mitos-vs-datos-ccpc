@@ -175,6 +175,20 @@
           <svg class="sello-icono" viewBox="0 0 24 24"><path id="sello-trazo" d=""/></svg>
           <span id="sello-texto"></span>
         </div>
+        <div id="estimar" class="estimar" hidden>
+          <p id="est-pregunta" class="est-pregunta"></p>
+          <div id="est-control" class="est-control">
+            <button type="button" class="numero-btn" id="est-menos" aria-controls="est-rango" aria-label="Uno menos">−</button>
+            <input type="range" id="est-rango" min="0" max="100" step="1" value="50" aria-labelledby="est-pregunta">
+            <button type="button" class="numero-btn" id="est-mas" aria-controls="est-rango" aria-label="Uno más">+</button>
+          </div>
+          <p id="est-muestra" class="est-valor" aria-hidden="true"><output id="est-valor" for="est-rango">50</output> <span id="est-unidad"></span></p>
+          <button class="boton primario" id="est-ver">Ver el dato</button>
+          <div id="est-resultado" class="est-resultado" hidden>
+            <p id="est-texto" class="est-texto" role="status"></p>
+            <div id="est-lienzo" class="g-lienzo"></div>
+          </div>
+        </div>
         <fieldset id="opciones" class="opciones">
           <legend class="sr">¿Es cierto o falso?</legend>
           <button class="opcion" data-respuesta="cierto">
@@ -258,6 +272,12 @@
         <button class="boton secundario" id="copiar">Copiar enlace</button>
       </div>
       <p id="aviso-compartir" class="aviso" role="status"></p>
+
+      <section id="estimaciones" class="estimaciones" aria-labelledby="t-estimaciones" hidden>
+        <h3 id="t-estimaciones">Tus estimaciones</h3>
+        <p id="est-resumen" class="entrada"></p>
+        <ul id="est-lista" class="est-lista"></ul>
+      </section>
 
       <h3 class="subtitulo">Tus respuestas</h3>
       <ol id="resumen" class="resumen"></ol>

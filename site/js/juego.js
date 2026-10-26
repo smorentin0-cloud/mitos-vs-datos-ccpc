@@ -18,6 +18,11 @@
     lugar: "México",
     ambitoClave: 0,
     caso: null, // «Y en tu caso…» de la pregunta actual
+    // «Adivina antes de ver»: fase de la pregunta ("estimar" o "votar") y estimaciones de la partida.
+    fase: "votar",
+    estimacion: null,
+    estimaciones: [],
+    personalAmbito: null, // personal.json del ámbito del juego (país o estado de la versión)
     datosPerfil: null,
     textoPerfil: "",
     // Modo salón: una pregunta por pantalla, sin puntos, la persona facilitadora revela.
@@ -59,8 +64,9 @@
   function textoPregunta() {
     const m = estado.mitos[estado.indice];
     const intro = m.introNivel ? `${m.introNivel} ` : "";
-    return `${intro}${J.pregunta(estado.indice + 1, estado.mitos.length)} ${m.enunciado} ` +
-      (estado.salon ? TEXTOS.salon.votar : J.cierto_o_falso);
+    const cierre = estado.fase === "estimar" ? $("#est-pregunta").textContent
+      : (estado.salon ? TEXTOS.salon.votar : J.cierto_o_falso);
+    return `${intro}${J.pregunta(estado.indice + 1, estado.mitos.length)} ${m.enunciado} ${cierre}`;
   }
 
   function textoRevelacion() {
@@ -77,7 +83,8 @@
 
   function textoResultado() {
     const g = $("#perfil-g-lienzo").dataset.spec ? JSON.parse($("#perfil-g-lienzo").dataset.spec) : null;
-    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ` +
+    const est = $("#estimaciones").hidden ? "" : `${$("#t-estimaciones").textContent}. ${$("#est-resumen").textContent} `;
+    return `${$("#t-resultado").textContent}. ${$("#mensaje").textContent} ${est}` +
       `${TEXTOS.perfil.titulo} ${$("#perfil-mensaje").textContent} ${$("#perfil-comparacion").textContent} ` +
       (g ? `${J.graficaMuestra} ${Graficas.describir(g)} ${$("#perfil-g-fuente").textContent}` : "");
   }
@@ -132,6 +139,7 @@
     estado.indice = 0;
     estado.puntos = 0;
     estado.aciertos = [];
+    estado.estimaciones = [];
     $("#casillas").replaceChildren(...estado.mitos.map((_, i) => {
       const li = document.createElement("li");
       li.textContent = i + 1;
@@ -173,8 +181,9 @@
     clearTimeout(estado.temporizador); // una revelación pendiente no debe caer en otra pregunta
     $("#sello").hidden = true;
     $("#revelacion").hidden = true;
-    $("#opciones").hidden = estado.salon;
-    $("#salon-votar").hidden = !estado.salon;
+    prepararEstimacion(m);
+    $("#opciones").hidden = estado.salon || estado.fase === "estimar";
+    $("#salon-votar").hidden = !estado.salon || estado.fase === "estimar";
     pintarProgreso();
     window.scrollTo(0, 0);
     $("#t-mito").focus({ preventScroll: true });
@@ -273,6 +282,100 @@
     }
   }
 
+  // ---------- «Adivina antes de ver»
+
+  const ESTIMAR = new Set(["primer-voto", "jovenes", "sesentas"]);
+
+  // Qué se estima en cada pregunta y con qué datos: los de la persona o los del ámbito del juego.
+  function objetivoEstimacion(m) {
+    const E = TEXTOS.estimar;
+    const { perfil } = estado;
+    const datos = perfil.entidad != null ? perfil.local : estado.personalAmbito;
+    if (!datos) return null;
+    const anio = String(estado.aniosHistoria.at(-1));
+    const lugar = datos.nombre;
+    if (m.id === "primer-voto") return { quien: E.de18, real: datos.estimar[anio]["18"], lugar, anio };
+    if (m.id === "sesentas") return { quien: E.de60a69, real: datos.estimar[anio]["60_69"], lugar, anio };
+    if (m.id === "jovenes") {
+      if (perfil.edad != null && perfil.edad >= 18 && !estado.salon) {
+        const res = Personal.participacionEdad(datos, perfil.pais || estado.personalAmbito, anio, perfil.edad);
+        if (res.nivel === "edad") return { quien: E.deTuEdad(perfil.edad), real: res.valor, lugar, anio };
+      }
+      return { quien: E.de18a29, real: datos.estimar[anio]["18_29"], lugar, anio };
+    }
+    return null;
+  }
+
+  function prepararEstimacion(m) {
+    const E = TEXTOS.estimar;
+    const obj = ESTIMAR.has(m.id) ? objetivoEstimacion(m) : null;
+    estado.estimacion = obj;
+    estado.fase = obj && obj.real != null ? "estimar" : "votar";
+    $("#estimar").hidden = estado.fase !== "estimar";
+    if (estado.fase !== "estimar") return;
+    $("#est-pregunta").textContent = (estado.salon ? E.preguntaGrupo : E.pregunta)(obj.quien, obj.lugar, obj.anio);
+    $("#est-control").hidden = estado.salon;
+    $("#est-muestra").hidden = estado.salon;
+    $("#est-ver").hidden = false;
+    $("#est-resultado").hidden = true;
+    $("#est-lienzo").replaceChildren();
+    $("#est-unidad").textContent = E.unidad;
+    ponerEstimacion(50);
+  }
+
+  function ponerEstimacion(v) {
+    const valor = Math.max(0, Math.min(100, Math.round(v)));
+    $("#est-rango").value = String(valor);
+    $("#est-valor").textContent = String(valor);
+    $("#est-rango").setAttribute("aria-valuetext", TEXTOS.estimar.valorTexto(valor));
+  }
+
+  function verDato() {
+    if (estado.fase !== "estimar") return;
+    const E = TEXTOS.estimar;
+    const obj = estado.estimacion;
+    const real = Math.round(obj.real);
+    estado.fase = "votar";
+    $("#est-control").hidden = true;
+    $("#est-muestra").hidden = true;
+    $("#est-ver").hidden = true;
+    $("#est-resultado").hidden = false;
+    let texto;
+    if (estado.salon) {
+      texto = E.resultadoGrupo(real);
+      $("#salon-votar").hidden = false;
+    } else {
+      const pensaste = Number($("#est-rango").value);
+      estado.estimaciones.push({ ...obj, pensaste, real });
+      texto = E.resultado(pensaste, real) + E.diferencia(pensaste, real);
+      const spec = {
+        tipo: "barras", titulo: E.tituloGrafica(obj.quien, obj.lugar, obj.anio),
+        items: [
+          { etiqueta: E.tuEstimacion, valor: pensaste, color: "acento" },
+          { etiqueta: E.datoReal, valor: obj.real, color: "datos" },
+        ],
+      };
+      Graficas.dibujar($("#est-lienzo"), spec);
+      $("#opciones").hidden = false;
+    }
+    $("#est-texto").textContent = `${texto} ${E.ahora}`;
+    Voz.anunciar($("#est-texto").textContent);
+  }
+
+  function pintarEstimaciones() {
+    const E = TEXTOS.estimar;
+    const lista = estado.estimaciones;
+    $("#estimaciones").hidden = !lista.length;
+    if (!lista.length) return;
+    const promedio = Math.round(lista.reduce((s, e) => s + Math.abs(e.real - e.pensaste), 0) / lista.length);
+    $("#est-resumen").textContent = E.resumen(promedio);
+    $("#est-lista").replaceChildren(...lista.map((e) => {
+      const li = document.createElement("li");
+      li.textContent = E.item(e.quien, e.lugar, e.pensaste, e.real);
+      return li;
+    }));
+  }
+
   function siguiente() {
     if (estado.indice < estado.mitos.length - 1) {
       estado.indice += 1;
@@ -307,9 +410,10 @@
     ponerTamano(estado.tamanoPrevio);
   }
 
-  // Avanza como en una presentación: primero revela, luego pasa a la siguiente.
+  // Avanza como en una presentación: dato estimado, luego el veredicto, luego la siguiente.
   function avanzarSalon() {
-    if (!estado.revelada) revelar();
+    if (estado.fase === "estimar") verDato();
+    else if (!estado.revelada) revelar();
     else if (!$("#revelacion").hidden) siguiente(); // espera a que termine de revelarse
   }
 
@@ -353,6 +457,7 @@
     }));
     $("#aviso-compartir").textContent = "";
     pintarPerfil();
+    pintarEstimaciones();
     mostrar("resultado");
     const g = JSON.parse($("#perfil-g-lienzo").dataset.spec);
     Graficas.dibujar($("#perfil-g-lienzo"), g);
@@ -738,6 +843,7 @@
       ...["data/explora.json", "data/entidades.json"].map((u) => fetch(u).then((r) => r.json())),
     ]);
     estado.datosPerfil = { edad, entidades };
+    estado.personalAmbito = await Personal.cargar(datos.ambito ? datos.ambito.clave : 0).catch(() => null);
     estado.proxima = datos.proxima_eleccion;
     estado.aniosHistoria = edad.anios;
     llenarEstados("");
@@ -758,6 +864,10 @@
   $("#salir-salon").addEventListener("click", () => mostrar("portada"));
   $("#revelar").addEventListener("click", revelar);
   $("#perfil-continuar").addEventListener("click", confirmarPerfil);
+  $("#est-rango").addEventListener("input", (e) => ponerEstimacion(Number(e.target.value)));
+  $("#est-menos").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) - 1));
+  $("#est-mas").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) + 1));
+  $("#est-ver").addEventListener("click", verDato);
   $("#perfil-no-decir").addEventListener("click", prefieroNoDecir);
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
   $("#edad-mas").addEventListener("click", () => cambiarEdad(1));
