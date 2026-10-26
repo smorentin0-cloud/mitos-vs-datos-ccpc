@@ -81,14 +81,14 @@
 
   function textoRevelacion() {
     const m = estado.mitos[estado.indice];
-    const aviso = estado.salon ? "" : `${$("#resultado-respuesta").textContent} `;
-    const discusion = estado.salon ? ` ${TEXTOS.salon.paraConversar} ${m.discusion}` : "";
     const caso = estado.caso
       ? ` ${TEXTOS.enTuCaso.titulo} ${estado.caso.texto}` +
         (estado.caso.grafica ? ` ${J.graficaMuestra} ${Graficas.describir(estado.caso.grafica)} ${estado.caso.fuente}` : "")
       : "";
-    return `${aviso}${J.respuesta(NOMBRES[m.veredicto])}. ` +
-      `${m.explicacion} ${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${discusion}${caso}`;
+    // Se lee todo, también lo que está plegado en «Más contexto».
+    return `${$("#t-veredicto").textContent} ${m.dato.cifra} ${m.dato.texto} ${m.resumen} ` +
+      `${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${caso} ` +
+      `${m.explicacion} ${TEXTOS.salon.paraConversar} ${m.discusion}`;
   }
 
   function textoResultado() {
@@ -222,6 +222,8 @@
       b.querySelector(".casilla").classList.remove("marcada");
     });
     estado.revelada = false;
+    estado.caso = null;
+    $("#mas-contexto").open = false;
     clearTimeout(estado.temporizador); // una revelación pendiente no debe caer en otra pregunta
     $("#sello").hidden = true;
     $("#revelacion").hidden = true;
@@ -239,6 +241,7 @@
     const acerto = respuesta === m.veredicto;
     if (acerto) estado.puntos += 1;
     estado.aciertos.push(acerto);
+    estado.respuesta = respuesta;
 
     document.querySelectorAll(".opcion").forEach((b) => {
       b.disabled = true;
@@ -248,21 +251,17 @@
         b.querySelector(".casilla").classList.add("marcada");
       }
     });
-
-    const aviso = $("#resultado-respuesta");
-    aviso.className = `resultado-respuesta ${acerto ? "acierto" : "fallo"}`;
-    aviso.innerHTML = icono(acerto ? TRAZOS.bien : TRAZOS.mal);
-    aviso.append(acerto ? J.acierto : J.fallo(NOMBRES[respuesta]));
     revelar();
   }
 
-  // Sello, explicación y gráfica. Lo usan el juego y el modo salón.
+  /*
+   * Revelación en secuencia: el veredicto una sola vez, el dato clave, una sola figura
+   * (México | estado) y «Más contexto» plegado. Lo usan el juego y el modo salón.
+   */
   function revelar() {
     if (estado.revelada) return;
     estado.revelada = true;
     const m = estado.mitos[estado.indice];
-    const aviso = $("#resultado-respuesta");
-    aviso.hidden = estado.salon;
     $("#salon-votar").hidden = true;
 
     // Sello con la respuesta correcta sobre la boleta.
@@ -273,17 +272,39 @@
     void sello.offsetWidth; // reinicia la animación
     sello.hidden = false;
 
-    $("#t-veredicto").textContent = J.respuesta(NOMBRES[m.veredicto]);
-    const g = m.grafica;
-    $("#g-titulo").textContent = g.titulo;
-    $("#g-fuente").textContent = m.fuente;
-    $("#g-nota").hidden = !g.nota;
-    $("#g-nota").textContent = g.nota || "";
-    $("#g-tabla").replaceChildren(Graficas.tabla(g));
+    // Una sola línea de retroalimentación.
+    const retro = $("#t-veredicto");
+    const acerto = !estado.salon && estado.respuesta === m.veredicto;
+    retro.className = `retro ${estado.salon ? "" : (acerto ? "acierto" : "fallo")}`;
+    retro.innerHTML = estado.salon ? "" : icono(acerto ? TRAZOS.bien : TRAZOS.mal);
+    retro.append(estado.salon ? J.retroSalon(NOMBRES[m.veredicto])
+      : (acerto ? J.retroBien(NOMBRES[m.veredicto]) : J.retroMal(NOMBRES[estado.respuesta], NOMBRES[m.veredicto])));
+
+    $("#dato-cifra").textContent = m.dato.cifra;
+    $("#dato-texto").textContent = m.dato.texto;
+    $("#resumen-mito").textContent = m.resumen;
     $("#explicacion").textContent = m.explicacion;
-    $("#discusion").hidden = !estado.salon;
+    $("#g-nota").hidden = !m.grafica.nota;
+    $("#g-nota").textContent = m.grafica.nota || "";
     $("#discusion-texto").textContent = m.discusion || "";
-    pintarEnTuCaso(m);
+    $("#mas-contexto").open = estado.salon; // en el salón, la pregunta para conversar a la vista
+
+    // El dato local se ve en la misma figura, con el selector México | estado.
+    estado.caso = estado.salon ? null : EnTuCaso.armar(m, {
+      perfil: estado.perfil,
+      ambito: estado.lugar,
+      ambitoClave: estado.ambitoClave,
+      anio: String(estado.aniosHistoria.at(-1)),
+    });
+    const vista = $("#vista");
+    vista.hidden = !estado.caso;
+    if (estado.caso) {
+      const [nacional, local] = vista.querySelectorAll(".vista-btn");
+      nacional.textContent = estado.lugar;
+      local.textContent = estado.caso.lugar === estado.lugar ? J.vistaEdad : estado.caso.lugar;
+    }
+    estado.vista = "nacional";
+
     const ultima = estado.indice === estado.mitos.length - 1;
     $("#siguiente").textContent = estado.salon
       ? (ultima ? TEXTOS.salon.terminar : J.siguiente)
@@ -294,35 +315,35 @@
     // Se lee dentro del clic: algunos navegadores solo permiten hablar como respuesta a una acción.
     Voz.anunciar(textoRevelacion());
 
-    // Primero se ve el sello; luego baja a la explicación.
+    // Primero se ve el sello; luego aparece lo demás.
     estado.temporizador = setTimeout(() => {
       $("#revelacion").hidden = false;
-      Graficas.dibujar($("#g-lienzo"), g);
-      if (estado.caso && estado.caso.grafica) Graficas.dibujar($("#etc-lienzo"), estado.caso.grafica);
-      $("#t-veredicto").focus({ preventScroll: true });
-      (estado.salon ? $("#t-veredicto") : aviso)
-        .scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
+      pintarVista("nacional");
+      retro.focus({ preventScroll: true });
+      retro.scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
     }, sinMovimiento() ? 0 : 700);
   }
 
-  // Bloque «Y en tu caso…»: el mismo dato para el estado o la edad de la persona.
-  function pintarEnTuCaso(m) {
-    const caso = estado.salon ? null : EnTuCaso.armar(m, {
-      perfil: estado.perfil,
-      ambito: estado.lugar,
-      ambitoClave: estado.ambitoClave,
-      anio: String(estado.aniosHistoria.at(-1)),
-    });
-    estado.caso = caso;
-    $("#en-tu-caso").hidden = !caso;
-    if (!caso) return;
-    $("#etc-texto").textContent = caso.texto;
-    $("#etc-figura").hidden = !caso.grafica;
-    $("#etc-lienzo").replaceChildren();
-    if (caso.grafica) {
-      $("#etc-titulo").textContent = caso.grafica.titulo;
-      $("#etc-fuente").textContent = caso.fuente;
-      $("#etc-tabla").replaceChildren(Graficas.tabla(caso.grafica));
+  // Cambia la figura entre el dato del ámbito del juego y el de la persona; la tabla sigue a la vista.
+  function pintarVista(cual) {
+    const m = estado.mitos[estado.indice];
+    const caso = estado.caso;
+    const local = cual === "local" && caso;
+    estado.vista = local ? "local" : "nacional";
+    document.querySelectorAll(".vista-btn").forEach((b) =>
+      b.setAttribute("aria-pressed", String(b.dataset.vista === estado.vista)));
+    const g = local ? caso.grafica : m.grafica;
+    $("#g-titulo").textContent = g ? g.titulo : TEXTOS.enTuCaso.titulo;
+    $("#g-local").hidden = !local;
+    $("#g-local").textContent = local ? caso.texto : "";
+    $("#g-fuente").textContent = local ? caso.fuente : m.fuente;
+    $("#g-detalle-tabla").hidden = !g;
+    if (g) {
+      Graficas.dibujar($("#g-lienzo"), g);
+      $("#g-tabla").replaceChildren(Graficas.tabla(g));
+    } else {
+      $("#g-lienzo").replaceChildren();
+      $("#g-tabla").replaceChildren();
     }
   }
 
@@ -363,7 +384,6 @@
     $("#est-muestra").hidden = estado.salon;
     $("#est-ver").hidden = false;
     $("#est-resultado").hidden = true;
-    $("#est-lienzo").replaceChildren();
     $("#est-unidad").textContent = E.unidad;
     ponerEstimacion(50);
   }
@@ -393,14 +413,11 @@
       const pensaste = Number($("#est-rango").value);
       estado.estimaciones.push({ ...obj, pensaste, real });
       texto = E.resultado(pensaste, real) + E.diferencia(pensaste, real);
-      const spec = {
-        tipo: "barras", titulo: E.tituloGrafica(obj.quien, obj.lugar, obj.anio),
-        items: [
-          { etiqueta: E.tuEstimacion, valor: pensaste, color: "acento" },
-          { etiqueta: E.datoReal, valor: obj.real, color: "datos" },
-        ],
-      };
-      Graficas.dibujar($("#est-lienzo"), spec);
+      // Dos barras simples junto a la frase (la frase ya dice las dos cifras).
+      $("#est-etq-tu").textContent = `${E.tuEstimacion}: ${pensaste}`;
+      $("#est-etq-real").textContent = `${E.datoReal}: ${real}`;
+      $("#est-barra-tu").style.width = `${pensaste}%`;
+      $("#est-barra-real").style.width = `${obj.real}%`;
       $("#opciones").hidden = false;
     }
     $("#est-texto").textContent = `${texto} ${E.ahora}`;
@@ -450,8 +467,6 @@
     estado.salon = false;
     document.body.classList.remove("modo-salon");
     $("#salir-salon").hidden = true;
-    $("#discusion").hidden = true;
-    $("#resultado-respuesta").hidden = false;
     ponerTamano(estado.tamanoPrevio);
   }
 
@@ -1175,6 +1190,8 @@
   $("#est-menos").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) - 1));
   $("#est-mas").addEventListener("click", () => ponerEstimacion(Number($("#est-rango").value) + 1));
   $("#est-ver").addEventListener("click", verDato);
+  document.querySelectorAll(".vista-btn").forEach((b) =>
+    b.addEventListener("click", () => pintarVista(b.dataset.vista)));
   document.querySelectorAll(".compromiso-btn").forEach((b) => {
     b.querySelector(".compromiso-texto").textContent = "";
     b.addEventListener("click", () => elegirCompromiso(b.dataset.compromiso));

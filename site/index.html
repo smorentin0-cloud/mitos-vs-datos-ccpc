@@ -222,7 +222,10 @@
           <button class="boton primario" id="est-ver">Ver el dato</button>
           <div id="est-resultado" class="est-resultado" hidden>
             <p id="est-texto" class="est-texto" role="status"></p>
-            <div id="est-lienzo" class="g-lienzo"></div>
+            <div class="est-barras" aria-hidden="true">
+              <span class="est-fila"><span id="est-etq-tu"></span><span class="est-pista"><span id="est-barra-tu" class="est-barra tu"></span></span></span>
+              <span class="est-fila"><span id="est-etq-real"></span><span class="est-pista"><span id="est-barra-real" class="est-barra real"></span></span></span>
+            </div>
           </div>
         </div>
         <fieldset id="opciones" class="opciones">
@@ -244,34 +247,38 @@
       </article>
 
       <div id="revelacion" class="revelacion" hidden>
-        <p id="resultado-respuesta" class="resultado-respuesta" role="status"></p>
-        <h3 id="t-veredicto" class="veredicto" tabindex="-1"></h3>
-        <p id="explicacion" class="explicacion"></p>
-        <p id="discusion" class="discusion" hidden><strong>Para conversar:</strong> <span id="discusion-texto"></span></p>
-        <button class="escuchar" data-leer="explicacion" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar explicación</span></button>
-        <figure class="grafica">
+        <h3 id="t-veredicto" class="retro" tabindex="-1"></h3>
+        <p class="dato-clave"><span id="dato-cifra" class="dato-cifra"></span> <span id="dato-texto" class="dato-texto"></span></p>
+        <p id="resumen-mito" class="resumen-mito"></p>
+        <button class="escuchar" data-leer="explicacion" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar todo</span></button>
+
+        <figure id="figura" class="grafica">
           <figcaption id="g-titulo" class="g-titulo"></figcaption>
+          <div id="vista" class="vista" role="group" aria-label="Ver el dato de" hidden>
+            <button class="vista-btn" data-vista="nacional" aria-pressed="true"></button>
+            <button class="vista-btn" data-vista="local" aria-pressed="false"></button>
+          </div>
+          <p id="g-local" class="g-local" hidden></p>
           <div id="g-lienzo" class="g-lienzo"></div>
-          <p id="g-nota" class="g-nota" hidden></p>
           <p id="g-fuente" class="g-fuente"></p>
-          <details class="g-tabla">
+          <details id="g-detalle-tabla" class="g-tabla">
             <summary>Ver los datos en una tabla</summary>
             <div id="g-tabla"></div>
           </details>
         </figure>
-        <section id="en-tu-caso" class="en-tu-caso" aria-labelledby="t-en-tu-caso" hidden>
-          <h4 id="t-en-tu-caso" class="en-tu-caso-titulo">Y en tu caso…</h4>
-          <p id="etc-texto" class="etc-texto"></p>
-          <figure id="etc-figura" class="grafica">
-            <figcaption id="etc-titulo" class="g-titulo"></figcaption>
-            <div id="etc-lienzo" class="g-lienzo"></div>
-            <p id="etc-fuente" class="g-fuente"></p>
-            <details class="g-tabla">
-              <summary>Ver los datos en una tabla</summary>
-              <div id="etc-tabla"></div>
-            </details>
-          </figure>
-        </section>
+
+        <details id="mas-contexto" class="mas-contexto">
+          <summary>Más contexto</summary>
+          <p id="explicacion" class="explicacion"></p>
+          <p id="g-nota" class="g-nota" hidden></p>
+          <p id="discusion" class="discusion"><strong>Para conversar:</strong> <span id="discusion-texto"></span></p>
+        </details>
+
+        <div class="acciones acciones-fijas">
+          <button class="boton primario" id="siguiente">Siguiente pregunta</button>
+        </div>
+      </div>
+    </section>
         <div class="acciones">
           <button class="boton primario" id="siguiente">Siguiente pregunta</button>
         </div>

@@ -448,6 +448,12 @@ def cantidad(personas: float) -> str:
     return f"{round(personas / 1e3):,} mil"
 
 
+def cantidad_personas(personas: float) -> str:
+    """«11.9 millones de personas» o «65 mil personas»."""
+    texto = cantidad(personas)
+    return f"{texto} de personas" if "millones" in texto else f"{texto} personas"
+
+
 def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = None) -> dict:
     """Textos, veredictos y datos de gráfica de cada mito. Todas las cifras salen de los datos.
 
@@ -495,8 +501,13 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "jovenes",
             "enunciado": "Los jóvenes no votan.",
             "veredicto": "falso",
+            "dato": {"cifra": pct(j["18_29"]), "texto": "de las personas de 18 a 29 años votó en 2024."},
+            "resumen": (
+                f"Son {cantidad_personas(votaron)}. Votan menos que quienes tienen 30 años o más "
+                f"({pct(j['30_mas'])}), pero sí votan."
+            ),
             "explicacion": (
-                f"Es falso. En 2024 votó el {pct(j['18_29'])} de las personas de 18 a 29 años: {cantidad(votaron)}. "
+                f"En 2024 votó el {pct(j['18_29'])} de las personas de 18 a 29 años: {cantidad(votaron)}. "
                 f"En ninguna elección desde 2009 votó menos de un tercio de ellas (el mínimo fue "
                 f"{pct(min_jov)} en {anio_min_jov}). Sí votan menos que quienes tienen 30 años o más "
                 f"({pct(j['30_mas'])} en 2024)."
@@ -523,8 +534,13 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "primer-voto",
             "enunciado": f"A los 18 años se vota menos que el {promedio}.",
             "veredicto": "falso",
+            "dato": {"cifra": pct(serie[0]), "texto": f"votó a los 18 años en 2024. El {promedio} fue de {pct(nac[2024])}."},
+            "resumen": (
+                f"A los 18 años se vota más que el {promedio}, y así fue en las 6 elecciones. "
+                f"Después la participación baja hasta {pct(minimo)} a los {edad_min} años."
+            ),
             "explicacion": (
-                f"Es al revés: a los 18 años se vota más que el {promedio}, y así fue en las 6 "
+                f"A los 18 años se vota más que el {promedio}, y así fue en las 6 "
                 f"elecciones desde 2009. En 2024 votó el {pct(serie[0])} de quienes tenían 18 años, frente "
                 f"al {pct(nac[2024])} {frente_a}. La participación baja después: llega a {pct(minimo)} a los "
                 f"{edad_min} años y luego vuelve a subir."
@@ -557,8 +573,10 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "sexo",
             "enunciado": "Los hombres votan más que las mujeres.",
             "veredicto": "falso",
+            "dato": {"cifra": pct(muj[-1]), "texto": f"de las mujeres votó en 2024, contra {pct(hom[-1])} de los hombres."},
+            "resumen": "Las mujeres votaron más que los hombres en las 6 elecciones desde 2009." + cierre_sexo,
             "explicacion": (
-                "Es al revés: las mujeres votaron más que los hombres en las 6 elecciones desde 2009. "
+                "Las mujeres votaron más que los hombres en las 6 elecciones desde 2009. "
                 f"En 2024 votó el {pct(muj[-1])} de las mujeres y el {pct(hom[-1])} de los hombres."
                 + cierre_sexo
             ),
@@ -586,8 +604,12 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "intermedias",
             "enunciado": "En las elecciones intermedias vota menos gente que en las presidenciales.",
             "veredicto": "cierto",
+            "dato": {"cifra": pct(inter[max_inter]),
+                     "texto": f"votó en la intermedia más alta ({max_inter}). La presidencial más baja tuvo {pct(pres[min_pres])} ({min_pres})."},
+            "resumen": ("En las 3 intermedias votó menos gente que en cualquier presidencial. "
+                        "En las intermedias se elige la Cámara de Diputados, pero no la Presidencia."),
             "explicacion": (
-                "Es cierto. En las 3 intermedias votó menos gente que en cualquiera de las 3 presidenciales: "
+                "En las 3 intermedias votó menos gente que en cualquiera de las 3 presidenciales: "
                 f"la intermedia con más participación ({max_inter}, {pct(inter[max_inter])}) quedó debajo de la "
                 f"presidencial con menos ({min_pres}, {pct(pres[min_pres])}). En las intermedias se elige la "
                 "Cámara de Diputados, pero no la Presidencia."
@@ -627,8 +649,10 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "campo",
             "enunciado": "En el campo siempre se ha votado menos que en la ciudad.",
             "veredicto": "falso",
+            "dato": {"cifra": pct(rural[4]), "texto": f"votó en secciones rurales en 2021, contra {pct(urbana[4])} en urbanas."},
+            "resumen": f"En las 6 elecciones el campo votó igual o más que la ciudad. {ultimo}",
             "explicacion": (
-                "Es falso: en todas las elecciones desde 2009 se votó igual o más en las secciones rurales "
+                "En todas las elecciones desde 2009 se votó igual o más en las secciones rurales "
                 f"que en las urbanas. En 2021, por ejemplo, votó el {pct(rural[4])} en secciones rurales y el "
                 f"{pct(urbana[4])} en urbanas. {ultimo}"
             ),
@@ -656,8 +680,11 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "tendencia",
             "enunciado": "La participación en las elecciones intermedias ha ido bajando desde 2009.",
             "veredicto": "falso",
+            "dato": {"cifra": pct(vals_inter[-1]), "texto": f"votó en la intermedia de {anios_inter[-1]}, contra {pct(vals_inter[0])} en {anios_inter[0]}."},
+            "resumen": ("Cada intermedia tuvo más participación que la anterior. "
+                        "Para comparar bien hay que ver elecciones del mismo tipo."),
             "explicacion": (
-                "Es al revés: cada elección intermedia ha tenido más participación que la anterior. "
+                "Cada elección intermedia ha tenido más participación que la anterior. "
                 f"Votó el {pct(vals_inter[0])} en {anios_inter[0]}, el {pct(vals_inter[1])} en "
                 f"{anios_inter[1]} y el {pct(vals_inter[2])} en {anios_inter[2]}. Para comparar bien hay que "
                 "ver elecciones del mismo tipo, porque en las presidenciales siempre vota más gente."
@@ -690,8 +717,12 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "sesentas",
             "enunciado": "Las personas de 60 a 69 años son las que más votan.",
             "veredicto": "cierto",
+            "dato": {"cifra": pct(ev['m8_mayores'][a]['valor_mas_alto']),
+                     "texto": f"votó el grupo de {etiqueta_grupo(ev['m8_mayores'][a]['grupo_mas_alto'])} años en 2024."},
+            "resumen": (f"En las 6 elecciones, el grupo que más votó tuvo entre 60 y 69 años. "
+                        f"El {promedio} fue de {pct(nac[2024])}."),
             "explicacion": (
-                "Es cierto. En las 6 elecciones desde 2009, el grupo de edad que más votó tuvo entre 60 y 69 años. "
+                "En las 6 elecciones desde 2009, el grupo de edad que más votó tuvo entre 60 y 69 años. "
                 f"En 2024 fue el de {etiqueta_grupo(ev['m8_mayores'][a]['grupo_mas_alto'])} años, con "
                 f"{pct(ev['m8_mayores'][a]['valor_mas_alto'])}, muy por encima del {promedio} "
                 f"({pct(nac[2024])})."
@@ -718,8 +749,11 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             "id": "mayores",
             "enunciado": "Las personas de 85 años o más son las que menos votan.",
             "veredicto": "cierto",
+            "dato": {"cifra": pct(g85["85+"]), "texto": "votó el grupo de 85 años o más en 2024."},
+            "resumen": (f"Fue el grupo que menos votó en las 6 elecciones. Es pequeño: el "
+                        f"{pct(ev['pct_lista_85_mas'][a])} de la lista nominal."),
             "explicacion": (
-                "Es cierto. En las 6 elecciones desde 2009, el grupo de 85 años o más fue el que menos votó. "
+                "En las 6 elecciones desde 2009, el grupo de 85 años o más fue el que menos votó. "
                 f"En 2024 votó el {pct(g85['85+'])}, frente al {pct(g85[siguiente])} del grupo de "
                 f"{etiqueta_grupo(siguiente)} años, el siguiente más bajo. Es un grupo pequeño: el "
                 f"{pct(ev['pct_lista_85_mas'][a])} de la lista nominal."
@@ -750,6 +784,8 @@ def construir_mitos(df: pd.DataFrame, s: dict, ev: dict, ambito: dict | None = N
             return None
         if m["id"] not in DISCUSION:
             raise SystemExit(f"Falta la pregunta de discusión del mito '{m['id']}'.")
+        if not (m.get("dato") and m.get("resumen")) or m["explicacion"].startswith(("Es falso", "Es cierto", "Es al revés")):
+            raise SystemExit(f"El mito '{m['id']}' debe traer dato, resumen y una explicación sin repetir el veredicto.")
         m["discusion"] = DISCUSION[m["id"]]
         return m
 

@@ -606,3 +606,49 @@ main:has(> #portada:not([hidden])) { padding-top: 1.25rem; padding-bottom: 1.25r
 #perfil h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
 #perfil .entrada { font-size: 1.0625rem; margin-bottom: 1.25rem; }
 .como-calcula { margin-top: 1.5rem; }
+
+/* ---------------------------------------------------------------- revelación en secuencia */
+.revelacion { margin-top: 2.5rem; }
+.retro {
+  display: flex; align-items: center; gap: 0.5rem;
+  margin: 0 0 1rem; font-size: 1.375rem; scroll-margin-top: 6rem;
+}
+.retro svg { width: 1.5rem; height: 1.5rem; flex: none; }
+.retro path { fill: none; stroke: currentColor; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+.retro.acierto { color: var(--azul); }
+.dato-clave { margin: 0 0 0.75rem; }
+.dato-cifra { display: block; font-size: 3.25rem; font-weight: 700; line-height: 1.05; color: var(--tinta); letter-spacing: -0.02em; }
+.dato-texto { font-size: 1.125rem; }
+.resumen-mito { margin: 0 0 1rem; }
+.vista { display: inline-flex; border: 2px solid var(--tinta); border-radius: 4px; margin: 0 0 0.75rem; max-width: 100%; }
+.vista-btn {
+  min-height: 44px; padding: 0.25rem 1rem;
+  font: inherit; font-size: 1rem; font-weight: 700;
+  background: var(--papel); color: var(--tinta); border: 0; cursor: pointer;
+}
+.vista-btn + .vista-btn { border-left: 2px solid var(--tinta); }
+.vista-btn[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
+.g-local { margin: 0 0 0.75rem; font-weight: 700; }
+.mas-contexto { margin: 1rem 0 0; }
+.mas-contexto > summary {
+  cursor: pointer; min-height: 44px; display: flex; align-items: center;
+  font-weight: 700; color: var(--azul);
+}
+.mas-contexto .discusion { border-left: 6px solid var(--ambar); padding: 0.5rem 0.75rem; background: var(--papel); }
+
+/* «Siguiente» siempre a la mano en el celular, sin tapar el foco. */
+.acciones-fijas {
+  position: sticky; bottom: 0; z-index: 4;
+  margin: 1.5rem -1rem 0; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--mesa); box-shadow: 0 -6px 12px rgba(243, 244, 246, 0.95);
+}
+html { scroll-padding-bottom: 6rem; }
+
+/* Estimación integrada en la boleta, sin tarjeta propia */
+.estimar { padding: 0; background: none; border: 0; margin: 0 0 1.25rem; }
+.est-barras { display: grid; gap: 0.375rem; margin: 0 0 1rem; font-size: 1rem; }
+.est-fila { display: grid; grid-template-columns: 9.5rem 1fr; align-items: center; gap: 0.5rem; }
+.est-pista { display: block; height: 0.875rem; background: var(--base); border-radius: 2px; overflow: hidden; }
+.est-barra { display: block; height: 100%; }
+.est-barra.tu { background: var(--ambar); }
+.est-barra.real { background: var(--azul); }
