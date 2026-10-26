@@ -14,13 +14,16 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
 - **«Adivina antes de ver»:** en 3 preguntas, la persona estima cuántas de cada 100 personas votaron antes de responder; al final se resume qué tan cerca estuvo.
 - **Pictograma «100 personas como tú»:** 100 casillas de boleta con X en las que votaron, en el final, en la pregunta de jóvenes y en la tarjeta.
 - **Tu historia como votante:** línea de tiempo de las elecciones 2009–2024 en las que tenía edad para votar, con la participación de su edad en su estado, y la próxima elección (junio de 2027) como una casilla vacía por marcar.
-- **Compromiso y reto entre generaciones:** en el cierre se elige un compromiso que aparece en la tarjeta, y se puede retar a alguien de otra generación. El enlace de reto solo lleva el puntaje.
-- **Tarjeta para compartir** (PNG 1080 × 1350) con el puntaje, el dato personalizado, un código QR al sitio y el reto «¿Me ganas?». Vista previa para WhatsApp y redes (Open Graph).
+- **Una pantalla, una idea, una acción principal:** la portada solo invita a «Jugar»; el perfil cabe en una pantalla (estado con búsqueda accesible y municipio opcional); cada respuesta se revela en secuencia —el veredicto una sola vez, el dato clave, un resumen de dos frases y una sola gráfica con selector México | tu estado— con «Más contexto» plegado y «Siguiente» siempre a la mano. El resultado y el cierre son un recorrido de 4 pasos con indicador de progreso y Atrás/Siguiente: puntaje, 100 personas como tú, tu historia y estimaciones, y compromiso con tarjeta.
+- **Compromiso y reto entre generaciones:** en el último paso se elige un compromiso que aparece en la tarjeta, y se puede retar a alguien de otra generación. El enlace de reto solo lleva el puntaje.
+- **Tarjeta para compartir** (PNG 1080 × 1350; «Compartir mi tarjeta» usa el menú de compartir del celular con la imagen y, si no está disponible, la descarga) con el puntaje, el dato personalizado, un código QR al sitio y el reto «¿Me ganas?». Vista previa para WhatsApp y redes (Open Graph).
+- **Pantalla «Para talleres»** (enlace «¿Das talleres?» en la portada) con el modo salón, la versión para imprimir y la guía.
 - **Modo salón** para talleres con proyector: letra muy grande, el grupo vota a mano alzada, la persona facilitadora revela con un botón o con el teclado y cada pregunta trae una pregunta para conversar.
 - **Versión para imprimir** (`imprimible.html`): tarjetas en tamaño carta con la frase al frente y la respuesta atrás, legibles en blanco y negro.
-- **Versión por estado** con un solo comando, con demo de Colima.
+- **Versión por estado** con un solo comando, con demo principal de San Luis Potosí y demo de Colima.
 - **Funciona sin conexión** después de la primera visita y no usa servicios externos.
-- **Lectura en voz alta**, control de tamaño de letra y gráficas con tabla de datos.
+- **Opciones de lectura** en el botón «Aa» del encabezado: lectura en voz alta y tamaño de letra (A, A+, A++). Gráficas con tabla de datos.
+- **«¿Cómo se calcula?»** plegado al pie de cada pantalla; el pie completo con créditos y licencia aparece en la portada y en «Explora los datos».
 - **Guía de facilitación** de una página: [`docs/guia-facilitacion.md`](docs/guia-facilitacion.md).
 
 ## Mensaje central y público

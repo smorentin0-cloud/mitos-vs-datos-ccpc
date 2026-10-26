@@ -9,15 +9,15 @@
 | Si tienes… | Usa… |
 |---|---|
 | Celulares con internet (o que ya abrieron el sitio una vez) | El juego: <https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/> |
-| Un proyector y una computadora | **Modo salón** (botón en la portada) |
-| Nada de lo anterior | **Versión para imprimir** (botón en la portada), una copia por equipo |
+| Un proyector y una computadora | **Modo salón** (en la portada, «¿Das talleres? Modo salón e imprimible», y luego «Empezar el modo salón») |
+| Nada de lo anterior | **Versión para imprimir** (en la misma pantalla «Para talleres»), una copia por equipo |
 
-El sitio funciona sin conexión después de la primera visita. Para un estado en particular agrega `?entidad=<clave>` a la dirección (por ejemplo, `?entidad=6` para Colima).
+El sitio funciona sin conexión después de la primera visita. Para un estado en particular agrega `?entidad=<clave>` a la dirección (por ejemplo, `?entidad=24` para San Luis Potosí o `?entidad=6` para Colima).
 
 ## Pasos del taller
 
 1. **Arranque (2 min).** Pregunta: «¿Quién creen que vota más en México?». Anota las respuestas sin corregir.
-2. **Juego (12 min).** Son 8 frases en 3 niveles. En modo salón, el grupo vota a mano alzada y tú presionas **Revelar** (o la tecla →). Lee en voz alta la pregunta «Para conversar» y deja 1 minuto para comentarla.
+2. **Juego (12 min).** Son 8 frases en 3 niveles. En modo salón, el grupo vota a mano alzada y tú presionas **Revelar** (o la tecla →). La pantalla dice el veredicto, el dato clave y la gráfica; en modo salón el apartado «Más contexto» ya viene abierto con la explicación y la pregunta «Para conversar». Léela en voz alta y deja 1 minuto para comentarla.
 3. **El centro de la historia (3 min).** Detente en el nivel «El primer voto»: a los 18 se vota más que el promedio, pero después la participación baja. Pregunta qué pasa en esos años.
 4. **Cierre (3 min).** Vuelve a las respuestas del arranque y compáralas con los datos. Lee juntos el mensaje final.
 
