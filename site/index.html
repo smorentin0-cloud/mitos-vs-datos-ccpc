@@ -61,6 +61,7 @@
     <!-- 1. Portada -->
     <section id="portada" class="pantalla" aria-labelledby="t-portada">
       <div class="portada-boleta" aria-hidden="true">
+        <div class="masc-portada" data-mascota="saluda"></div>
         <div class="mini-boleta">
           <span class="mini-folio">Folio 2009–2024</span>
           <span class="mini-pregunta">¿Mito o dato?</span>
@@ -204,6 +205,7 @@
       <p id="intro-nivel" class="intro-nivel" hidden></p>
 
       <article class="boleta">
+        <div id="masc-asoma" class="masc-asoma" aria-hidden="true"></div>
         <p id="nivel" class="folio"></p>
         <h2 id="t-mito" class="mito" tabindex="-1"></h2>
         <button class="escuchar" data-leer="pregunta" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar</span></button>
@@ -293,6 +295,7 @@
       </div>
 
       <div class="paso" id="paso-1">
+        <div id="masc-resultado" class="masc-resultado" aria-hidden="true"></div>
         <h2 id="t-resultado" tabindex="-1"></h2>
         <p id="mensaje" class="entrada"></p>
         <details class="plegable">
@@ -456,6 +459,7 @@
   <script src="js/personal.js"></script>
   <script src="js/caso.js"></script>
   <script src="js/voz.js"></script>
+  <script src="js/mascota.js"></script>
   <script src="js/juego.js"></script>
 </body>
 </html>

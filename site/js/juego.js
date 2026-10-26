@@ -225,6 +225,7 @@
     clearTimeout(estado.temporizador); // una revelación pendiente no debe caer en otra pregunta
     $("#sello").hidden = true;
     $("#revelacion").hidden = true;
+    ponerAsoma("piensa");
     prepararEstimacion(m);
     $("#opciones").hidden = estado.salon || estado.fase === "estimar";
     $("#salon-votar").hidden = !estado.salon || estado.fase === "estimar";
@@ -273,6 +274,8 @@
     // Una sola línea de retroalimentación.
     const retro = $("#t-veredicto");
     const acerto = !estado.salon && estado.respuesta === m.veredicto;
+    // La mascota reacciona: en el salón, según el veredicto; en el juego, según la respuesta.
+    ponerAsoma((estado.salon ? m.veredicto === "cierto" : acerto) ? "celebra" : "sorpresa");
     retro.className = `retro ${estado.salon ? "" : (acerto ? "acierto" : "fallo")}`;
     retro.innerHTML = estado.salon ? "" : icono(acerto ? TRAZOS.bien : TRAZOS.mal);
     retro.append(estado.salon ? J.retroSalon(NOMBRES[m.veredicto])
@@ -316,10 +319,38 @@
     // Primero se ve el sello; luego aparece lo demás.
     estado.temporizador = setTimeout(() => {
       $("#revelacion").hidden = false;
+      contar($("#dato-cifra"), m.dato.cifra);
       pintarVista("nacional");
       retro.focus({ preventScroll: true });
       retro.scrollIntoView({ behavior: sinMovimiento() ? "auto" : "smooth", block: "start" });
     }, sinMovimiento() ? 0 : 700);
+  }
+
+  // La mascota asomada sobre la boleta; se reinicia su animación en cada cambio.
+  function ponerAsoma(expresion) {
+    Mascota.poner($("#masc-asoma"), expresion);
+  }
+
+  // La cifra clave cuenta desde 0 hasta su valor; al final queda el texto exacto de los datos.
+  function contar(nodo, texto) {
+    nodo.textContent = texto;
+    const partes = /^(\D*)(\d+(?:\.\d+)?)(.*)$/.exec(texto);
+    if (!partes || sinMovimiento()) return;
+    const [, antes, numero, despues] = partes;
+    const decimales = (numero.split(".")[1] || "").length;
+    const meta = Number(numero);
+    const inicio = performance.now();
+    const duracion = 700;
+    const turno = (estado.cuenta = (estado.cuenta || 0) + 1);
+    const paso = (ahora) => {
+      if (turno !== estado.cuenta) return; // ya empezó otra cuenta (otra pregunta)
+      const t = Math.min(1, (ahora - inicio) / duracion);
+      const v = meta * (1 - (1 - t) ** 3);
+      nodo.textContent = t < 1 ? `${antes}${v.toFixed(decimales)}${despues}` : texto;
+      if (t < 1) requestAnimationFrame(paso);
+    };
+    nodo.textContent = `${antes}${(0).toFixed(decimales)}${despues}`;
+    requestAnimationFrame(paso);
   }
 
   // Cambia la figura entre el dato del ámbito del juego y el de la persona; la tabla sigue a la vista.
@@ -523,8 +554,12 @@
     $("#t-paso-3").textContent = $("#historia").hidden ? R.paso3Estimaciones : R.paso3;
     // Si no hay historia ni estimaciones, el paso 3 se omite.
     estado.pasos = [1, 2, ...($("#historia").hidden && $("#estimaciones").hidden ? [] : [3]), 4];
+    // La mascota festeja si acertaste la mitad o más; si no, saluda para animar a intentarlo otra vez.
+    const buenas = estado.puntos * 2 >= total;
+    Mascota.poner($("#masc-resultado"), buenas ? "celebra" : "saluda");
     mostrar("resultado");
     irPaso(1);
+    if (buenas) Mascota.festejar();
     dibujarTarjeta();
   }
 
