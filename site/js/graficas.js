@@ -305,7 +305,9 @@ const Graficas = (() => {
     spec.x.forEach((etq, k) => {
       const ultimo = k === spec.x.length - 1 && k % cada >= cada * 0.6;
       if (k % cada === 0 || ultimo) {
-        texto(svg, x(k), alto - m.aba + 20 * escala(), etq, { class: "eje", "text-anchor": "middle" });
+        // Que la última etiqueta no se corte con letra grande: se recorre hacia dentro si hace falta.
+        const xx = Math.min(x(k), ancho - 2 - etq.length * 4.6 * escala());
+        texto(svg, xx, alto - m.aba + 20 * escala(), etq, { class: "eje", "text-anchor": "middle" });
       }
     });
     if (spec.x_titulo) {
