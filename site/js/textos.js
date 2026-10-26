@@ -170,10 +170,13 @@ const TEXTOS = {
     de60a69: "personas de 60 a 69 años",
     unidad: "de cada 100",
     valorTexto: (v) => `${v} de cada 100`,
-    resultado: (pensaste, real) => `Pensaste ${pensaste}; en realidad fueron ${real}.`,
+    resultado: (pensaste, real) => (pensaste === real
+      ? `Pensaste ${pensaste} y fueron exactamente ${real}.`
+      : `Pensaste ${pensaste}; en realidad fueron ${real}.`),
     diferencia: (pensaste, real) => {
       const d = real - pensaste;
-      if (Math.abs(d) <= 3) return " ¡Le atinaste o casi!";
+      if (d === 0) return " ¡Le atinaste!";
+      if (Math.abs(d) <= 3) return " ¡Casi le atinas!";
       return d > 0 ? ` Votaron ${d} más de lo que pensaste.` : ` Votaron ${-d} menos de lo que pensaste.`;
     },
     resultadoGrupo: (real) => `En realidad fueron ${real} de cada 100.`,
