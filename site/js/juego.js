@@ -384,6 +384,8 @@
   // ---------- «Adivina antes de ver»
 
   const ESTIMAR = new Set(["primer-voto", "jovenes", "sesentas"]);
+  // Rango del mito «Los jóvenes no votan» (el mismo 18_29 de procesar.py): solo dentro de él se estima con la edad de la persona.
+  const EDAD_JOVEN = { min: 18, max: 29 };
 
   // Qué se estima en cada pregunta y con qué datos: los de la persona o los del ámbito del juego.
   function objetivoEstimacion(m) {
@@ -397,7 +399,8 @@
     if (m.id === "sesentas") return { quien: E.de60a69, real: datos.estimar[anio]["60_69"], lugar, anio };
     if (m.id === "jovenes") {
       const edadEleccion = perfil.edad != null ? Personal.edadEn(perfil.edad, Number(anio)) : null;
-      if (edadEleccion != null && edadEleccion >= 18 && !estado.salon) {
+      const esJoven = edadEleccion != null && edadEleccion >= EDAD_JOVEN.min && edadEleccion <= EDAD_JOVEN.max;
+      if (esJoven && !estado.salon) {
         const res = Personal.participacionEdad(datos, perfil.pais || estado.personalAmbito, anio, edadEleccion);
         if (res.nivel === "edad") return { quien: E.deTuEdad(edadEleccion, anio), real: res.valor, lugar, anio };
       }
