@@ -49,6 +49,15 @@
         <label id="voz-campo" class="voz-campo" hidden>Voz para leer
           <select id="voz-elegida"></select>
         </label>
+        <label class="voz-campo">Lengua
+          <select id="lengua">
+            <option value="es" lang="es">Español</option>
+            <option value="nah" lang="nah">Nawatl (náhuatl)</option>
+            <option value="yua" lang="yua">Maaya t'aan (maya)</option>
+            <option value="tzh" lang="tzh">Bats'il k'op (tseltal)</option>
+          </select>
+        </label>
+        <p class="panel-nota">Náhuatl, maya y tseltal: traducción preliminar, sin revisar por hablantes. La página se vuelve a cargar.</p>
         <div class="tamano" role="group" aria-label="Tamaño de la letra">
           <button class="tamano-btn" data-tamano="1" aria-pressed="true" aria-label="Letra normal">A</button>
           <button class="tamano-btn" data-tamano="2" aria-pressed="false" aria-label="Letra grande">A</button>
@@ -64,6 +73,15 @@
       <a href="#metodo" data-seccion="metodo"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.4 a2.5 2.5 0 1 1 3.4 2.3 c-.7.3-1 .8-1 1.5 V14 M12 17 v.01"/></svg><span>Cómo se calcula</span></a>
     </nav>
   </header>
+
+  <aside id="aviso-lengua" class="aviso-lengua" lang="es" aria-label="Aviso sobre la traducción" hidden>
+    <details>
+      <summary class="aviso-lengua-titulo"></summary>
+      <p class="aviso-lengua-texto"></p>
+      <p class="aviso-lengua-fuentes"></p>
+      <p><a href="?">Ver la página en español</a></p>
+    </details>
+  </aside>
 
   <main id="contenido" tabindex="-1">
     <h1 class="sr">Mitos vs. Datos: el juego</h1>
@@ -599,6 +617,8 @@
       <p>INE, <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" rel="noopener">Conteos Censales de Participación Ciudadana</a> de las elecciones federales de 2009 a 2024. Son datos abiertos y agregados: no hay datos de ninguna persona.</p>
       <h3>Datos con pocas personas</h3>
       <p id="metodo-umbral"></p>
+      <h3>Lenguas indígenas</h3>
+      <p>El sitio tiene una traducción preliminar al náhuatl, al maya (peninsular) y al tseltal, las tres lenguas indígenas con más hablantes en México según el Censo de Población y Vivienda 2020 del INEGI. La hizo una inteligencia artificial y todavía no la revisan personas hablantes, así que puede tener errores; se elige en el botón <strong>Aa</strong>. Las cifras son las mismas en todas las lenguas.</p>
       <h3>Lo que no guardamos</h3>
       <p>Tu edad, tu estado, tu municipio y tus respuestas viven solo en esta página mientras la usas. No los guardamos ni los enviamos.</p>
     </section>
@@ -611,6 +631,7 @@
   </footer>
 
   <script src="js/textos.js"></script>
+  <script src="js/lenguas.js"></script>
   <script src="js/datos.js"></script>
   <script src="js/graficas.js"></script>
   <script src="js/mapa.js"></script>

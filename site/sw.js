@@ -21,6 +21,7 @@ const ARCHIVOS = [
   "css/atlas.css",
   "js/datos.js",
   "js/textos.js",
+  "js/lenguas.js",
   "js/graficas.js",
   "js/mapa.js",
   "js/atlas-graficas.js",

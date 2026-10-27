@@ -35,7 +35,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 
 ## 4. Reglas que no se pueden romper
 
-1. **Privacidad.** Edad, estado elegido, municipio, respuestas, estimaciones y compromiso viven solo en memoria. Sin `localStorage`, `sessionStorage`, cookies ni analítica. No se envían a ningún servidor ni van en la URL. El enlace de reto solo lleva la edición pública (`entidad=N`, que es la página, no un dato de la persona) y el puntaje (`reto=P-T`). **Excepción aprobada (27 oct. 2026):** la dirección del mapa lleva la vista (`#mapa?anio=…&ver=…&grupo=…`), y el estado solo entra cuando la persona pulsa «Copiar enlace a esta vista». El estado que viene del perfil del juego nunca va en la URL.
+1. **Privacidad.** Edad, estado elegido, municipio, respuestas, estimaciones y compromiso viven solo en memoria. Sin `localStorage`, `sessionStorage`, cookies ni analítica. No se envían a ningún servidor ni van en la URL. El enlace de reto solo lleva la edición pública (`entidad=N`, que es la página, no un dato de la persona) y el puntaje (`reto=P-T`). **Excepción aprobada (27 oct. 2026):** la dirección del mapa lleva la vista (`#mapa?anio=…&ver=…&grupo=…`), y el estado solo entra cuando la persona pulsa «Copiar enlace a esta vista». El estado que viene del perfil del juego nunca va en la URL. La lengua de la página (`?lengua=nah|yua|tzh`) también puede ir en la URL: es la versión pública, como `entidad`.
 2. **Toda cifra sale de `scripts/procesar.py`** (o de `scripts/procesar_atlas.py`, en el atlas). No escribas números a mano en HTML, JS ni documentos. No inventes cifras ni resultados de pruebas con usuarios.
 3. **Veredictos binarios (Cierto / Falso) que no cambian.** Nada de «parcialmente cierto». Si una frase no se puede verificar en las 6 elecciones, se reformula. El dato local complementa, pero nunca cambia el sello nacional.
 4. **Paleta del INE, sin colores de partidos** (tomada de ine.mx): tinta `#1D1D1D`, rosa `#C31C78` (marca y datos), base `#E5E7EB`, dorado oscuro `#766552` (sello y foco), fondo `#EFEBEB`, blanco y grises. Los mapas usan cinco tonos del rosa (`site/js/mapa.js`) y trama de rayas para «sin dato»; el gris de comparación es `#5E6573` (AA sobre el fondo). No uses el dorado claro `#C5A989` en texto ni en el foco: no llega a AA.
@@ -76,6 +76,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── sw.js / manifest.webmanifest   # sin conexión
 │   ├── css/                  # estilos.css, atlas.css (prefijo at-) e imprimible.css
 │   ├── js/textos.js          # textos que arma JavaScript
+│   ├── js/lenguas.js         # náhuatl, maya y tseltal (BORRADOR sin revisar por hablantes): ?lengua=
 │   ├── js/datos.js           # rutas de datos y edición por estado (?entidad=)
 │   ├── js/juego.js           # flujo, perfil, revelación, resultado en 4 pasos, tarjeta
 │   ├── js/caso.js            # «Y en tu caso…»
@@ -133,6 +134,8 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - «Adivina antes de ver»: una estimación exacta dice «¡Le atinaste!»; a 3 puntos o menos, «¡Casi le atinas!».
 - **Juego y mapa con el mismo peso** (rama `juego-y-mapa`): portada con dos puertas; navegación Inicio · Juego · Mapa · Cómo se calcula (abajo en el celular, arriba en escritorio) con direcciones `#inicio`, `#juego`, `#mapa?…`, `#metodo` y botón Atrás; pantalla Mapa con «Explorar» (elección, indicador y grupo; panel con frase en «de cada 100», evolución, municipio, Escuchar, «Ponte a prueba» y «Copiar enlace») y «Recorrido por regiones»; «Ver esto en el mapa» en cada respuesta e invitación al mapa en el resultado; pantalla «Cómo se calcula» compartida. Los grupos de edad del atlas son los de los mitos (18, 18–29, 60–69, 85+). «Explora los datos» se integró al mapa. Voz no se ofrece si no hay una voz local en español. Revisado a 390, 768 y 1536 px, normal y A++; axe sin fallas en portada, Explorar, Recorrido y Cómo se calcula.
 - «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
+
+- **Lenguas indígenas (borrador, rama `lenguas-indigenas`):** selector en «Aa» con náhuatl, maya y tseltal, las tres con más hablantes (INEGI, Censo 2020). Traducción preliminar hecha con IA, **sin revisar por hablantes**; la página lo avisa siempre. Traduce portada, navegación, instrucciones, perfil, las 8 frases, botones del juego y encabezados del mapa; las explicaciones con cifras, la guía y el imprimible siguen en español; Voz se apaga en esas lenguas. Antes de usarla con comunidades debe revisarla una persona hablante de cada lengua.
 
 **En curso:**
 - Verificación final de la ronda de saturación. Faltan:

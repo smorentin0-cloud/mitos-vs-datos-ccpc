@@ -1323,8 +1323,9 @@
     pintarPortada(datos, respaldo);
     leerReto(datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0));
     estado.totalNiveles = datos.niveles.length;
-    estado.mitos = datos.niveles.flatMap((n, i) =>
-      n.mitos.map((m, j) => ({ ...m, nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));
+    // En náhuatl, maya o tseltal (js/lenguas.js) cambian la frase y el nivel; el veredicto y las cifras no.
+    estado.mitos = datos.niveles.map(Lengua.nivel).flatMap((n, i) =>
+      n.mitos.map((m, j) => ({ ...Lengua.mito(m), nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));
     if (datos.cierre) {
       $("#t-cierre").textContent = datos.cierre.titulo;
       $("#cierre-texto").textContent = datos.cierre.texto;
