@@ -10,6 +10,7 @@
 const TEXTOS = {
   veredictos: { cierto: "Cierto", falso: "Falso" },
   juego: {
+    nivel: (n, total, nombre) => `Nivel ${n} de ${total}: ${nombre}`,
     pregunta: (n, total) => `Pregunta ${n} de ${total}.`,
     contador: (n, total, puntos) => `Pregunta ${n} de ${total}. Aciertos: ${puntos}.`,
     cierto_o_falso: "¿Es cierto o falso? Elige Cierto o Falso.",
@@ -99,6 +100,7 @@ const TEXTOS = {
     tituloSerie: (quien, desde, hasta) => `De cada 100 ${quien}, cuántas votaron de ${desde} a ${hasta}`,
     pais: "el país",
     delPais: "del país",
+    deLugar: (nombre) => `de ${nombre}`,
     colEstado: "Estado",
     colMunicipio: "Municipio",
     colValor: "De cada 100",

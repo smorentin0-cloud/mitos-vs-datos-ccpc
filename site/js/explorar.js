@@ -209,7 +209,7 @@ const Explorar = (() => {
     if (m) {
       const vm = m.participacion[anio];
       const ve = e.participacion[anio];
-      mun.textContent = (vm == null ? T().munSinDato(m.nombre) : T().frase(m.nombre, vm, T().quien.total, anio, ve, `de ${e.nombre}`))
+      mun.textContent = (vm == null ? T().munSinDato(m.nombre) : T().frase(m.nombre, vm, T().quien.total, anio, ve, T().deLugar(e.nombre)))
         + (vista.ver === "total" ? "" : ` ${T().soloTotal}`);
     }
 

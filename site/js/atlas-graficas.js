@@ -70,13 +70,26 @@ const GraficasAtlas = (() => {
   // Barras pareadas por categoría: estado arriba, país abajo, con el valor escrito.
   function pares(contenedor, { categorias, estado, pais, nombre }) {
     const k = escala();
-    const etq = 86 * k, valor = 52 * k, grosor = 14 * k, hueco = 3 * k, fila = grosor * 2 + hueco + 16 * k;
+    const valor = 52 * k, grosor = 14 * k, hueco = 3 * k;
+    const { svg, ancho } = lienzo(contenedor, 0);
+    // La etiqueta va a la izquierda si cabe en un tercio del ancho; si no (letra grande, otras lenguas), arriba de sus barras.
+    const medidas = categorias.map((c) => {
+      const t = txt(svg, 0, 0, c, { class: "at-cat" });
+      const w = t.getComputedTextLength() || c.length * 8.5 * k;
+      t.remove();
+      return w;
+    });
+    const etqMin = Math.max(86 * k, Math.max(...medidas) + 10 * k);
+    const arriba = etqMin > ancho / 3;
+    const etq = arriba ? 0 : etqMin;
+    const cabeza = arriba ? 20 * k : 0;
+    const fila = cabeza + grosor * 2 + hueco + 16 * k;
     const alto = categorias.length * fila;
-    const { svg, ancho } = lienzo(contenedor, alto);
+    svg.setAttribute("viewBox", `0 0 ${ancho} ${alto}`);
     const largo = ancho - etq - valor;
     categorias.forEach((c, i) => {
-      const y0 = i * fila;
-      txt(svg, 0, y0 + grosor + 4 * k, c, { class: "at-cat" });
+      const y0 = i * fila + cabeza;
+      txt(svg, 0, arriba ? y0 - 6 * k : y0 + grosor + 4 * k, c, { class: "at-cat" });
       [[estado[i], C.estado, 0], [pais[i], C.pais, grosor + hueco]].forEach(([v, col, dy]) => {
         el("rect", { x: etq, y: y0 + dy, width: largo, height: grosor, fill: "#EFEBEB", rx: 2 }, svg);
         if (v == null) {

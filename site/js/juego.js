@@ -288,7 +288,7 @@
 
   function pintarPregunta() {
     const m = estado.mitos[estado.indice];
-    $("#nivel").textContent = `Nivel ${m.nivel} de ${estado.totalNiveles}: ${m.nombreNivel}`;
+    $("#nivel").textContent = J.nivel(m.nivel, estado.totalNiveles, m.nombreNivel);
     $("#t-mito").textContent = m.enunciado;
     // Texto de transición al empezar cada nivel.
     $("#intro-nivel").hidden = !m.introNivel;
@@ -1313,7 +1313,7 @@
     // Una versión estatal generada con un script anterior puede no traer estos datos: se usan los nacionales.
     const config = datos.proxima_eleccion && datos.presidenciales ? datos
       : await fetch("data/mitos.json").then((r) => r.json());
-    estado.proxima = config.proxima_eleccion;
+    estado.proxima = { ...config.proxima_eleccion, fecha: Lengua.fecha(config.proxima_eleccion.fecha) };
     estado.presidenciales = config.presidenciales;
     document.querySelectorAll(".compromiso-btn").forEach((b) => {
       b.querySelector(".compromiso-texto").textContent = textoCompromiso(b.dataset.compromiso);
@@ -1327,11 +1327,12 @@
     estado.mitos = datos.niveles.map(Lengua.nivel).flatMap((n, i) =>
       n.mitos.map((m, j) => ({ ...Lengua.mito(m), nivel: i + 1, nombreNivel: n.nombre, introNivel: j === 0 ? n.intro : "" })));
     if (datos.cierre) {
+      datos.cierre = Lengua.cierre(datos.cierre);
       $("#t-cierre").textContent = datos.cierre.titulo;
       $("#cierre-texto").textContent = datos.cierre.texto;
       $("#cierre-paso").textContent = datos.cierre.texto;
     }
-    $("#nota-metodo").textContent = datos.nota_metodo;
+    $("#nota-metodo").textContent = TEXTOS.metodo.nota || datos.nota_metodo;
     if (estado.personalAmbito) $("#metodo-umbral").textContent = TEXTOS.metodo.umbral(estado.personalAmbito.umbral);
   }
 
