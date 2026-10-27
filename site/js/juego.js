@@ -32,6 +32,7 @@
     tamanoPrevio: "1",
     revelada: false,
     temporizador: null,
+    pantallaJuego: null, // última pantalla del juego: la navegación «Juego» vuelve ahí sin perder la partida
   };
 
   function icono(trazo) {
@@ -39,25 +40,99 @@
   }
 
   // ---------- navegación entre pantallas
+  // Cuatro secciones con su dirección (#inicio, #juego, #mapa, #metodo), para el botón Atrás y para compartir.
+  // En la URL solo va la vista del mapa (elección, indicador, grupo); nunca la edad, el estado ni las respuestas.
 
-  function mostrar(id) {
+  const SECCIONES = { portada: "inicio", talleres: "inicio", mapa: "mapa", metodo: "metodo" };
+  const seccionDe = (id) => SECCIONES[id] || "juego";
+
+  function ponerDireccion(seccion, consulta, reemplazar = false) {
+    const destino = `#${seccion}${consulta ? `?${consulta}` : ""}`;
+    if (location.hash === destino) return;
+    history[reemplazar ? "replaceState" : "pushState"](null, "", `${location.pathname}${location.search}${destino}`);
+  }
+
+  // opciones: { desdeUrl } si la pantalla viene de la dirección; { vista } para abrir el mapa ya filtrado.
+  function mostrar(id, opciones = {}) {
     Voz.detener();
     if (id === "portada" && estado.salon) salirSalon();
     document.querySelectorAll(".pantalla").forEach((p) => { p.hidden = p.id !== id; });
-    // El pie completo solo en la portada y en Explora; en lo demás, «¿Cómo se calcula?».
-    const conPie = id === "portada" || id === "explora";
-    $("#pie").hidden = !conPie;
-    $("#como-calcula").hidden = conPie;
-    $("#como-calcula").open = false;
+    const seccion = seccionDe(id);
+    if (seccion === "juego") estado.pantallaJuego = id;
+    document.querySelectorAll(".nav-principal a").forEach((a) => {
+      if (a.dataset.seccion === seccion) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    if (!opciones.desdeUrl) ponerDireccion(seccion);
+    // El pie con la fuente, fuera del juego.
+    $("#pie").hidden = seccion === "juego";
     window.scrollTo(0, 0);
     const titulo = document.querySelector(`#${id} h1, #${id} h2`);
     if (titulo) {
       if (!titulo.hasAttribute("tabindex")) titulo.setAttribute("tabindex", "-1");
       titulo.focus({ preventScroll: true });
     }
-    if (id === "explora") Explora.abrir();
-    else Explora.cerrar();
+    if (id === "mapa") {
+      $("#mapa-volver").hidden = !estado.pantallaJuego || estado.salon;
+      Explorar.abrir(opciones.vista || opciones.consulta || null);
+    } else {
+      Explorar.cerrar();
+    }
     if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
+  }
+
+  // «Juego» vuelve a la pantalla donde se quedó la partida; si no hay partida, a las instrucciones.
+  function irAlJuego(opciones) {
+    mostrar(estado.pantallaJuego || "instrucciones", opciones);
+  }
+
+  // Lee la dirección (#mapa?anio=2024&ver=edad…) y muestra esa sección.
+  function rutear() {
+    const [seccion, q] = location.hash.slice(1).split("?");
+    const desdeUrl = { desdeUrl: true };
+    if (seccion === "mapa") mostrar("mapa", { ...desdeUrl, consulta: new URLSearchParams(q || "") });
+    else if (seccion === "metodo") mostrar("metodo", desdeUrl);
+    else if (seccion === "juego") irAlJuego(desdeUrl);
+    else if (seccion === "inicio" || seccion === "portada") mostrar("portada", desdeUrl);
+  }
+
+  addEventListener("popstate", rutear);
+  // Enlaces internos (navegación y pie): sin recargar y con su propia dirección.
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const seccion = a.getAttribute("href").slice(1);
+    if (!["inicio", "juego", "mapa", "metodo"].includes(seccion)) return;
+    e.preventDefault();
+    if (seccion === "juego") irAlJuego();
+    else mostrar({ inicio: "portada" }[seccion] || seccion);
+  });
+
+  // La vista del mapa cambia la dirección sin crear otra entrada en el historial.
+  Explorar.alCambiar((consulta) => { if (!$("#mapa").hidden) ponerDireccion("mapa", consulta, true); });
+  Explorar.alJugar(() => irAlJuego());
+  Explorar.perfil(() => (estado.salon ? null : estado.perfil));
+  $("#volver-juego").addEventListener("click", () => irAlJuego());
+
+  // «Ver esto en el mapa»: el mapa abre con el indicador de la frase y, si la persona lo dio, su estado.
+  const MAPA_DE_MITO = {
+    sexo: { ver: "sexo", grupo: "Mujeres" },
+    campo: { ver: "seccion", grupo: "Rural" },
+    intermedias: { ver: "total", intermedia: true },
+    tendencia: { ver: "total", intermedia: true },
+    "primer-voto": { ver: "edad", grupo: "18" },
+    jovenes: { ver: "edad", grupo: "18–29" },
+    sesentas: { ver: "edad", grupo: "60–69" },
+    mayores: { ver: "edad", grupo: "85 y más" },
+  };
+
+  function verEnMapa() {
+    const m = estado.mitos[estado.indice];
+    const v = MAPA_DE_MITO[m.id] || { ver: "total" };
+    const anios = estado.aniosHistoria;
+    const anio = v.intermedia ? anios.filter((a) => !estado.presidenciales.includes(a)).at(-1) : anios.at(-1);
+    const clave = estado.perfil.entidad != null ? estado.perfil.entidad : estado.ambitoClave || null;
+    mostrar("mapa", { vista: { anio, ver: v.ver, grupo: v.grupo, estado: clave } });
   }
 
   // ---------- textos para leer en voz alta
@@ -105,7 +180,9 @@
   function leerPantallaActual() {
     const visible = [...document.querySelectorAll(".pantalla")].find((p) => !p.hidden);
     if (!visible) return;
-    if (visible.id === "juego") {
+    if (visible.id === "mapa") {
+      Voz.anunciar(`${textoPantalla("mapa")}. ${Explorar.texto()}`);
+    } else if (visible.id === "juego") {
       Voz.anunciar($("#revelacion").hidden ? textoPregunta() : textoRevelacion());
     } else if (visible.id === "resultado") {
       Voz.anunciar(textoPaso());
@@ -114,7 +191,7 @@
     }
   }
 
-  const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoPaso };
+  const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoPaso, mapa: () => Explorar.texto() };
   document.querySelectorAll(".escuchar").forEach((b) =>
     b.addEventListener("click", () => Voz.alternar(LECTURAS[b.dataset.leer](), b)));
 
@@ -133,6 +210,7 @@
       x.setAttribute("aria-pressed", String(x.dataset.tamano === nivel)));
     Graficas.redibujar();
     Atlas.redibujar();
+    Explorar.redibujar();
   }
 
   document.querySelectorAll(".tamano-btn").forEach((b) =>
@@ -603,8 +681,8 @@
     const total = datos.niveles.reduce((n, nivel) => n + nivel.mitos.length, 0);
     estado.lugar = datos.ambito ? datos.ambito.nombre : "México";
     estado.ambitoClave = datos.ambito ? datos.ambito.clave : 0;
-    if (datos.titulo) $("#t-portada").textContent = datos.titulo;
-    $("#portada-entrada").textContent = P.entrada(total);
+    $("#t-portada").textContent = P.titulo(estado.lugar);
+    $("#puerta-juego-txt").textContent = P.juego(total);
     const edicion = $("#edicion");
     if (datos.ambito && datos.ambito.clave) {
       edicion.textContent = P.edicion(estado.lugar);
@@ -1038,7 +1116,7 @@
     const qr = await cargarImagen("img/qr.png");
     const total = estado.mitos.length;
     const anios = estado.datosPerfil.edad.anios;
-    const C = { tinta: "#1D1D1D", suave: "#4B5563", azul: "#C31C78", ambar: "#766552", gris: "#6B7280", perf: "#9CA3AF" };
+    const C = { tinta: "#1D1D1D", suave: "#4B5563", azul: "#C31C78", ambar: "#766552", gris: "#5E6573", perf: "#9CA3AF" };
 
     ctx.fillStyle = "#EFEBEB";
     ctx.fillRect(0, 0, W, H);
@@ -1252,7 +1330,7 @@
       $("#cierre-paso").textContent = datos.cierre.texto;
     }
     $("#nota-metodo").textContent = datos.nota_metodo;
-    $("#nota-metodo-corta").textContent = datos.nota_metodo;
+    if (estado.personalAmbito) $("#metodo-umbral").textContent = TEXTOS.metodo.umbral(estado.personalAmbito.umbral);
   }
 
   Voz.iniciar({ alActivar: leerPantallaActual });
@@ -1283,6 +1361,7 @@
   // "Jugar otra vez" conserva el perfil que se haya elegido.
   document.querySelectorAll(".jugar-otra").forEach((b) => b.addEventListener("click", () => iniciar()));
   $("#siguiente").addEventListener("click", siguiente);
+  $("#ver-en-mapa").addEventListener("click", verEnMapa);
   $("#descargar").addEventListener("click", descargar);
   $("#compartir").addEventListener("click", compartir);
   $("#copiar").addEventListener("click", copiar);
@@ -1294,7 +1373,9 @@
     window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }
 
-  cargar().catch(() => {
+  // La dirección decide la primera pantalla (#mapa, #metodo…) cuando ya están los datos del juego.
+  cargar().then(rutear, () => {
     $("#portada-entrada").textContent = J.errorCarga;
+    rutear();
   });
 })();
