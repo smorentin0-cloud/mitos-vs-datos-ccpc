@@ -159,7 +159,7 @@
       : "";
     // Se lee todo, también lo que está plegado en «Más contexto».
     return `${$("#t-veredicto").textContent} ${m.dato.cifra} ${m.dato.texto} ${m.resumen} ` +
-      `${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${caso} ` +
+      `${J.graficaMuestra} ${Graficas.describir(m.grafica)} ${m.fuente}${m.grafica.nota ? ` ${m.grafica.nota}` : ""}${caso} ` +
       `${m.explicacion} ${TEXTOS.salon.paraConversar} ${m.discusion}`;
   }
 
