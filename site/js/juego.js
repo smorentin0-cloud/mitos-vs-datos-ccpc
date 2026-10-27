@@ -57,7 +57,6 @@
     }
     if (id === "explora") Explora.abrir();
     else Explora.cerrar();
-    if (id === "chat") Chat.abrir();
     if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
   }
 

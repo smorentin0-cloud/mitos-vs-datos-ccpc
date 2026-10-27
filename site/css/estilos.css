@@ -845,32 +845,85 @@ main:has(> #resultado:not([hidden])) { padding-top: var(--esp-4); }
 @media (min-width: 40rem) { .pestanas { display: inline-flex; } .pestana { flex: none; padding: var(--esp-2) var(--esp-4); } }
 
 /* ---------------------------------------------------------------- «Pregúntale a Boleta» */
-.chat-cabeza { display: flex; align-items: flex-start; gap: var(--esp-3); margin: 0 0 var(--esp-4); }
-.chat-cabeza h2 { margin-bottom: var(--esp-2); }
-.masc-chat { flex: none; width: 4.5rem; }
-.chat-intro { margin: 0; font-size: 1rem; color: var(--tinta-suave); }
-/* El único contenedor con borde de la pantalla: la conversación. */
-.chat-log {
-  display: flex; flex-direction: column; gap: var(--esp-2);
-  min-height: 10rem; max-height: min(28rem, 55vh); overflow-y: auto;
-  padding: var(--esp-3); background: var(--papel); border: 2px solid var(--tinta); border-radius: 6px;
+/* Botón flotante abajo a la izquierda, en todas las pantallas. */
+.chat-flotante {
+  position: fixed; left: var(--esp-4); bottom: calc(var(--esp-4) + var(--chat-elevar, 0px) + env(safe-area-inset-bottom)); z-index: 6;
+  display: inline-flex; align-items: center; gap: var(--esp-2);
+  min-height: 3.5rem; padding: 0 var(--esp-4) 0 0;
+  font: inherit; font-size: 1rem; font-weight: 700; color: var(--papel);
+  background: var(--azul); border: 2px solid var(--azul); border-radius: 999px; cursor: pointer;
+  box-shadow: 0 6px 16px rgba(29, 29, 29, 0.25);
 }
-.chat-msg { max-width: 85%; padding: var(--esp-2) var(--esp-3); border-radius: 6px; font-size: 1.0625rem; line-height: 1.5; overflow-wrap: anywhere; }
+.chat-flotante:hover { background: var(--tinta); border-color: var(--tinta); }
+/* La cara de Boleta asomada en un círculo blanco. */
+.chat-flotante-masc {
+  flex: none; width: 3.25rem; height: 3.25rem; margin: -2px 0 -2px -2px; overflow: hidden;
+  background: var(--papel); border: 2px solid var(--azul); border-radius: 50%;
+}
+.chat-flotante-masc .mascota { width: 4.25rem; margin: 0.1rem 0 0 -0.5rem; }
+.chat-flotante:hover .chat-flotante-masc { border-color: var(--tinta); }
+/* En el celular solo el círculo (el nombre sigue disponible para lectores de pantalla). */
+@media (max-width: 40rem) {
+  .chat-flotante { padding: 0; }
+  .chat-flotante-texto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+/* Que no tape la barra fija de «Siguiente pregunta» (chat.js mide su alto en --chat-elevar) ni lo último de cada pantalla. */
+body { padding-bottom: 5.5rem; }
+/* En el modo salón (proyector) y al imprimir no se muestra. */
+.modo-salon .chat-flotante { display: none; }
+.modo-salon { padding-bottom: 0; }
+@media print { .chat-flotante { display: none; } }
+
+/* Ventana del chat: panel en la esquina inferior izquierda; en el celular, pantalla completa. */
+.chat-panel {
+  position: fixed; inset: auto auto var(--esp-4) var(--esp-4); margin: 0;
+  width: min(26rem, calc(100vw - 2rem)); height: min(40rem, calc(100dvh - 2rem));
+  max-width: none; max-height: none; padding: 0;
+  color: var(--tinta); background: var(--papel); border: 2px solid var(--tinta); border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(29, 29, 29, 0.3);
+}
+.chat-panel[open] { display: flex; flex-direction: column; }
+.chat-panel::backdrop { background: rgba(29, 29, 29, 0.35); }
+@media (max-width: 40rem) {
+  .chat-panel { inset: 0; width: 100%; height: 100dvh; border: 0; border-radius: 0; }
+}
+.chat-cabeza {
+  flex: none; display: flex; align-items: center; gap: var(--esp-2);
+  padding: var(--esp-2) var(--esp-2) var(--esp-2) var(--esp-3); border-bottom: 2px solid var(--base);
+}
+.chat-titulos { flex: 1; min-width: 0; }
+.chat-cabeza h2 { margin: 0; font-size: 1.25rem; }
+.masc-chat { flex: none; width: 3rem; }
+.chat-intro { margin: 0; font-size: 0.875rem; line-height: 1.4; color: var(--tinta-suave); }
+.chat-cerrar {
+  flex: none; display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; padding: 0; color: var(--tinta);
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px; cursor: pointer;
+}
+.chat-cerrar svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+.chat-log {
+  flex: 1 1 auto; min-height: 6rem; overflow-y: auto;
+  display: flex; flex-direction: column; gap: var(--esp-2); padding: var(--esp-3);
+}
+.chat-msg { max-width: 88%; padding: var(--esp-2) var(--esp-3); border-radius: 6px; font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
 .chat-bot { align-self: flex-start; background: var(--mesa); color: var(--tinta); }
 .chat-tu { align-self: flex-end; background: var(--tinta); color: var(--papel); }
-.chat-sugerencias { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: var(--esp-3) 0 0; }
+.chat-sugerencias { flex: none; display: flex; flex-wrap: wrap; gap: var(--esp-2); padding: 0 var(--esp-3); }
+.chat-sugerencias:empty { display: none; }
 .chat-sugerencia {
   min-height: 44px; padding: var(--esp-1) var(--esp-3); text-align: left;
-  font: inherit; font-size: 1rem; font-weight: 700; color: var(--azul);
+  font: inherit; font-size: 0.9375rem; font-weight: 700; color: var(--azul);
   background: var(--papel); border: 2px solid var(--azul); border-radius: 999px; cursor: pointer;
 }
 .chat-sugerencia:hover { background: var(--mesa); }
-.chat-form { margin: var(--esp-4) 0 0; }
-.chat-etiqueta { display: block; font-weight: 700; margin: 0 0 var(--esp-1); }
-.chat-fila { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.chat-form { flex: none; margin: 0; padding: var(--esp-3) var(--esp-3) 0; }
+.chat-etiqueta { display: block; font-weight: 700; font-size: 1rem; margin: 0 0 var(--esp-1); }
+.chat-fila { display: flex; gap: var(--esp-2); }
 .chat-fila input {
-  flex: 1 1 12rem; min-width: 0; min-height: 3.5rem; padding: 0 var(--esp-3);
-  font: inherit; color: var(--tinta); background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
+  flex: 1 1 auto; min-width: 0; min-height: 3rem; padding: 0 var(--esp-3);
+  font: inherit; font-size: 1rem; color: var(--tinta); background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
 }
-.chat-fila .boton { flex: none; margin: 0; }
-#chat .enlaces-portada { margin-top: var(--esp-3); align-items: center; }
+.chat-fila .boton { flex: none; min-height: 3rem; margin: 0; padding: 0 var(--esp-4); }
+#chat-escuchar { flex: none; align-self: flex-start; margin: var(--esp-2) var(--esp-3) var(--esp-3); }
+#chat-escuchar[hidden] + * { margin-top: var(--esp-3); }
+.chat-panel > :last-child { margin-bottom: var(--esp-3); }

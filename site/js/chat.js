@@ -1,5 +1,6 @@
 /*
- * Pantalla «Pregúntale a Boleta»: conversación con el motor de chat-motor.js.
+ * «Pregúntale a Boleta»: botón flotante (abajo a la izquierda, en todas las pantallas) que abre la ventana
+ * del chat sobre lo que se esté haciendo, sin perder el avance del juego. Conversación con chat-motor.js.
  * La conversación vive solo en la página (en memoria y en el DOM): no se guarda ni se envía.
  * Con ?entidad=<clave>, el estado de esa edición queda como contexto inicial.
  */
@@ -65,7 +66,11 @@ const Chat = (() => {
   });
   $("#chat-escuchar").addEventListener("click", (e) => Voz.alternar(ultima, e.currentTarget));
 
+  // Ventana modal (dialog): Esc la cierra, el resto de la página queda inactivo y el foco vuelve a quien la abrió.
+  const ventana = $("#chat-panel");
   async function abrir() {
+    if (!ventana.open) ventana.showModal();
+    $("#chat-abrir").setAttribute("aria-expanded", "true");
     try {
       if (!carga) carga = cargar();
       await carga;
@@ -73,7 +78,34 @@ const Chat = (() => {
       carga = null;
       mensaje("bot", T.error);
     }
+    $("#chat-entrada").focus();
+  }
+  function cerrar() {
+    if (ventana.open) ventana.close();
+  }
+  ventana.addEventListener("close", () => {
+    Voz.detener();
+    $("#chat-abrir").setAttribute("aria-expanded", "false");
+  });
+  // Tocar fuera del panel (en el fondo) también lo cierra.
+  ventana.addEventListener("click", (e) => {
+    if (e.target !== ventana) return;
+    const r = ventana.getBoundingClientRect();
+    const fuera = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    if (fuera) cerrar();
+  });
+  $("#chat-cerrar").addEventListener("click", cerrar);
+  $("#chat-abrir").addEventListener("click", abrir);
+  document.querySelectorAll("[data-chat]").forEach((b) => b.addEventListener("click", abrir));
+  Mascota.poner($("#chat-flotante-masc"), "saluda");
+
+  // Si la barra fija de «Siguiente pregunta» está a la vista, el botón se sube su alto (crece con A+ y A++).
+  const barra = $(".acciones-fijas");
+  if (barra && window.ResizeObserver) {
+    new ResizeObserver(() => {
+      document.documentElement.style.setProperty("--chat-elevar", `${barra.offsetHeight}px`);
+    }).observe(barra);
   }
 
-  return { abrir };
+  return { abrir, cerrar };
 })();

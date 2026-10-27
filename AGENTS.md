@@ -88,7 +88,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/mascota.js         # mascota «Boleta» (SVG decorativo) y confeti
 │   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
 │   ├── js/atlas.js           # pestaña «Atlas de la participación» (mapa.js, atlas-graficas.js)
-│   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM y pantalla
+│   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM; botón flotante y ventana (dialog)
 │   ├── js/imprimible.js
 │   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json, entidad/<clave>/
 │   └── fonts/, img/
@@ -139,7 +139,7 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
 
 **En curso:**
-- «Pregúntale a Boleta» (rama `chatbot-boleta`, por validar con el equipo): chatbot sin LLM por intenciones. Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
+- «Pregúntale a Boleta» (rama `chatbot-boleta`, por validar con el equipo): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la barra de «Siguiente pregunta» y no aparece en el modo salón). Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
 - Verificación final de la ronda de saturación. Faltan:
   - medir alturas por pantalla (normal y A++), ya con la mascota;
   - probar el reto desde ambas ediciones, el modo salón, el imprimible, «Explora», «Para talleres» y sin conexión;
