@@ -35,13 +35,13 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 
 ## 4. Reglas que no se pueden romper
 
-1. **Privacidad.** Edad, estado elegido, municipio, respuestas, estimaciones y compromiso viven solo en memoria. Sin `localStorage`, `sessionStorage`, cookies ni analítica. No se envían a ningún servidor ni van en la URL. El enlace de reto solo lleva la edición pública (`entidad=N`, que es la página, no un dato de la persona) y el puntaje (`reto=P-T`).
+1. **Privacidad.** Edad, estado elegido, municipio, respuestas, estimaciones y compromiso viven solo en memoria. Sin `localStorage`, `sessionStorage`, cookies ni analítica. No se envían a ningún servidor ni van en la URL. El enlace de reto solo lleva la edición pública (`entidad=N`, que es la página, no un dato de la persona) y el puntaje (`reto=P-T`). **Excepción aprobada (27 oct. 2026):** la dirección del mapa lleva la vista (`#mapa?anio=…&ver=…&grupo=…`), y el estado solo entra cuando la persona pulsa «Copiar enlace a esta vista». El estado que viene del perfil del juego nunca va en la URL. La lengua de la página (`?lengua=nah|yua|tzh`) también puede ir en la URL: es la versión pública, como `entidad`.
 2. **Toda cifra sale de `scripts/procesar.py`** (o de `scripts/procesar_atlas.py`, en el atlas). No escribas números a mano en HTML, JS ni documentos. No inventes cifras ni resultados de pruebas con usuarios.
 3. **Veredictos binarios (Cierto / Falso) que no cambian.** Nada de «parcialmente cierto». Si una frase no se puede verificar en las 6 elecciones, se reformula. El dato local complementa, pero nunca cambia el sello nacional.
-4. **Paleta del INE, sin colores de partidos** (tomada de ine.mx): tinta `#1D1D1D`, rosa `#C31C78` (marca y datos), base `#E5E7EB`, dorado oscuro `#766552` (sello y foco), fondo `#EFEBEB`, blanco y grises. El mapa del atlas usa siete tonos del rosa. No uses el dorado claro `#C5A989` en texto ni en el foco: no llega a AA.
+4. **Paleta del INE, sin colores de partidos** (tomada de ine.mx): tinta `#1D1D1D`, rosa `#C31C78` (marca y datos), base `#E5E7EB`, dorado oscuro `#766552` (sello y foco), fondo `#EFEBEB`, blanco y grises. Los mapas usan cinco tonos del rosa (`site/js/mapa.js`) y trama de rayas para «sin dato»; el gris de comparación es `#5E6573` (AA sobre el fondo). No uses el dorado claro `#C5A989` en texto ni en el foco: no llega a AA.
 5. **Sin frameworks ni paso de compilación.** HTML, CSS y JavaScript sin dependencias; Python + pandas para los datos.
 6. **Accesibilidad AA:** teclado, foco visible, `aria-live`, botones de al menos 44 px, `prefers-reduced-motion`, alto contraste, A / A+ / A++ sin scroll lateral, y el botón Voz debe leer todo (también lo plegado).
-7. **«Una pantalla, una idea, una acción principal».** Un solo botón primario por pantalla o paso, como máximo un contenedor con borde, un titular dominante. Espacios con las variables `--esp-1` a `--esp-6`.
+7. **«Una pantalla, una idea, una acción principal».** Un solo botón primario por pantalla o paso, como máximo un contenedor con borde, un titular dominante. **Excepción aprobada:** la portada tiene dos puertas del mismo peso (Juego y Mapa), que son su única acción. Espacios con las variables `--esp-1` a `--esp-6`.
 8. **Textos nuevos en `site/js/textos.js`** (o en `procesar.py` si son de los mitos), para poder traducirlos.
 9. **Al cambiar archivos del sitio, revisa `site/sw.js`:** agrega rutas nuevas a `ARCHIVOS`. La versión de caché (`__VERSION__`) la pone el workflow con el commit.
 10. **Licencia y cesión:** conforme a la Base Décimo primera, los derechos patrimoniales se ceden al INE por 10 años. No cambies `LICENSE` ni quites el aviso de cesión.
@@ -78,6 +78,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── sw.js / manifest.webmanifest   # sin conexión
 │   ├── css/                  # estilos.css, atlas.css (prefijo at-) e imprimible.css
 │   ├── js/textos.js          # textos que arma JavaScript
+│   ├── js/lenguas.js         # náhuatl, maya y tseltal (BORRADOR sin revisar por hablantes): ?lengua=
 │   ├── js/datos.js           # rutas de datos y edición por estado (?entidad=)
 │   ├── js/juego.js           # flujo, perfil, revelación, resultado en 4 pasos, tarjeta
 │   ├── js/caso.js            # «Y en tu caso…»
@@ -86,8 +87,9 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/graficas.js        # gráficas SVG accesibles
 │   ├── js/voz.js             # lectura en voz alta
 │   ├── js/mascota.js         # mascota «Boleta» (SVG decorativo) y confeti
-│   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
-│   ├── js/atlas.js           # pestaña «Atlas de la participación» (mapa.js, atlas-graficas.js)
+│   ├── js/explorar.js        # pantalla Mapa: pestañas y «Explorar» (filtros, panel, buscador, tablas ordenables)
+│   ├── js/atlas.js           # pestaña «Recorrido por regiones»; carga atlas.json y mapa.json para las dos
+│   ├── js/mapa.js            # Mapa.crear(): mapa SVG con zoom, teclado (flechas) y escala de 5 tonos
 │   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM; botón flotante y ventana (dialog)
 │   ├── js/imprimible.js
 │   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json, entidad/<clave>/
@@ -135,16 +137,20 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - Voz: solo voces locales (`localService`), ordenadas de la mejor a la peor; la persona puede elegir otra en «Aa» (solo en memoria). No uses voces en línea: mandarían el texto, que puede incluir el estado o la edad, a Microsoft o Google. La mascota mueve la boca mientras suena la voz (clase `voz-hablando` en `<html>`), salvo con «reducir movimiento».
 - Mascota «Boleta» (PR #1): se asoma en cada pregunta, reacciona al sello y festeja el resultado; la cifra clave cuenta hasta su valor. Es decorativa (`aria-hidden`) y se detiene con «reducir movimiento». Revisada a 390 px, normal y A++: sin scroll lateral y sin tapar texto.
 - «Adivina antes de ver»: una estimación exacta dice «¡Le atinaste!»; a 3 puntos o menos, «¡Casi le atinas!».
-- «Ver los datos» con dos pestañas: «Explora los datos» (la original) y «Atlas de la participación» (mapa con recorrido por seis regiones y comparación de tu estado, traído de `atlas-participacion`). Revisada a 390 px, normal y A++, y en escritorio: sin scroll lateral, pestañas con teclado (flechas).
+- **Juego y mapa con el mismo peso** (rama `juego-y-mapa`): portada con dos puertas; navegación Inicio · Juego · Mapa · Cómo se calcula (abajo en el celular, arriba en escritorio) con direcciones `#inicio`, `#juego`, `#mapa?…`, `#metodo` y botón Atrás; pantalla Mapa con «Explorar» (elección, indicador y grupo; panel con frase en «de cada 100», evolución, municipio, Escuchar, «Ponte a prueba» y «Copiar enlace») y «Recorrido por regiones»; «Ver esto en el mapa» en cada respuesta e invitación al mapa en el resultado; pantalla «Cómo se calcula» compartida. Los grupos de edad del atlas son los de los mitos (18, 18–29, 60–69, 85+). «Explora los datos» se integró al mapa. Voz no se ofrece si no hay una voz local en español. Revisado a 390, 768 y 1536 px, normal y A++; axe sin fallas en portada, Explorar, Recorrido y Cómo se calcula.
 - «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
 
+- **Lenguas indígenas (borrador, rama `lenguas-indigenas`):** selector en «Aa» con náhuatl, maya y tseltal, las tres con más hablantes (INEGI, Censo 2020). Traducción preliminar hecha con IA, **sin revisar por hablantes**; la página lo avisa siempre. Traduce portada, navegación, instrucciones, perfil, las 8 frases y sus explicaciones, «Y en tu caso…», el resultado, el mapa y el recorrido (rama `lenguas-completas`; si una cifra no coincide con la plantilla, ese texto se queda en español); la guía y el imprimible siguen en español; Voz se apaga en esas lenguas. Antes de usarla con comunidades debe revisarla una persona hablante de cada lengua.
+
+- **Verificación final** (27 oct. 2026, a 390 px, recorriendo el juego completo con un script en el navegador):
+  - Alturas (normal / A++): pregunta 844–1076 / 1070–1881 px; revelación 1785–2146 / 2900–3820 px; resultado 844–1054 / 962–1741 px. Un solo botón primario por pantalla, botones de al menos 44 px y sin scroll lateral en A, A+ y A++, en español, náhuatl, maya y tseltal.
+  - Corregido: con A+ y A++ las tablas de «Ver los datos en una tabla» se cortaban a la derecha (`main` recorta lo que sobra); ahora se ponen guiones y los encabezados se parten. Voz no leía la nota de la gráfica en «Más contexto»; ya la lee.
+  - Probado: reto desde la edición nacional, San Luis Potosí y Colima (el enlace solo lleva `entidad` y `reto`); modo salón con clic y teclado (→, ←, Esc); imprimible en las tres ediciones; «Para talleres»; «Explorar» y «Recorrido»; sin conexión con el servidor apagado (juego, perfil y mapa); festejo de la mascota con 4 de 8 y saludo con 3 de 8; Voz con voz local en pregunta, revelación y los 4 pasos del resultado.
+
+- «Pregúntale a Boleta» (rama `chatbot-boleta`): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la navegación inferior y la barra de «Siguiente pregunta», y no aparece en el modo salón). Solo entiende y responde en español, también con la página en náhuatl, maya o tseltal (la ventana lleva `lang="es"`). Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
+
 **En curso:**
-- «Pregúntale a Boleta» (rama `chatbot-boleta`, por validar con el equipo): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la barra de «Siguiente pregunta» y no aparece en el modo salón). Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
-- Verificación final de la ronda de saturación. Faltan:
-  - medir alturas por pantalla (normal y A++), ya con la mascota;
-  - probar el reto desde ambas ediciones, el modo salón, el imprimible, «Explora», «Para talleres» y sin conexión;
-  - con la mascota: el festejo con la mitad o más de aciertos, el modo salón, Voz y teclado;
-  - auditoría con axe.
+- Auditoría con axe de la versión actual (no se corrió en esta ronda: hace falta cargar axe-core).
 - Entregables fuera del repositorio (sección 9).
 
 ## 8. Ideas de mejora para explorar

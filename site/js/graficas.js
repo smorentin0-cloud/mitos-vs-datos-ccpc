@@ -5,7 +5,7 @@
  */
 const Graficas = (() => {
   const SVG = "http://www.w3.org/2000/svg";
-  const COLORES = { datos: "#C31C78", base: "#6B7280", acento: "#766552", pista: "#E5E7EB" };
+  const COLORES = { datos: "#C31C78", base: "#5E6573", acento: "#766552", pista: "#E5E7EB" };
   const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let contadorId = 0;
   // Factor del tamaño de letra elegido (1 = 16 px): la geometría crece con el texto.

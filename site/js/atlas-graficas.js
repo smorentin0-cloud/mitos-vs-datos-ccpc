@@ -1,10 +1,10 @@
 /*
- * Atlas de la participación: gráficas SVG de la comparación: tu estado (rosa INE) frente a México (gris).
+ * Gráficas SVG del mapa: tu estado o municipio (rosa INE) frente a la referencia, México o el estado (gris).
  * Son decorativas para el lector de pantalla: cada una tiene su tabla con los mismos datos.
  */
 const GraficasAtlas = (() => {
   const NS = "http://www.w3.org/2000/svg";
-  const C = { estado: "#C31C78", pais: "#6B7280", base: "#E5E7EB", tinta: "#1D1D1D", suave: "#4B5563" };
+  const C = { estado: "#C31C78", pais: "#5E6573", base: "#E5E7EB", tinta: "#1D1D1D", suave: "#4B5563" };
   const el = (tag, attrs = {}, padre) => {
     const n = document.createElementNS(NS, tag);
     Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
@@ -39,7 +39,7 @@ const GraficasAtlas = (() => {
   }
 
   // Línea: participación por elección, con el año elegido marcado.
-  function historia(contenedor, { anios, estado, pais, nombre, anioActivo }) {
+  function historia(contenedor, { anios, estado, pais, nombre, nombreRef = TEXTOS.atlas.compara.nacional, anioActivo }) {
     const k = escala();
     const alto = 240 * k;
     const { svg, ancho } = lienzo(contenedor, alto);
@@ -64,19 +64,32 @@ const GraficasAtlas = (() => {
       el("polyline", { points: pts.join(" "), fill: "none", stroke: col, "stroke-width": 3 * k, "stroke-dasharray": guiones, "stroke-linejoin": "round" }, svg);
       serie.forEach((v, i) => v != null && el("circle", { cx: x(i), cy: y(v), r: 4 * k, fill: "#fff", stroke: col, "stroke-width": 2.5 * k }, svg));
     });
-    leyenda(contenedor, [[nombre, C.estado, true], [TEXTOS.atlas.compara.nacional, C.pais, true]]);
+    leyenda(contenedor, [[nombre, C.estado, true], [nombreRef, C.pais, true]]);
   }
 
   // Barras pareadas por categoría: estado arriba, país abajo, con el valor escrito.
   function pares(contenedor, { categorias, estado, pais, nombre }) {
     const k = escala();
-    const etq = 86 * k, valor = 52 * k, grosor = 14 * k, hueco = 3 * k, fila = grosor * 2 + hueco + 16 * k;
+    const valor = 52 * k, grosor = 14 * k, hueco = 3 * k;
+    const { svg, ancho } = lienzo(contenedor, 0);
+    // La etiqueta va a la izquierda si cabe en un tercio del ancho; si no (letra grande, otras lenguas), arriba de sus barras.
+    const medidas = categorias.map((c) => {
+      const t = txt(svg, 0, 0, c, { class: "at-cat" });
+      const w = t.getComputedTextLength() || c.length * 8.5 * k;
+      t.remove();
+      return w;
+    });
+    const etqMin = Math.max(86 * k, Math.max(...medidas) + 10 * k);
+    const arriba = etqMin > ancho / 3;
+    const etq = arriba ? 0 : etqMin;
+    const cabeza = arriba ? 20 * k : 0;
+    const fila = cabeza + grosor * 2 + hueco + 16 * k;
     const alto = categorias.length * fila;
-    const { svg, ancho } = lienzo(contenedor, alto);
+    svg.setAttribute("viewBox", `0 0 ${ancho} ${alto}`);
     const largo = ancho - etq - valor;
     categorias.forEach((c, i) => {
-      const y0 = i * fila;
-      txt(svg, 0, y0 + grosor + 4 * k, c, { class: "at-cat" });
+      const y0 = i * fila + cabeza;
+      txt(svg, 0, arriba ? y0 - 6 * k : y0 + grosor + 4 * k, c, { class: "at-cat" });
       [[estado[i], C.estado, 0], [pais[i], C.pais, grosor + hueco]].forEach(([v, col, dy]) => {
         el("rect", { x: etq, y: y0 + dy, width: largo, height: grosor, fill: "#EFEBEB", rx: 2 }, svg);
         if (v == null) {

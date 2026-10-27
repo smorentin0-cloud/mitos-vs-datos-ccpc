@@ -1,12 +1,12 @@
 /*
- * Pestaña «Atlas de la participación» de «Ver los datos»: recorrido con el mapa fijo (scrollytelling)
- * y comparación de tu estado. Se carga la primera vez que se abre la pestaña.
+ * Pestaña «Recorrido por regiones» del mapa: recorrido con el mapa fijo (scrollytelling)
+ * y comparación de tu estado. Los datos se cargan una vez (Atlas.datos) y los comparte «Explorar».
  * El estado elegido vive solo en memoria: no se guarda ni va en la URL.
  */
 const Atlas = (() => {
   const $ = (s) => document.querySelector(s);
   const T = TEXTOS.atlas;
-  let atlas, porClave, presidencial, observador, carga;
+  let atlas, geo, porClave, presidencial, observador, carga, mapa, cortes, armado = false;
   const estado = { clave: null, anio: null, paso: null };
   const PASOS = {};
 
@@ -35,6 +35,7 @@ const Atlas = (() => {
       p.textContent = t;
       s.appendChild(p);
     });
+    s.appendChild(botonEscuchar());
     if (tabla) s.appendChild(tabla);
     return s;
   }
@@ -84,7 +85,7 @@ const Atlas = (() => {
       p = e ? { anio: estado.anio, titulo: T.mapa.tituloEstado(e.nombre), estado: e.clave, etiquetas: [e.clave] }
         : { anio: estado.anio, titulo: T.mapa.tituloPais };
     }
-    const filas = Mapa.pintar(p);
+    const filas = mapa.pintar({ ...p, cortes });
     $("#a-mapa-titulo").textContent = p.titulo;
     $("#a-mapa-anio").textContent = T.mapa.anio(p.anio, presidencial(p.anio));
     $("#a-mapa-desc").textContent = T.mapa.desc(p.titulo, p.anio, T.mapa.listaEstados(filas));
@@ -109,7 +110,7 @@ const Atlas = (() => {
       nombres.forEach((e) => s.add(new Option(e.nombre, e.clave)));
       s.addEventListener("change", () => elegir(Number(s.value) || null));
     });
-    Mapa.alTocar((clave) => { if (estado.paso === "final") elegir(clave); });
+    mapa.alElegir((clave) => { if (estado.paso === "final") elegir(clave); });
     // Botones en lugar de enlaces con #: así la URL no cambia.
     document.querySelectorAll("[data-a-compara]").forEach((b) => b.addEventListener("click", () => {
       const destino = $("#a-compara");
@@ -174,11 +175,14 @@ const Atlas = (() => {
       ["sexo", atlas.sexos, T.compara.tituloSexo(a)],
       ["seccion", atlas.secciones, T.compara.tituloSeccion(a)],
     ];
+    // Las categorías son claves (las usan los filtros); se muestran con su nombre en la lengua de la página.
+    const nombreDe = (k, c) => (TEXTOS.explorar.grupos[k] || {})[c] || c;
     bloques.forEach(([k, cats, titulo], i) => {
+      const nombres = cats.map((c) => nombreDe(k, c));
       $(`#a-g${i + 2}-t`).textContent = titulo;
-      GraficasAtlas.pares($(`#a-g-${k}`), { categorias: cats, estado: de[k], pais: dn[k], nombre: e.nombre });
+      GraficasAtlas.pares($(`#a-g-${k}`), { categorias: nombres, estado: de[k], pais: dn[k], nombre: e.nombre });
       GraficasAtlas.tabla($(`#a-t-${k}`), [T.compara.colGrupo, e.nombre, T.compara.nacional],
-        cats.map((c, j) => [c, T.pct(de[k][j]), T.pct(dn[k][j])]));
+        nombres.map((c, j) => [c, T.pct(de[k][j]), T.pct(dn[k][j])]));
     });
 
     // La mayor diferencia por edad, calculada con los mismos datos de la gráfica.
@@ -199,19 +203,36 @@ const Atlas = (() => {
     document.documentElement.style.setProperty("--at-encabezado", `${alto}px`);
   }
 
-  async function cargar() {
-    const [datos, geo] = await Promise.all([
-      fetch("data/atlas.json").then((r) => r.json()),
-      fetch("data/mapa.json").then((r) => r.json()),
-    ]);
-    atlas = datos;
-    porClave = Object.fromEntries(atlas.estados.map((e) => [e.clave, e]));
-    presidencial = (a) => atlas.presidenciales.includes(Number(a));
-    estado.anio = String(atlas.ultimo);
+  // Datos del atlas y del mapa: una sola descarga para las dos pestañas.
+  function datos() {
+    if (!carga) {
+      carga = Promise.all([
+        fetch("data/atlas.json").then((r) => r.json()),
+        fetch("data/mapa.json").then((r) => r.json()),
+      ]).then(([a, g]) => {
+        atlas = Lengua.atlas(a);
+        geo = g;
+        porClave = Object.fromEntries(atlas.estados.map((e) => [e.clave, e]));
+        presidencial = (x) => atlas.presidenciales.includes(Number(x));
+        estado.anio = String(atlas.ultimo);
+        return { atlas, geo };
+      }).catch((err) => {
+        carga = null;
+        throw err;
+      });
+    }
+    return carga;
+  }
 
-    Mapa.iniciar($("#a-mapa"), geo, atlas);
-    Mapa.leyenda($("#a-leyenda"));
+  function armar() {
+    if (armado) return;
+    armado = true;
+    mapa = Mapa.crear($("#a-mapa"), geo, atlas);
+    cortes = Mapa.escala(atlas.estados.flatMap((e) => atlas.anios.map((a) => e.participacion[a])));
+    Mapa.leyenda($("#a-leyenda"), cortes, false);
     $("#a-fuente").textContent = `${atlas.metodo} ${geo.fuente}`;
+    $(".at-paso-portada").appendChild(botonEscuchar());
+    $("#a-elige-estado").before(botonEscuchar());
 
     armarPasos();
     armarComparacion();
@@ -223,16 +244,45 @@ const Atlas = (() => {
     });
   }
 
+  // «Escuchar» en cada paso: lee su título y sus textos (también los de su tabla no, que es larga).
+  function textoPaso(s) {
+    return [...s.querySelectorAll(".at-antetitulo, h3, p:not(.at-pista)")]
+      .filter((n) => !n.hidden).map((n) => n.textContent.trim()).filter(Boolean).join(". ");
+  }
+
+  function botonEscuchar() {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "escuchar escuchar-paso";
+    b.hidden = !Voz.soportada;
+    b.innerHTML = `<svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>${T.escuchar}</span>`;
+    b.addEventListener("click", () => Voz.alternar(textoPaso(b.closest(".at-paso")), b));
+    return b;
+  }
+
+  // Lo que se lee al activar «Leer en voz alta» con el recorrido abierto: el paso activo.
+  function textoActivo() {
+    const s = document.querySelector(".at-paso.at-activo") || document.querySelector(".at-paso-portada");
+    return s ? textoPaso(s) : "";
+  }
+
+  // Desde «Explorar»: abre la comparación con ese estado ya elegido.
+  function verEstado(clave) {
+    elegir(clave);
+    const destino = $("#a-compara");
+    destino.scrollIntoView({ behavior: "auto" });
+    destino.focus({ preventScroll: true });
+  }
+
   // Se llama cada vez que la pestaña se muestra (el mapa necesita estar visible para medir sus etiquetas).
   async function abrir() {
     try {
-      if (!carga) carga = cargar();
-      await carga;
+      await datos();
     } catch {
-      carga = null;
       $("#a-mapa-titulo").textContent = T.error;
       return;
     }
+    armar();
     ajustarEncabezado();
     observar();
     const paso = estado.paso || "portada";
@@ -246,11 +296,11 @@ const Atlas = (() => {
 
   // Al cambiar el tamaño de la ventana o de la letra: etiquetas del mapa y gráficas de la comparación.
   function redibujar() {
-    if (!atlas || $("#panel-atlas").hidden || $("#explora").hidden) return;
+    if (!armado || $("#panel-recorrido").hidden || $("#mapa").hidden) return;
     ajustarEncabezado();
     pintarMapa();
     pintarComparacion();
   }
 
-  return { abrir, cerrar, redibujar };
+  return { datos, geo: () => geo, abrir, cerrar, redibujar, verEstado, textoActivo };
 })();
