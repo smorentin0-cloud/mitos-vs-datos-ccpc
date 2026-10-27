@@ -172,8 +172,16 @@ const EnTuCaso = (() => {
       const j = datos.estimar[anio]["18_29"];
       const partes = [];
       if (d) partes.push(`${apertura(d.relacion, ctx.lugar)} ${t.jovenes(d, j, anio, pct)}`);
-      const e = fraseEdad(ctx, anio);
+      const fe = fraseEdad(ctx, anio);
+      // Su edad solo se usa si es joven (o si aún no votaba: la frase habla de los 18 años).
+      // Con 30 o más, el pictograma es de 18 a 29 años y su grupo de edad queda como contraste.
+      const e = fe && (fe.edad < 18 || Personal.esJoven(fe.edad)) ? fe : null;
       if (e) partes.push(e.texto);
+      else if (fe) {
+        const g = grupoDeEdad(datos, fe.edad);
+        const v = datos.por_grupo[anio][datos.grupos.indexOf(g)];
+        if (v != null) partes.push(t.tuGrupo(g, v, ctx.lugar, anio, pct));
+      }
       const valor = e ? e.res.valor : j;
       const quien = e ? e.quien : t.jovenesQuien;
       const lugar = e ? e.lugar : ctx.lugar;
