@@ -36,7 +36,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 ## 4. Reglas que no se pueden romper
 
 1. **Privacidad.** Edad, estado elegido, municipio, respuestas, estimaciones y compromiso viven solo en memoria. Sin `localStorage`, `sessionStorage`, cookies ni analítica. No se envían a ningún servidor ni van en la URL. El enlace de reto solo lleva la edición pública (`entidad=N`, que es la página, no un dato de la persona) y el puntaje (`reto=P-T`).
-2. **Toda cifra sale de `scripts/procesar.py`.** No escribas números a mano en HTML, JS ni documentos. No inventes cifras ni resultados de pruebas con usuarios.
+2. **Toda cifra sale de `scripts/procesar.py`** (o de `scripts/procesar_atlas.py`, en el atlas). No escribas números a mano en HTML, JS ni documentos. No inventes cifras ni resultados de pruebas con usuarios.
 3. **Veredictos binarios (Cierto / Falso) que no cambian.** Nada de «parcialmente cierto». Si una frase no se puede verificar en las 6 elecciones, se reformula. El dato local complementa, pero nunca cambia el sello nacional.
 4. **Paleta neutral, sin colores de partidos:** `#1F2937`, `#2563EB`, `#E5E7EB`, `#D97706`, blanco y grises.
 5. **Sin frameworks ni paso de compilación.** HTML, CSS y JavaScript sin dependencias; Python + pandas para los datos.
@@ -53,9 +53,10 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 ├── AGENTS.md / CLAUDE.md     # este contexto (CLAUDE.md solo lo importa)
 ├── README.md                 # descripción completa, metodología, reproducción
 ├── LICENSE                   # cesión de derechos al INE (Base Décimo primera)
-├── requirements.txt          # pandas; pillow y qrcode solo para imágenes
+├── requirements.txt          # pandas; shapely para el mapa; pillow y qrcode solo para imágenes
 ├── data/
 │   ├── raw/                  # ZIP del INE (ignorados por git)
+│   ├── fuentes/              # estados_natural_earth.geojson: límites estatales del mapa (dominio público)
 │   └── processed/
 │       ├── conteos_agregados.csv   # caché: año × entidad × tipo de sección × sexo × edad
 │       ├── municipios.csv          # participación por municipio (se crea con --rehacer)
@@ -64,6 +65,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 ├── docs/guia-facilitacion.md # taller de 20 minutos (fuente de site/guia.html)
 ├── scripts/
 │   ├── procesar.py           # agrega, valida y genera los JSON del sitio
+│   ├── procesar_atlas.py     # atlas: hallazgos por región (se detiene con HallazgoNoSostenido) y mapa
 │   ├── generar_guia.py       # convierte la guía a site/guia.html
 │   ├── generar_imagenes.py   # vista previa para redes, QR e íconos
 │   └── recursos/             # Lexend TTF para las imágenes
@@ -72,7 +74,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── imprimible.html       # tarjetas tamaño carta (frente y reverso)
 │   ├── guia.html             # guía generada, no se edita a mano
 │   ├── sw.js / manifest.webmanifest   # sin conexión
-│   ├── css/                  # estilos.css e imprimible.css
+│   ├── css/                  # estilos.css, atlas.css (prefijo at-) e imprimible.css
 │   ├── js/textos.js          # textos que arma JavaScript
 │   ├── js/datos.js           # rutas de datos y edición por estado (?entidad=)
 │   ├── js/juego.js           # flujo, perfil, revelación, resultado en 4 pasos, tarjeta
@@ -82,8 +84,10 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/graficas.js        # gráficas SVG accesibles
 │   ├── js/voz.js             # lectura en voz alta
 │   ├── js/mascota.js         # mascota «Boleta» (SVG decorativo) y confeti
-│   ├── js/explora.js / imprimible.js
-│   ├── data/                 # mitos.json, explora.json, entidades.json, entidad/<clave>/
+│   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
+│   ├── js/atlas.js           # pestaña «Atlas de la participación» (mapa.js, atlas-graficas.js)
+│   ├── js/imprimible.js
+│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, entidad/<clave>/
 │   └── fonts/, img/
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
 ```
@@ -97,6 +101,7 @@ pip install -r requirements.txt
 python scripts/procesar.py                # regenera site/data/ desde el agregado (sin ZIP)
 python scripts/procesar.py --rehacer      # vuelve a leer los ZIP de data/raw/ (1 a 2 min)
 python scripts/procesar.py --entidad 24   # edición de San Luis Potosí (clave INE 1–32)
+python scripts/procesar_atlas.py          # atlas: site/data/atlas.json y mapa.json
 python scripts/generar_guia.py            # tras editar docs/guia-facilitacion.md
 python -m http.server 8000 --directory site   # abrir http://localhost:8000
 ```
@@ -124,6 +129,7 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - Ronda «reducir la saturación visual»: encabezado con panel «Aa», portada con una acción, perfil compacto, revelación en secuencia, resultado en 4 pasos, limpieza visual y documentación. Incluye «Adivina antes de ver» en una pantalla y barras con etiqueta en el mismo renglón cuando hay más de 8 categorías.
 - Mascota «Boleta» (PR #1): se asoma en cada pregunta, reacciona al sello y festeja el resultado; la cifra clave cuenta hasta su valor. Es decorativa (`aria-hidden`) y se detiene con «reducir movimiento». Revisada a 390 px, normal y A++: sin scroll lateral y sin tapar texto.
 - «Adivina antes de ver»: una estimación exacta dice «¡Le atinaste!»; a 3 puntos o menos, «¡Casi le atinas!».
+- «Ver los datos» con dos pestañas: «Explora los datos» (la original) y «Atlas de la participación» (mapa con recorrido por seis regiones y comparación de tu estado, traído de `atlas-participacion`). Revisada a 390 px, normal y A++, y en escritorio: sin scroll lateral, pestañas con teclado (flechas).
 - «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
 
 **En curso:**

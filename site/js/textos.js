@@ -50,6 +50,53 @@ const TEXTOS = {
     fuente: (anio) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${anio}.`,
     error: "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.",
   },
+  // Pestaña «Atlas de la participación» de «Ver los datos». Los textos de cada paso de la historia
+  // vienen de atlas.json, generados por scripts/procesar_atlas.py con las cifras calculadas.
+  atlas: {
+    pct: (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`),
+    puntos: (v) => `${Math.abs(v).toFixed(1)} ${Math.abs(v).toFixed(1) === "1.0" ? "punto" : "puntos"}`,
+    error: "No se pudo cargar el mapa. Recarga la página para intentarlo de nuevo.",
+
+    mapa: {
+      tituloPais: "Participación por estado",
+      tituloRegion: (r) => `Región ${r}`,
+      tituloEstado: (e) => e,
+      anio: (a, presidencial) => `${a} · ${presidencial ? "presidencial" : "intermedia"}`,
+      desc: (titulo, anio, lista) => `Mapa de México. ${titulo}, elección de ${anio}. ${lista}`,
+      listaEstados: (filas) => filas.map(([n, v]) => `${n}: ${v == null ? "sin dato" : v.toFixed(1) + "%"}`).join("; ") + ".",
+      // Nombres cortos para que las etiquetas del centro del país quepan.
+      corto: { 9: "CDMX", 15: "Edomex" },
+      leyenda: (desde, hasta) => (hasta == null ? `${desde}% o más` : desde == null ? `menos de ${hasta}%` : `${desde}–${hasta}%`),
+    },
+
+    pasos: {
+      regionesTitulo: "Seis regiones, seis historias",
+      regionesTexto: "Para recorrer el país, juntamos los 32 estados en seis regiones vecinas. En cada una, los datos cuentan algo distinto.",
+      regionEtiqueta: (n, total) => `Región ${n} de ${total}`,
+      tablaEstados: "Ver los estados en una tabla",
+      colEstado: "Estado",
+      colVoto: (anio) => `Votó en ${anio}`,
+    },
+
+    compara: {
+      frase: (estado, anio, dif, lugar) => {
+        const sentido = Math.abs(dif) < 0.05 ? "la misma participación que el país"
+          : `una participación ${TEXTOS.atlas.puntos(dif)} ${dif > 0 ? "mayor" : "menor"} que la del país`;
+        return `En ${anio}, ${estado} tuvo ${sentido} y quedó en el lugar ${lugar} de 32 estados.`;
+      },
+      votoEn: (estado, anio) => `votó en ${estado} en ${anio}`,
+      tituloHistoria: (desde, hasta) => `Participación en cada elección, ${desde}–${hasta}`,
+      tituloEdad: (anio) => `Por edad, ${anio}`,
+      tituloSexo: (anio) => `Mujeres y hombres, ${anio}`,
+      tituloSeccion: (anio) => `Por tipo de sección, ${anio}`,
+      fraseEdad: (estado, grupo, dif) =>
+        `La mayor diferencia con el país está en las personas de ${grupo} años: en ${estado} votaron ${TEXTOS.atlas.puntos(dif)} ${dif > 0 ? "más" : "menos"}.`,
+      colGrupo: "Grupo",
+      colAnio: "Elección",
+      nacional: "México",
+      sinDato: "Sin datos suficientes",
+    },
+  },
   voz: { detener: "Detener" },
   lectura: {
     boton: "Opciones de lectura",

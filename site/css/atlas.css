@@ -1,0 +1,132 @@
+/*
+ * Pestaña «Atlas de la participación» de «Ver los datos».
+ * Todo va con el prefijo at- para no chocar con los estilos del juego.
+ * --at-encabezado lo pone atlas.js con el alto real de la barra.
+ */
+:root { --at-encabezado: 4.25rem; }
+
+/* El atlas usa más ancho que la columna del juego. */
+body.con-atlas main { max-width: 76rem; }
+
+/* ---------------------------------------------------------------- recorrido */
+.at-recorrido {
+  display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: var(--esp-6);
+}
+.at-pasos { order: 1; padding: 10vh 0 30vh; }
+.at-mapa-col {
+  order: 2; margin: 0;
+  position: sticky; top: calc(var(--at-encabezado) + var(--esp-4));
+  height: calc(100vh - var(--at-encabezado) - var(--esp-6));
+  display: flex; flex-direction: column; gap: var(--esp-2);
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 6px; padding: var(--esp-3) var(--esp-4);
+}
+.at-mapa-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: var(--esp-3); flex-wrap: wrap; }
+.at-mapa-titulo { font-weight: 700; font-size: 1.125rem; }
+.at-mapa-anio { font-size: 0.9375rem; padding: 0 var(--esp-2); border: 2px solid var(--ambar); border-radius: 4px; font-weight: 700; }
+.at-mapa-caja { flex: 1; min-height: 0; }
+.at-mapa { width: 100%; height: 100%; display: block; }
+
+.at-estado {
+  stroke: var(--papel); stroke-width: 0.8; vector-effect: non-scaling-stroke; stroke-linejoin: round;
+  transition: fill 0.5s ease, opacity 0.5s ease;
+}
+.at-estado.at-atenuado { fill: var(--base); }
+.at-estado.at-resaltado { stroke: var(--tinta); stroke-width: 2.5; }
+.at-region { fill: none; stroke: var(--tinta); stroke-width: 2.2; vector-effect: non-scaling-stroke; stroke-linejoin: round; opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
+.at-region.at-visible { opacity: 1; }
+svg .at-etiqueta { fill: var(--tinta); paint-order: stroke; stroke: var(--papel); stroke-width: 0.28em; stroke-linejoin: round; font-family: var(--fuente); }
+.at-etq-nombre { font-weight: 700; }
+.at-etq-region { font-weight: 700; letter-spacing: 0.02em; }
+
+.at-leyenda-mapa { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--esp-1) var(--esp-3); font-size: 0.8125rem; color: var(--tinta-suave); }
+.at-leyenda-mapa li { display: flex; align-items: center; gap: var(--esp-1); }
+.at-muestra { width: 1rem; height: 1rem; border: 1px solid var(--gris-graf); border-radius: 2px; }
+
+/* Pasos: el activo se ve completo y los demás se atenúan. */
+.at-paso {
+  min-height: 70vh; display: flex; flex-direction: column; justify-content: center;
+  margin-bottom: 30vh;
+}
+.at-paso > * { max-width: 34rem; }
+.at-paso:not(.at-paso-portada) { opacity: 0.4; transition: opacity 0.4s ease; }
+.at-paso.at-activo { opacity: 1; }
+.at-paso-portada { min-height: 50vh; }
+.at-paso h3 { font-size: 1.5rem; }
+.at-paso-portada h3 { font-size: 1.75rem; }
+.at-antetitulo { margin: 0 0 var(--esp-2); font-size: 0.9375rem; font-weight: 700; color: var(--azul); }
+.at-texto { font-size: 1.1875rem; margin: 0 0 var(--esp-3); }
+.at-extra { margin: 0 0 var(--esp-3); padding-left: var(--esp-3); border-left: 4px solid var(--ambar); color: var(--tinta-suave); }
+.at-pista { display: flex; align-items: center; gap: var(--esp-2); color: var(--tinta-suave); font-weight: 700; }
+.at-pista svg { width: 1.5rem; height: 1.5rem; fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; animation: at-bajar 1.4s ease-in-out infinite; }
+@keyframes at-bajar { 50% { transform: translateY(4px); } }
+
+.at-campo-titulo { display: block; font-weight: 700; margin: var(--esp-3) 0 var(--esp-1); }
+.at-selector {
+  width: 100%; max-width: 22rem; min-height: 3rem; padding: 0 var(--esp-3);
+  font: inherit; font-size: 1.125rem; color: var(--tinta);
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
+}
+.at-final-resumen { margin-top: var(--esp-4); }
+
+/* ---------------------------------------------------------------- comparación */
+.at-compara { padding: var(--esp-6) 0 0; scroll-margin-top: var(--at-encabezado); }
+.at-compara > h3 { font-size: 1.75rem; }
+.at-compara-controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--esp-2) var(--esp-6); margin-bottom: var(--esp-5); }
+.at-compara-controles .at-campo-titulo { margin-top: 0; }
+.at-anios-botones { display: flex; flex-wrap: wrap; gap: var(--esp-1); }
+.at-anio-btn {
+  min-width: 44px; min-height: 44px; padding: 0 var(--esp-3);
+  font: inherit; font-weight: 700; color: var(--tinta); background: var(--papel);
+  border: 2px solid var(--tinta); border-radius: 4px; cursor: pointer;
+}
+.at-anio-btn[aria-pressed="true"] { background: var(--tinta); color: var(--papel); }
+
+.at-cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: var(--esp-2) var(--esp-6); margin-bottom: var(--esp-5); }
+.at-cifra { margin: 0; display: grid; }
+.at-cifra-num { font-size: 3.25rem; font-weight: 700; line-height: 1.05; color: var(--azul); letter-spacing: -0.02em; }
+.at-cifra-nacional .at-cifra-num { color: var(--gris-graf); }
+.at-cifra-etq { color: var(--tinta-suave); }
+.at-cifra-frase { grid-column: 1 / -1; margin: 0; font-size: 1.1875rem; font-weight: 700; }
+
+.at-graficas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--esp-5); }
+.at-graficas .grafica { margin: 0; min-width: 0; }
+.at-frase { margin: 0 0 var(--esp-2); color: var(--tinta-suave); }
+.at-lienzo { width: 100%; }
+.at-svg { display: block; overflow: visible; }
+svg .at-eje { font-size: 0.8125rem; fill: var(--tinta-suave); }
+svg .at-cat { font-size: 0.875rem; fill: var(--tinta); font-weight: 700; }
+svg .at-valor { font-size: 0.8125rem; fill: var(--tinta); font-weight: 700; }
+svg .at-valor.sin { font-weight: 400; fill: var(--tinta-suave); }
+.at-barra { transform-box: fill-box; transform-origin: left; animation: at-crecer 0.6s ease-out both; }
+@keyframes at-crecer { from { transform: scaleX(0); } }
+.at-leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: var(--esp-1) var(--esp-4); margin: 0 0 var(--esp-2); padding: 0; font-size: 0.9375rem; }
+.at-leyenda li { display: flex; align-items: center; gap: var(--esp-2); }
+.at-muestra-g { width: 1rem; height: 0.75rem; background: var(--c); border-radius: 2px; }
+.at-muestra-g.linea { height: 3px; }
+.atlas .g-tabla td { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- celular: mapa arriba, texto que pasa debajo */
+@media (max-width: 52rem) {
+  .at-recorrido { display: block; }
+  .at-mapa-col {
+    top: var(--at-encabezado); z-index: 3; height: 46vh;
+    margin: 0 calc(-1 * var(--esp-4)); border-width: 0 0 2px; border-radius: 0; padding: var(--esp-2) var(--esp-4);
+  }
+  .at-leyenda-mapa { font-size: 0.75rem; }
+  .at-pasos { position: relative; z-index: 4; padding: 0 0 20vh; }
+  .at-paso {
+    min-height: 0; margin: 0 0 60vh; padding: var(--esp-4);
+    background: var(--papel); border: 2px solid var(--tinta); border-radius: 6px;
+    box-shadow: 0 6px 18px rgba(31, 41, 55, 0.12);
+  }
+  .at-paso:first-child { margin-top: 30vh; }
+  .at-paso:not(.at-paso-portada) { opacity: 1; }
+  .at-paso-final { margin-bottom: 30vh; }
+  .at-texto { font-size: 1.0625rem; }
+  .at-cifra-num { font-size: 2.75rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .at-estado, .at-region, .at-paso { transition: none; }
+  .at-pista svg, .at-barra { animation: none; }
+}

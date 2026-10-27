@@ -398,7 +398,8 @@ const Graficas = (() => {
       let ultimoAncho = contenedor.clientWidth;
       const ro = new ResizeObserver(() => {
         const w = contenedor.clientWidth;
-        if (Math.abs(w - ultimoAncho) < 8) return;
+        // Oculta (p. ej. en otra pestaña de «Ver los datos»): se redibuja al volver a mostrarse.
+        if (!w || Math.abs(w - ultimoAncho) < 8) return;
         ultimoAncho = w;
         const actual = observados.get(contenedor);
         if (actual.spec) dibujar(contenedor, actual.spec, { ...actual.opciones, animado: false });

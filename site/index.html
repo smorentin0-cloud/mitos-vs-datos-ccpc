@@ -25,6 +25,7 @@
   <link rel="preload" href="fonts/lexend-latin-400.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/lexend-latin-700.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/estilos.css">
+  <link rel="stylesheet" href="css/atlas.css">
 </head>
 <body>
   <a class="saltar" href="#contenido">Saltar al contenido</a>
@@ -396,43 +397,144 @@
       </p>
     </section>
 
-    <!-- Explora los datos -->
+    <!-- Ver los datos: dos pestañas, «Explora los datos» (gráficas) y «Atlas de la participación» (mapa) -->
     <section id="explora" class="pantalla" aria-labelledby="t-explora" hidden>
-      <h2 id="t-explora" tabindex="-1">Explora los datos</h2>
-      <p class="entrada">Elige un año y un estado para ver cómo cambia la participación.</p>
+      <h2 id="t-explora" tabindex="-1">Ver los datos</h2>
+      <div class="pestanas" role="tablist" aria-label="Formas de ver los datos">
+        <button id="tab-graficas" class="pestana" role="tab" aria-selected="true" aria-controls="panel-graficas">Explora los datos</button>
+        <button id="tab-atlas" class="pestana" role="tab" aria-selected="false" aria-controls="panel-atlas" tabindex="-1">Atlas de la participación</button>
+      </div>
 
-      <figure class="grafica">
-        <figcaption class="g-titulo">Participación por grupo de edad</figcaption>
-        <div class="filtros">
-          <label>Año
-            <select id="f-anio-edad"></select>
-          </label>
-          <label>Estado
-            <select id="f-entidad"></select>
-          </label>
-        </div>
-        <div id="e-edad" class="g-lienzo"></div>
-        <p id="e-edad-fuente" class="g-fuente"></p>
-        <details class="g-tabla">
-          <summary>Ver los datos en una tabla</summary>
-          <div id="e-edad-tabla"></div>
-        </details>
-      </figure>
+      <div id="panel-graficas" class="panel-datos" role="tabpanel" aria-labelledby="tab-graficas">
+        <p class="entrada">Elige un año y un estado para ver cómo cambia la participación.</p>
 
-      <figure class="grafica">
-        <figcaption class="g-titulo">Participación por estado</figcaption>
-        <div class="filtros">
-          <label>Año
-            <select id="f-anio-estado"></select>
-          </label>
+        <figure class="grafica">
+          <figcaption class="g-titulo">Participación por grupo de edad</figcaption>
+          <div class="filtros">
+            <label>Año
+              <select id="f-anio-edad"></select>
+            </label>
+            <label>Estado
+              <select id="f-entidad"></select>
+            </label>
+          </div>
+          <div id="e-edad" class="g-lienzo"></div>
+          <p id="e-edad-fuente" class="g-fuente"></p>
+          <details class="g-tabla">
+            <summary>Ver los datos en una tabla</summary>
+            <div id="e-edad-tabla"></div>
+          </details>
+        </figure>
+
+        <figure class="grafica">
+          <figcaption class="g-titulo">Participación por estado</figcaption>
+          <div class="filtros">
+            <label>Año
+              <select id="f-anio-estado"></select>
+            </label>
+          </div>
+          <div id="e-estado" class="g-lienzo"></div>
+          <p id="e-estado-fuente" class="g-fuente"></p>
+          <details class="g-tabla">
+            <summary>Ver los datos en una tabla</summary>
+            <div id="e-estado-tabla"></div>
+          </details>
+        </figure>
+      </div>
+
+      <div id="panel-atlas" class="panel-datos atlas" role="tabpanel" aria-labelledby="tab-atlas" hidden>
+        <p class="entrada">¿Dónde se vota más en México? Baja con calma: el mapa se mueve del país a cada región y, al final, a tu estado.</p>
+        <p><button class="enlace-texto" data-a-compara>Ir directo a comparar tu estado</button></p>
+
+        <!-- Recorrido: el mapa queda fijo y los pasos pasan al lado (o debajo, en el celular). -->
+        <div class="at-recorrido">
+          <figure class="at-mapa-col" aria-labelledby="a-mapa-titulo">
+            <figcaption class="at-mapa-cabeza">
+              <span id="a-mapa-titulo" class="at-mapa-titulo"></span>
+              <span id="a-mapa-anio" class="at-mapa-anio"></span>
+            </figcaption>
+            <div class="at-mapa-caja">
+              <svg id="a-mapa" class="at-mapa" role="img" aria-labelledby="a-mapa-desc" preserveAspectRatio="xMidYMid meet">
+                <desc id="a-mapa-desc"></desc>
+                <g id="a-capa-estados"></g>
+                <g id="a-capa-regiones"></g>
+                <g id="a-capa-etiquetas" aria-hidden="true"></g>
+              </svg>
+            </div>
+            <ol id="a-leyenda" class="at-leyenda-mapa" aria-label="Escala de colores: porcentaje que votó"></ol>
+          </figure>
+
+          <div class="at-pasos">
+            <section class="at-paso at-paso-portada" data-paso="portada" aria-labelledby="a-t-portada">
+              <h3 id="a-t-portada">Atlas de la participación</h3>
+              <p class="at-texto">Un recorrido por el mapa de México, de lo nacional a cada región y a tu estado.</p>
+              <p class="at-pista" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4 V19 M6 13 L12 19 L18 13"/></svg> Desliza hacia abajo</p>
+            </section>
+            <div id="a-pasos-generados"></div>
+            <section class="at-paso at-paso-final" data-paso="final" aria-labelledby="a-t-final">
+              <h3 id="a-t-final">¿Y tu estado?</h3>
+              <p>Elige tu estado para ver cómo vota frente al país. No guardamos tu elección: solo vive en esta página mientras la ves.</p>
+              <label class="at-campo-titulo" for="a-elige-estado">Tu estado</label>
+              <select id="a-elige-estado" class="at-selector">
+                <option value="">Elige un estado</option>
+              </select>
+              <p id="a-final-resumen" class="at-texto at-final-resumen" aria-live="polite" hidden></p>
+              <button id="a-ir-compara" class="enlace-texto" data-a-compara hidden>Compáralo con el país →</button>
+            </section>
+          </div>
         </div>
-        <div id="e-estado" class="g-lienzo"></div>
-        <p id="e-estado-fuente" class="g-fuente"></p>
-        <details class="g-tabla">
-          <summary>Ver los datos en una tabla</summary>
-          <div id="e-estado-tabla"></div>
-        </details>
-      </figure>
+
+        <!-- Comparación: tu estado frente al país. -->
+        <section id="a-compara" class="at-compara" aria-labelledby="a-t-compara" tabindex="-1">
+          <h3 id="a-t-compara">Tu estado frente al país</h3>
+          <p id="a-compara-vacio">Elige tu estado arriba, o aquí:</p>
+          <div class="at-compara-controles">
+            <div>
+              <label class="at-campo-titulo" for="a-elige-estado-2">Estado</label>
+              <select id="a-elige-estado-2" class="at-selector">
+                <option value="">Elige un estado</option>
+              </select>
+            </div>
+            <div role="group" aria-label="Elección">
+              <span class="at-campo-titulo" aria-hidden="true">Elección</span>
+              <div id="a-anios" class="at-anios-botones"></div>
+            </div>
+          </div>
+
+          <div id="a-compara-cuerpo" hidden>
+            <div class="at-cifras" aria-live="polite">
+              <p class="at-cifra"><span id="a-c-estado-valor" class="at-cifra-num"></span><span id="a-c-estado-nombre" class="at-cifra-etq"></span></p>
+              <p class="at-cifra at-cifra-nacional"><span id="a-c-nac-valor" class="at-cifra-num"></span><span class="at-cifra-etq">México</span></p>
+              <p id="a-c-frase" class="at-cifra-frase"></p>
+            </div>
+
+            <div class="at-graficas">
+              <figure class="grafica" aria-labelledby="a-g1-t">
+                <figcaption id="a-g1-t" class="g-titulo"></figcaption>
+                <div id="a-g-historia" class="at-lienzo"></div>
+                <details class="g-tabla"><summary>Ver los datos en una tabla</summary><div id="a-t-historia"></div></details>
+              </figure>
+              <figure class="grafica" aria-labelledby="a-g2-t">
+                <figcaption id="a-g2-t" class="g-titulo"></figcaption>
+                <p id="a-g-edad-frase" class="at-frase"></p>
+                <div id="a-g-edad" class="at-lienzo"></div>
+                <details class="g-tabla"><summary>Ver los datos en una tabla</summary><div id="a-t-edad"></div></details>
+              </figure>
+              <figure class="grafica" aria-labelledby="a-g3-t">
+                <figcaption id="a-g3-t" class="g-titulo"></figcaption>
+                <div id="a-g-sexo" class="at-lienzo"></div>
+                <details class="g-tabla"><summary>Ver los datos en una tabla</summary><div id="a-t-sexo"></div></details>
+              </figure>
+              <figure class="grafica" aria-labelledby="a-g4-t">
+                <figcaption id="a-g4-t" class="g-titulo"></figcaption>
+                <div id="a-g-seccion" class="at-lienzo"></div>
+                <details class="g-tabla"><summary>Ver los datos en una tabla</summary><div id="a-t-seccion"></div></details>
+              </figure>
+            </div>
+          </div>
+          <p id="a-fuente" class="g-fuente"></p>
+        </section>
+      </div>
 
       <div class="acciones">
         <button class="boton primario" data-ir="portada">Volver al inicio</button>
@@ -455,6 +557,9 @@
   <script src="js/textos.js"></script>
   <script src="js/datos.js"></script>
   <script src="js/graficas.js"></script>
+  <script src="js/mapa.js"></script>
+  <script src="js/atlas-graficas.js"></script>
+  <script src="js/atlas.js"></script>
   <script src="js/explora.js"></script>
   <script src="js/combobox.js"></script>
   <script src="js/personal.js"></script>

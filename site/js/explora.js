@@ -1,5 +1,6 @@
 /*
- * Sección "Explora los datos": dos gráficas filtrables por año y estado.
+ * Pantalla "Ver los datos", con dos pestañas:
+ * «Explora los datos» (dos gráficas filtrables por año y estado) y «Atlas de la participación» (atlas.js).
  */
 const Explora = (() => {
   const $ = (sel) => document.querySelector(sel);
@@ -67,7 +68,7 @@ const Explora = (() => {
     $("#e-estado-fuente").textContent = E.fuente(anio);
   }
 
-  async function abrir() {
+  async function abrirGraficas() {
     try {
       if (!datos) await cargar();
       porEdad();
@@ -77,5 +78,48 @@ const Explora = (() => {
     }
   }
 
-  return { abrir };
+  // ---------- pestañas (patrón ARIA: flechas, Inicio y Fin cambian de pestaña)
+
+  const pestanas = [...document.querySelectorAll("#explora .pestana")];
+
+  function elegirPestana(tab, enfocar = false) {
+    pestanas.forEach((t) => {
+      const activa = t === tab;
+      t.setAttribute("aria-selected", String(activa));
+      t.tabIndex = activa ? 0 : -1;
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !activa;
+    });
+    if (enfocar) tab.focus();
+    // El atlas usa todo el ancho de la pantalla; las gráficas, la columna del juego.
+    document.body.classList.toggle("con-atlas", tab.id === "tab-atlas");
+    if (tab.id === "tab-atlas") Atlas.abrir();
+    else {
+      Atlas.cerrar();
+      abrirGraficas();
+    }
+  }
+
+  pestanas.forEach((t, i) => {
+    t.addEventListener("click", () => elegirPestana(t));
+    t.addEventListener("keydown", (e) => {
+      const n = pestanas.length;
+      const destino = { ArrowRight: (i + 1) % n, ArrowLeft: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
+      if (destino === undefined) return;
+      e.preventDefault();
+      elegirPestana(pestanas[destino], true);
+    });
+  });
+
+  // Al entrar a la pantalla se abre la pestaña que estaba elegida.
+  function abrir() {
+    elegirPestana(pestanas.find((t) => t.getAttribute("aria-selected") === "true"));
+  }
+
+  // Al salir de la pantalla: el atlas deja de observar el scroll y la columna vuelve a su ancho.
+  function cerrar() {
+    Atlas.cerrar();
+    document.body.classList.remove("con-atlas");
+  }
+
+  return { abrir, cerrar };
 })();

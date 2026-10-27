@@ -56,6 +56,7 @@
       titulo.focus({ preventScroll: true });
     }
     if (id === "explora") Explora.abrir();
+    else Explora.cerrar();
     if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
   }
 
@@ -131,6 +132,7 @@
     document.querySelectorAll(".tamano-btn").forEach((x) =>
       x.setAttribute("aria-pressed", String(x.dataset.tamano === nivel)));
     Graficas.redibujar();
+    Atlas.redibujar();
   }
 
   document.querySelectorAll(".tamano-btn").forEach((b) =>
