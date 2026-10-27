@@ -7,8 +7,9 @@
  *    los cambia por _anio y _estado para que «cuánto votó Jalisco» y «cuánto votó Sonora» se parezcan.
  * 3. Corrige faltas contra las palabras conocidas, cambia sinónimos, quita palabras vacías y recorta
  *    terminaciones («votaron», «votantes» → «vot»).
- * 4. Compara con las preguntas de ejemplo de cada intención (TF-IDF por palabras + trigramas de letras)
- *    y gana la más parecida. Si ninguna pasa el umbral, no adivina: dice que no sabe y sugiere preguntas.
+ * 4. Compara con las preguntas de ejemplo de cada intención (TF-IDF por palabras + trigramas de letras,
+ *    o qué tanto del ejemplo contiene la pregunta) y gana la más parecida. Si ninguna pasa el umbral,
+ *    no adivina: dice que no sabe y sugiere preguntas. Las preguntas dobles («… y cómo …») se responden por partes.
  * 5. Llena la plantilla con cifras de atlas.json y mitos.json (generadas por los scripts).
  *
  * El contexto (último estado, año e intención) vive solo en memoria, en el objeto que crea nuevoContexto().
@@ -16,6 +17,9 @@
 const ChatMotor = (() => {
   const UMBRAL = 0.4;
   const PESO_PALABRAS = 0.75;
+  // En preguntas largas el parecido se diluye; si la pregunta contiene casi todo un ejemplo (de 2 palabras o más),
+  // también cuenta, con este peso.
+  const PESO_CONTIENE = 0.85;
 
   const normal = (t) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9]+/g, " ").trim();
@@ -158,16 +162,28 @@ const ChatMotor = (() => {
       a.v.forEach((x, t) => { s += x * (b.v.get(t) || 0); });
       return s / (a.norma * b.norma);
     };
-    ejemplos.forEach((e) => { e.vec = vector(e.terms); e.tri = trigramas(e.terms.join(" ")); });
+    ejemplos.forEach((e) => {
+      e.vec = vector(e.terms);
+      e.tri = trigramas(e.terms.join(" "));
+      e.unicos = [...new Set(e.terms)];
+      e.pesoTotal = e.unicos.reduce((s, t) => s + idf(t), 0);
+    });
 
     function puntuar(terms) {
       const q = vector(terms), tri = trigramas(terms.join(" "));
+      const enPregunta = new Set(terms);
       const mejores = new Map();
       ejemplos.forEach((e) => {
-        const p = PESO_PALABRAS * coseno(q, e.vec) + (1 - PESO_PALABRAS) * dice(tri, e.tri);
-        if (p > (mejores.get(e.intencion) || 0)) mejores.set(e.intencion, p);
+        const parecido = PESO_PALABRAS * coseno(q, e.vec) + (1 - PESO_PALABRAS) * dice(tri, e.tri);
+        // Solo cuenta si coincide al menos una palabra real (no solo _estado o _anio).
+        const contiene = e.unicos.length >= 2 && e.unicos.some((t) => !t.startsWith("_") && enPregunta.has(t))
+          ? e.unicos.reduce((s, t) => s + (enPregunta.has(t) ? idf(t) : 0), 0) / e.pesoTotal : 0;
+        const p = Math.max(parecido, PESO_CONTIENE * contiene);
+        const previo = mejores.get(e.intencion);
+        if (!previo || p > previo.p || (p === previo.p && parecido > previo.parecido)) mejores.set(e.intencion, { p, parecido });
       });
-      return [...mejores].map(([intencion, p]) => ({ intencion, p })).sort((a, b) => b.p - a.p);
+      return [...mejores].map(([intencion, x]) => ({ intencion, ...x }))
+        .sort((a, b) => b.p - a.p || b.parecido - a.parecido);
     }
 
     // ---------- cifras para las plantillas
@@ -218,8 +234,17 @@ const ChatMotor = (() => {
             comparacion: Math.abs(dif) < 0.05 ? T.votaronIgual : T.votaronMas(dif > 0 ? T.lasMujeres : T.losHombres, puntos(dif)) };
         }
         case "seccion": {
-          const [u, m, r] = fuente(e).detalle[a].seccion;
-          return { lugar_texto: lugarTexto(e), anio: a, urbana: pct(u), mixta: pct(m), rural: pct(r) };
+          const valores = fuente(e).detalle[a].seccion;
+          const [u, m, r] = valores;
+          const k = valores.indexOf(Math.max(...valores.filter((v) => v != null)));
+          return { lugar_texto: lugarTexto(e), anio: a, urbana: pct(u), mixta: pct(m), rural: pct(r), mayor: T.secciones[k] };
+        }
+        case "entre_anios": {
+          const [a1, a2] = d.anios;
+          const v1 = fuente(e).participacion[a1], v2 = fuente(e).participacion[a2];
+          const dif = v2 - v1;
+          return { lugar_texto: lugarTexto(e), anio1: a1, anio2: a2, pct1: pct(v1), pct2: pct(v2),
+            cambio: Math.abs(dif) < 0.05 ? T.igual : dif > 0 ? T.subio(puntos(dif)) : T.bajo(puntos(dif)) };
         }
         case "historia": return { lugar_texto: lugarTexto(e),
           lista: atlas.anios.map((x) => `${x} (${tipoEleccion(x)}): ${pct(fuente(e).participacion[x])}`).join("; ") };
@@ -232,7 +257,7 @@ const ChatMotor = (() => {
             .map((r) => `${r.nombre}, ${pct(r.participacion[a])}`).join("; ") };
         case "mito": {
           const m = listaMitos.find((x) => x.id === i.mito);
-          return { enunciado: m.enunciado, veredicto: textos.veredictos[m.veredicto], resumen: m.resumen };
+          return { enunciado: m.enunciado.replace(/\.$/, ""), veredicto: textos.veredictos[m.veredicto].toLowerCase(), resumen: m.resumen };
         }
         default: return {};
       }
@@ -255,7 +280,23 @@ const ChatMotor = (() => {
       return { estado: estadoInicial, otro: null, anio: null, ultima: null, pendiente: null };
     }
 
+    // «¿Qué edad vota más y cómo se compara entre hombres y mujeres?» → dos partes, cada una con su respuesta.
+    const SEPARADOR = /\s+y\s+(?=(?:como|cuanto|cuanta|cuantos|cuantas|que|quien|quienes|donde|cuando|cual|cuales)\b)/;
+    function partes(texto) {
+      return texto.split(/[?;]+/).map(normal).filter(Boolean).flatMap((p) => p.split(SEPARADOR)).filter(Boolean);
+    }
+
     function responder(texto, ctx) {
+      const lista = partes(texto);
+      if (lista.length <= 1) return responderUna(texto, ctx);
+      const respuestas = lista.map((p) => responderUna(p, ctx));
+      const buenas = respuestas.filter((r) => r.intencion && !r.falta);
+      if (!buenas.length) return respuestas[0];
+      return { texto: buenas.map((r) => r.texto).join(" "), intencion: buenas.map((r) => r.intencion).join("+"),
+        puntaje: Math.min(...buenas.map((r) => r.puntaje || 0)) };
+    }
+
+    function responderUna(texto, ctx) {
       const tokens = normal(texto).split(" ").filter(Boolean);
       if (!tokens.length) return { texto: T.vacio, sugerencias: sugerir([]) };
       const { salida, estados, anios } = extraer(tokens);
@@ -285,6 +326,11 @@ const ChatMotor = (() => {
         intencion = sirve ? previa : porId[estados.length ? "estado" : ctx.estado ? "estado" : "pais"];
       } else if (mejor.p >= UMBRAL) intencion = mejor.intencion;
       ctx.pendiente = null;
+      // Dos años en la pregunta («Colima, 2018 contra 2024»): se comparan entre sí.
+      const anioUnicos = [...new Set(anios)].sort();
+      if (anioUnicos.length >= 2 && (!intencion || ["pais", "estado", "historia", "entre_anios"].includes(intencion.tipo))) {
+        intencion = porId.entre_anios;
+      }
 
       if (!intencion) {
         return { texto: T.noSe, sugerencias: sugerir(ranking), intencion: null, puntaje: mejor.p };
@@ -292,7 +338,7 @@ const ChatMotor = (() => {
 
       // Datos: lo que dijo la persona, luego el contexto, luego lo de por omisión.
       const usa = new Set([...(intencion.requiere || []), ...(intencion.usa || [])]);
-      const d = { anio: anioPedido || ctx.anio || atlas.ultimo, estado: null, otro: null };
+      const d = { anio: anioPedido || ctx.anio || atlas.ultimo, anios: anioUnicos.slice(0, 2), estado: null, otro: null };
       if (usa.has("otro")) {
         if (estados.length >= 2) [d.estado, d.otro] = estados;
         else if (!estados.length && ctx.estado && ctx.otro) [d.estado, d.otro] = [ctx.estado, ctx.otro];

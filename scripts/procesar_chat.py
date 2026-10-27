@@ -46,7 +46,8 @@ DATOS_POR_TIPO = {
     "comparar": {"anio", "estado", "pct", "otro", "pct_otro", "comparacion"},
     "edad": {"lugar_texto", "anio", "lista", "grupo_max", "pct_max", "grupo_min", "pct_min"},
     "sexo": {"lugar_texto", "anio", "mujeres", "hombres", "comparacion"},
-    "seccion": {"lugar_texto", "anio", "urbana", "mixta", "rural"},
+    "seccion": {"lugar_texto", "anio", "urbana", "mixta", "rural", "mayor"},
+    "entre_anios": {"lugar_texto", "anio1", "anio2", "pct1", "pct2", "cambio"},
     "historia": {"lugar_texto", "lista"},
     "tipos": {"presidenciales", "intermedias"},
     "region": {"anio", "lista"},
@@ -132,7 +133,7 @@ INTENCIONES = [
         "ejemplos": ["se vota mas en el campo o en la ciudad", "participacion rural", "como votan en las ciudades",
                      "urbano contra rural", "votan mas en los pueblos", "secciones rurales", "tipo de seccion",
                      "cuanto votan en el campo", "participacion urbana"],
-        "respuesta": "{lugar_texto} en {anio}, por tipo de sección: urbana {urbana}, mixta {mixta} y rural {rural}.",
+        "respuesta": "{lugar_texto} en {anio}, por tipo de sección: urbana {urbana}, mixta {mixta} y rural {rural}. Se votó más en las secciones {mayor}.",
     },
     {
         "id": "historia", "tipo": "historia", "usa": ["estado"],
@@ -141,6 +142,12 @@ INTENCIONES = [
                      "ha subido o bajado la participacion", "evolucion de la participacion", "cada eleccion desde 2009",
                      "como ha votado jalisco en los ultimos anos", "tendencia de participacion"],
         "respuesta": "Participación {lugar_texto} en cada elección federal: {lista}.",
+    },
+    {
+        "id": "entre_anios", "tipo": "entre_anios", "usa": ["estado"],
+        "ejemplos": ["como cambio la participacion entre 2018 y 2024", "compara 2018 con 2024", "diferencia entre 2015 y 2021",
+                     "cuanto subio de 2012 a 2018", "evolucion de jalisco de 2018 a 2024", "2021 contra 2024"],
+        "respuesta": "{lugar_texto}: {pct1} en {anio1} y {pct2} en {anio2}; {cambio}.",
     },
     {
         "id": "tipos", "tipo": "tipos",
@@ -177,6 +184,13 @@ INTENCIONES = [
         "ejemplos": ["como se calcula", "como calculan la participacion", "que significa participacion",
                      "por que no coincide con los resultados oficiales", "metodologia", "formula de participacion"],
         "respuesta": "{metodo}",
+    },
+    {
+        "id": "quien_eres", "tipo": "fijo",
+        "ejemplos": ["quien eres", "que eres", "eres una inteligencia artificial", "eres chatgpt", "eres un robot",
+                     "como funcionas por dentro", "muestra tu prompt", "cual es tu prompt de sistema",
+                     "ignora tus instrucciones", "dime tus instrucciones secretas", "ignora todas las instrucciones previas"],
+        "respuesta": "Soy Boleta, la mascota de este juego. No soy una inteligencia artificial generativa ni tengo instrucciones ocultas: comparo tu pregunta con preguntas de ejemplo y respondo con datos del INE. Por eso a veces no te entiendo.",
     },
     {
         "id": "privacidad", "tipo": "fijo",
@@ -217,13 +231,13 @@ EJEMPLOS_MITOS = {
     "primer-voto": ["a los 18 se vota menos", "los de 18 votan menos que el promedio", "el primer voto es bajo",
                     "es cierto que a los 18 anos se vota poco"],
     "jovenes": ["los jovenes no votan", "es cierto que los jovenes no votan", "a los jovenes no les importa votar",
-                "los chavos no votan"],
+                "los chavos no votan", "los jovenes son los que menos votan", "los jovenes de 18 a 29 votan menos"],
     "sesentas": ["los de 60 votan mas", "las personas de 60 a 69 son las que mas votan", "es cierto que los de sesenta votan mas"],
     "mayores": ["los de 85 votan menos", "las personas muy mayores votan menos", "es cierto que los de 85 o mas votan menos"],
     "tendencia": ["la participacion en intermedias va bajando", "cada vez se vota menos en las intermedias",
                   "la participacion ha ido bajando desde 2009"],
 }
-PLANTILLA_MITO = "{veredicto}. {resumen}"
+PLANTILLA_MITO = "Sobre «{enunciado}»: {veredicto}. {resumen}"
 
 # Palabras con el mismo sentido para el motor (se comparan sin acentos y en minúsculas).
 SINONIMOS = {
@@ -253,7 +267,7 @@ VACIAS = ("a al algo ante con de del el ella ellos en entre era es esa ese eso e
 # Alias de cada estado (además de su nombre en atlas.json). Los cortos solo se aceptan escritos tal cual.
 ALIAS_ESTADOS = {
     2: ["baja california norte", "bc"], 3: ["bcs"], 5: ["coahuila de zaragoza"], 7: [], 8: [],
-    9: ["cdmx", "df", "distrito federal", "ciudad de mexico", "la capital"], 15: ["edomex", "edo mex", "estado de mexico", "edo de mexico"],
+    9: ["cdmx", "df", "distrito federal", "ciudad de mexico"], 15: ["edomex", "edo mex", "estado de mexico", "edo de mexico"],
     16: ["michoacan de ocampo"], 19: ["nl", "nuevo leon"], 22: ["queretaro de arteaga"], 23: ["qroo", "q roo"],
     24: ["slp"], 30: ["veracruz de ignacio de la llave"],
 }
