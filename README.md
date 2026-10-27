@@ -213,7 +213,7 @@ El proyecto es un **kit de educación cívica** listo para usarse en Juntas Loca
 - Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación.
 - **Sin internet y sin servicios externos:** la fuente Lexend está alojada en `site/fonts/` (licencia OFL) y un service worker (`site/sw.js`) guarda el sitio en el dispositivo después de la primera visita, así funciona sin conexión en talleres. El workflow de publicación cambia la versión de la caché en cada commit, así que las actualizaciones llegan solas.
 - **Peso:** la carga inicial es de unos 215 KB (código, fuentes y los datos nacionales). Los datos de cada estado se descargan solo si la persona lo elige: `personal.json` pesa unos 5 KB y `municipios.json` hasta 76 KB (Oaxaca). Con los datos de las 32 entidades, el sitio completo pesa unos 760 KB. Sin conexión funcionan el país y la demo de Colima; otros estados se guardan en cuanto se visitan con internet. La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
-- Paleta neutral, sin colores asociados a partidos: texto `#1F2937`, datos `#2563EB`, base `#E5E7EB`, acento `#D97706`, blanco y grises.
+- Paleta del INE, tomada de ine.mx y sin colores asociados a partidos: texto `#1D1D1D`, marca y datos rosa `#C31C78`, base `#E5E7EB`, acento dorado oscuro `#766552`, fondo `#EFEBEB`, blanco y grises. El rosa sobre blanco tiene un contraste de 5.6:1 y el dorado oscuro, 5.6:1 (AA).
 - Sin `localStorage`: el estado del juego vive en memoria.
 
 ## Créditos

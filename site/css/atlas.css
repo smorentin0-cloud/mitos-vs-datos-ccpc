@@ -2,6 +2,7 @@
  * Pestaña «Atlas de la participación» de «Ver los datos».
  * Todo va con el prefijo at- para no chocar con los estilos del juego.
  * --at-encabezado lo pone atlas.js con el alto real de la barra.
+ * La escala del mapa (siete tonos de rosa INE) está en js/mapa.js.
  */
 :root { --at-encabezado: 4.25rem; }
 

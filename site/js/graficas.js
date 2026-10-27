@@ -5,7 +5,7 @@
  */
 const Graficas = (() => {
   const SVG = "http://www.w3.org/2000/svg";
-  const COLORES = { datos: "#2563EB", base: "#6B7280", acento: "#D97706", pista: "#E5E7EB" };
+  const COLORES = { datos: "#C31C78", base: "#6B7280", acento: "#766552", pista: "#E5E7EB" };
   const sinMovimiento = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   let contadorId = 0;
   // Factor del tamaño de letra elegido (1 = 16 px): la geometría crece con el texto.
@@ -216,7 +216,7 @@ const Graficas = (() => {
         texto(svg, x + col / 2, y(v) - 6, v.toFixed(1), { class: "valor aparece", "text-anchor": "middle" });
       });
     });
-    el("line", { x1: m.izq, x2: ancho - m.der, y1: y(0), y2: y(0), stroke: "#1F2937" }, svg);
+    el("line", { x1: m.izq, x2: ancho - m.der, y1: y(0), y2: y(0), stroke: "#1D1D1D" }, svg);
     return svg;
   }
 
@@ -267,7 +267,7 @@ const Graficas = (() => {
       const voto = i < si;
       el("rect", {
         x, y, width: lado, height: lado, rx: 2, fill: "#FFFFFF",
-        stroke: voto ? "#1F2937" : COLORES.base, "stroke-width": voto ? trazo * 0.8 : trazo * 0.6,
+        stroke: voto ? "#1D1D1D" : COLORES.base, "stroke-width": voto ? trazo * 0.8 : trazo * 0.6,
       }, svg);
       if (voto) {
         const m = lado * 0.24;
@@ -281,7 +281,7 @@ const Graficas = (() => {
     // Leyenda con texto: no depende del color.
     const yl = rejilla + altoLeyenda - 8 * k;
     const caja = 16 * k;
-    el("rect", { x: 0, y: yl - caja + 3, width: caja, height: caja, rx: 2, fill: "#FFFFFF", stroke: "#1F2937", "stroke-width": 2 }, svg);
+    el("rect", { x: 0, y: yl - caja + 3, width: caja, height: caja, rx: 2, fill: "#FFFFFF", stroke: "#1D1D1D", "stroke-width": 2 }, svg);
     el("path", { d: `M3,${yl - caja + 6} L${caja - 3},${yl} M${caja - 3},${yl - caja + 6} L3,${yl}`, stroke: COLORES.datos, "stroke-width": 2.5, fill: "none" }, svg);
     texto(svg, caja + 8, yl, TEXTOS.graficas.leyendaSi(si), { class: "etiqueta", "font-weight": 700 });
     const x2 = rejilla / 2 + 8;

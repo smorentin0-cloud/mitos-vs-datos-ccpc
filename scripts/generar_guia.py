@@ -95,8 +95,8 @@ PLANTILLA = """<!doctype html>
   <header class="barra">
     <a class="marca" href="./">
       <svg class="marca-icono" viewBox="0 0 28 28" aria-hidden="true">
-        <rect x="2" y="2" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#1F2937" stroke-width="2.5"/>
-        <path d="M8 8 L20 20 M20 8 L8 20" stroke="#2563EB" stroke-width="3.5" stroke-linecap="round"/>
+        <rect x="2" y="2" width="24" height="24" rx="3" fill="#FFFFFF" stroke="#1D1D1D" stroke-width="2.5"/>
+        <path d="M8 8 L20 20 M20 8 L8 20" stroke="#C31C78" stroke-width="3.5" stroke-linecap="round"/>
       </svg>
       <span>Mitos vs. Datos</span>
     </a>

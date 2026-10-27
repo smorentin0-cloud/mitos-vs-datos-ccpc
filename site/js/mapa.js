@@ -4,9 +4,9 @@
  */
 const Mapa = (() => {
   const NS = "http://www.w3.org/2000/svg";
-  // Escala fija para todos los años: así 2021 se ve más claro que 2024.
+  // Escala fija para todos los años (tonos del rosa INE): así 2021 se ve más claro que 2024.
   const CORTES = [45, 50, 55, 60, 65, 70];
-  const COLORES = ["#E4ECFC", "#C2D4FA", "#93B3F5", "#5E8DEF", "#2563EB", "#1E4BB8", "#1E3A7B"];
+  const COLORES = ["#FBE8F2", "#F4C3DD", "#E893C0", "#D9579D", "#C31C78", "#931C63", "#5C1240"];
   const sinMovimiento = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let svg, geo, atlas, porClave, vista, animacion;

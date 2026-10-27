@@ -24,11 +24,11 @@ IMG = RAIZ / "site" / "img"
 FUENTE = RAIZ / "scripts" / "recursos" / "Lexend[wght].ttf"
 URL_SITIO = "https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/"
 
-TINTA = "#1F2937"
+TINTA = "#1D1D1D"
 TINTA_SUAVE = "#4B5563"
-AZUL = "#2563EB"
-AMBAR = "#D97706"
-MESA = "#F3F4F6"
+AZUL = "#C31C78"
+AMBAR = "#766552"
+MESA = "#EFEBEB"
 PERFORADO = "#9CA3AF"
 
 
@@ -101,7 +101,7 @@ def codigo_qr() -> None:
 
 
 def icono(lado: int) -> None:
-    """Recuadro de boleta con la X azul, con margen para recortes redondos."""
+    """Recuadro de boleta con la X de color de marca (rosa INE), con margen para recortes redondos."""
     img = Image.new("RGB", (lado, lado), "white")
     d = ImageDraw.Draw(img)
     m = lado * 0.2

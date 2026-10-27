@@ -1,10 +1,10 @@
 /*
- * Atlas de la participación: gráficas SVG de la comparación: tu estado (azul) frente a México (gris).
+ * Atlas de la participación: gráficas SVG de la comparación: tu estado (rosa INE) frente a México (gris).
  * Son decorativas para el lector de pantalla: cada una tiene su tabla con los mismos datos.
  */
 const GraficasAtlas = (() => {
   const NS = "http://www.w3.org/2000/svg";
-  const C = { estado: "#2563EB", pais: "#6B7280", base: "#E5E7EB", tinta: "#1F2937", suave: "#4B5563" };
+  const C = { estado: "#C31C78", pais: "#6B7280", base: "#E5E7EB", tinta: "#1D1D1D", suave: "#4B5563" };
   const el = (tag, attrs = {}, padre) => {
     const n = document.createElementNS(NS, tag);
     Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
@@ -55,7 +55,7 @@ const GraficasAtlas = (() => {
     }
     anios.forEach((a, i) => {
       if (String(a) === String(anioActivo)) {
-        el("rect", { x: x(i) - 18 * k, y: m.arr - 8, width: 36 * k, height: alto - m.arr - m.aba + 8, fill: "#F3F4F6" }, svg);
+        el("rect", { x: x(i) - 18 * k, y: m.arr - 8, width: 36 * k, height: alto - m.arr - m.aba + 8, fill: "#EFEBEB" }, svg);
       }
       txt(svg, x(i), alto - 8 * k, a, { "text-anchor": "middle", class: "at-eje", "font-weight": String(a) === String(anioActivo) ? 700 : 400 });
     });
@@ -78,7 +78,7 @@ const GraficasAtlas = (() => {
       const y0 = i * fila;
       txt(svg, 0, y0 + grosor + 4 * k, c, { class: "at-cat" });
       [[estado[i], C.estado, 0], [pais[i], C.pais, grosor + hueco]].forEach(([v, col, dy]) => {
-        el("rect", { x: etq, y: y0 + dy, width: largo, height: grosor, fill: "#F3F4F6", rx: 2 }, svg);
+        el("rect", { x: etq, y: y0 + dy, width: largo, height: grosor, fill: "#EFEBEB", rx: 2 }, svg);
         if (v == null) {
           txt(svg, etq + 6, y0 + dy + grosor - 3 * k, TEXTOS.atlas.compara.sinDato, { class: "at-valor sin" });
           return;

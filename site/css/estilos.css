@@ -12,16 +12,19 @@
 
 /*
  * Identidad: la boleta y el cuadernillo de la lista nominal.
- * Paleta permitida: tinta #1F2937, marca/datos #2563EB, base #E5E7EB, sello #D97706, blanco y grises neutros.
+ * Paleta del INE (tomada de ine.mx): tinta #1D1D1D, marca/datos rosa #C31C78, base #E5E7EB,
+ * sello dorado oscuro #766552, blanco y grises neutros. El dorado claro del INE (#C5A989) no se usa:
+ * no llega al contraste AA sobre blanco.
+ * --azul y --ambar conservan su nombre histórico: hoy son el rosa y el dorado del INE.
  */
 :root {
-  --tinta: #1F2937;
+  --tinta: #1D1D1D;
   --tinta-suave: #4B5563;
-  --azul: #2563EB;
+  --azul: #C31C78;
   --base: #E5E7EB;
-  --ambar: #D97706;
+  --ambar: #766552;
   --papel: #FFFFFF;
-  --mesa: #F3F4F6;
+  --mesa: #EFEBEB;
   --perforado: #9CA3AF;
   --gris-graf: #6B7280;
   /* Escala de espacios: todo margen, relleno y separación sale de aquí. */
@@ -361,7 +364,7 @@ svg .aparece.inicio { opacity: 0; }
 }
 
 @media (prefers-contrast: more) {
-  :root { --tinta-suave: #1F2937; --perforado: #4B5563; }
+  :root { --tinta-suave: #1D1D1D; --perforado: #4B5563; }
 }
 
 @media (prefers-reduced-motion: reduce) {

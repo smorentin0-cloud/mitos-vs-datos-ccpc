@@ -1001,7 +1001,7 @@
     });
   }
 
-  // 10 x 10 casillas de boleta en el canvas, con X azul en las que votaron.
+  // 10 x 10 casillas de boleta en el canvas, con X de color de marca en las que votaron.
   function dibujarUnidades(ctx, x0, y0, lado, si, C) {
     const sep = 4;
     const celda = (lado - 9 * sep) / 10;
@@ -1038,9 +1038,9 @@
     const qr = await cargarImagen("img/qr.png");
     const total = estado.mitos.length;
     const anios = estado.datosPerfil.edad.anios;
-    const C = { tinta: "#1F2937", suave: "#4B5563", azul: "#2563EB", ambar: "#D97706", gris: "#6B7280", perf: "#9CA3AF" };
+    const C = { tinta: "#1D1D1D", suave: "#4B5563", azul: "#C31C78", ambar: "#766552", gris: "#6B7280", perf: "#9CA3AF" };
 
-    ctx.fillStyle = "#F3F4F6";
+    ctx.fillStyle = "#EFEBEB";
     ctx.fillRect(0, 0, W, H);
 
     // Hoja con talón perforado
