@@ -213,8 +213,57 @@ El proyecto es un **kit de educación cívica** listo para usarse en Juntas Loca
 - Respeta la preferencia de movimiento reducido y de alto contraste. Diseño mobile-first, sin frameworks ni paso de compilación.
 - **Sin internet y sin servicios externos:** la fuente Lexend está alojada en `site/fonts/` (licencia OFL) y un service worker (`site/sw.js`) guarda el sitio en el dispositivo después de la primera visita, así funciona sin conexión en talleres. El workflow de publicación cambia la versión de la caché en cada commit, así que las actualizaciones llegan solas.
 - **Peso:** la carga inicial es de unos 215 KB (código, fuentes y los datos nacionales). Los datos de cada estado se descargan solo si la persona lo elige: `personal.json` pesa unos 5 KB y `municipios.json` hasta 76 KB (Oaxaca). Con los datos de las 32 entidades, el sitio completo pesa unos 760 KB. Sin conexión funcionan el país y la demo de Colima; otros estados se guardan en cuanto se visitan con internet. La imagen de vista previa para redes (58 KB) solo la descargan WhatsApp y las redes sociales.
-- Paleta del INE, tomada de ine.mx y sin colores asociados a partidos: texto `#1D1D1D`, marca y datos rosa `#C31C78`, base `#E5E7EB`, acento dorado oscuro `#766552`, fondo `#EFEBEB`, blanco y grises. El rosa sobre blanco tiene un contraste de 5.6:1 y el dorado oscuro, 5.6:1 (AA).
+- Paleta del INE, sin colores asociados a partidos: ver [Paleta de colores](#paleta-de-colores).
 - Sin `localStorage`: el estado del juego vive en memoria.
+
+## Paleta de colores
+
+Colores tomados de las hojas de estilo de [ine.mx](https://ine.mx/) (no encontramos un manual de identidad publicado). Ninguno está asociado a un partido político. El contraste se mide contra el blanco `#FFFFFF` y contra el fondo `#EFEBEB`; AA pide 4.5:1 para texto y 3:1 para elementos gráficos.
+
+### Interfaz
+
+Variables de `site/css/estilos.css`. `--azul` y `--ambar` conservan su nombre de la paleta anterior, pero hoy son el rosa y el dorado del INE.
+
+| Color | Variable | Uso | Contraste (blanco / fondo) |
+|---|---|---|---|
+| `#C31C78` rosa INE | `--azul` | Botón principal, enlaces, X de la boleta, dato en las gráficas | 5.6:1 / 4.7:1 |
+| `#766552` dorado oscuro | `--ambar` | Sello del veredicto, foco del teclado, año del mapa, acentos de la mascota | 5.6:1 / 4.7:1 |
+| `#1D1D1D` tinta | `--tinta` | Texto, bordes de la boleta, botones seleccionados | 16.9:1 / 14.3:1 |
+| `#4B5563` tinta suave | `--tinta-suave` | Texto secundario, fuentes y notas | 7.6:1 / 6.4:1 |
+| `#6B7280` gris de gráficas | `--gris-graf` | Serie de comparación («México», «Hombres») | 4.8:1 / 4.1:1 |
+| `#9CA3AF` perforado | `--perforado` | Línea punteada de la boleta (decorativa) | 2.5:1 / 2.1:1 |
+| `#E5E7EB` base | `--base` | Rejillas, pistas de las barras, estados fuera de foco en el mapa | decorativo |
+| `#EFEBEB` fondo | `--mesa` | Fondo de la página | — |
+| `#FFFFFF` papel | `--papel` | Boleta, tarjetas y paneles | — |
+
+No usamos el dorado claro del INE `#C5A989` porque solo da 2.2:1 sobre blanco.
+
+### Gráficas
+
+| Gráfica | Colores | Archivo |
+|---|---|---|
+| Juego y «Explora los datos» | dato `#C31C78`, comparación `#6B7280`, acento `#766552`, pista `#E5E7EB` | `site/js/graficas.js` (`COLORES`) |
+| Atlas: tu estado frente al país | tu estado `#C31C78`, México `#6B7280` (línea punteada) | `site/js/atlas-graficas.js` |
+
+Nada depende solo del color: cada serie lleva su nombre o su valor escrito, la línea del país es punteada y cada gráfica tiene su tabla.
+
+### Mapa del atlas
+
+Escala fija de siete tonos del rosa INE, la misma para todos los años (así 2021 se ve más claro que 2024). Está en `site/js/mapa.js` (`CORTES` y `COLORES`). Las etiquetas del mapa llevan contorno blanco para leerse sobre cualquier tono.
+
+| Participación | Color |
+|---|---|
+| menos de 45% | `#FBE8F2` |
+| 45–50% | `#F4C3DD` |
+| 50–55% | `#E893C0` |
+| 55–60% | `#D9579D` |
+| 60–65% | `#C31C78` |
+| 65–70% | `#931C63` |
+| 70% o más | `#5C1240` |
+
+### Imágenes y archivos fuera del CSS
+
+Los mismos valores están escritos en `scripts/generar_imagenes.py` (vista previa, QR e íconos), `scripts/generar_guia.py`, `site/favicon.svg`, `site/manifest.webmanifest`, el ícono de `imprimible.html` y la tarjeta PNG que dibuja `site/js/juego.js`. Si cambia la paleta, hay que cambiarla en todos ellos y volver a ejecutar `python scripts/generar_imagenes.py` y `python scripts/generar_guia.py`.
 
 ## Créditos
 
