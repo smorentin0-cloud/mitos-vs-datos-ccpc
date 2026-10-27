@@ -12,6 +12,7 @@ const Voz = (() => {
   let elegidaPorPersona = false;
   let auto = false;
   let botonActivo = null;
+  const enEspanol = () => document.documentElement.lang.startsWith("es");
 
   // Mejor voz primero: español de México, luego de EE. UU., luego cualquier español;
   // dentro de cada idioma, las voces de mayor calidad que instalan algunos sistemas.
@@ -28,6 +29,8 @@ const Voz = (() => {
       .sort((a, b) => puntaje(a) - puntaje(b) || a.name.localeCompare(b.name));
     if (!elegidaPorPersona || !voces.includes(voz)) voz = voces[0] || null;
     // Sin voz local en español no se ofrece la lectura: el navegador usaría una voz en línea.
+    // Tampoco en náhuatl, maya o tseltal: no hay voces para esas lenguas y una voz en español las leería mal.
+    if (!enEspanol()) voz = null;
     document.documentElement.classList.toggle("sin-voz", !voz);
     pintarSelector();
   }

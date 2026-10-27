@@ -59,6 +59,12 @@ const TEXTOS = {
     sinDato: "Sin dato (muy pocas personas)",
     deCada100: (v) => (v == null ? "sin dato" : `${Math.round(v)} de cada 100`),
   },
+  // Aviso de las lenguas indígenas (js/lenguas.js). Va en español: es el texto revisado.
+  lenguas: {
+    titulo: (propio, nombre) => `${propio} (${nombre}): traducción preliminar. Leer el aviso`,
+    aviso: (nombre, variante) => `Esta traducción al ${nombre} (${variante}) la hizo una inteligencia artificial y todavía no la revisan personas hablantes: puede tener errores. Las explicaciones con cifras, la guía y la versión para imprimir siguen en español, y la lectura en voz alta no está disponible en esta lengua.`,
+    fuentes: "Elegimos náhuatl, maya y tseltal porque son las tres lenguas indígenas con más hablantes en México, según el Censo de Población y Vivienda 2020 del INEGI. Las cifras de participación son del INE, Conteos Censales de Participación Ciudadana 2009–2024.",
+  },
   metodo: {
     umbral: (n) => `No mostramos la cifra de un grupo (por ejemplo, una edad en un estado chico) cuando tiene menos de ${n.toLocaleString("es-MX")} personas en la lista nominal: con tan pocas personas el dato no es confiable. En esos casos verás «sin dato» o usamos un grupo más grande, y lo decimos.`,
   },
