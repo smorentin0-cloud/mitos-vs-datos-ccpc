@@ -624,6 +624,33 @@
     </section>
   </main>
 
+  <!-- Pregúntale a Boleta: botón flotante en todas las pantallas y ventana del chat (chat-motor.js) -->
+  <button id="chat-abrir" class="chat-flotante" lang="es" aria-haspopup="dialog" aria-controls="chat-panel">
+    <span id="chat-flotante-masc" class="chat-flotante-masc" aria-hidden="true"></span>
+    <span class="chat-flotante-texto">Pregúntale a Boleta</span>
+  </button>
+  <dialog id="chat-panel" class="chat-panel" lang="es" aria-labelledby="t-chat">
+    <div class="chat-cabeza">
+      <div id="masc-chat" class="masc-chat" aria-hidden="true"></div>
+      <div class="chat-titulos">
+        <h2 id="t-chat">Pregúntale a Boleta</h2>
+        <p class="chat-intro">Respondo con datos del INE de 2009 a 2024. Lo que escribes no se guarda ni se envía.</p>
+      </div>
+      <button id="chat-cerrar" class="chat-cerrar" aria-label="Cerrar el chat">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 L18 18 M18 6 L6 18"/></svg>
+      </button>
+    </div>
+    <div id="chat-log" class="chat-log" role="log" aria-label="Conversación con Boleta" tabindex="0"></div>
+    <div id="chat-sugerencias" class="chat-sugerencias" role="group" aria-label="Preguntas sugeridas"></div>
+    <form id="chat-form" class="chat-form" autocomplete="off">
+      <label for="chat-entrada" class="chat-etiqueta">Tu pregunta</label>
+      <div class="chat-fila">
+        <input id="chat-entrada" type="text" maxlength="200" enterkeyhint="send" placeholder="Por ejemplo: ¿cuánto votó Jalisco?">
+        <button class="boton primario" type="submit">Preguntar</button>
+      </div>
+    </form>
+    <button id="chat-escuchar" class="escuchar" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar la respuesta</span></button>
+  </dialog>
 
   <footer id="pie" class="pie">
     <p>Datos: <a href="https://ine.mx/transparencia/datos-abiertos/visualizacion-datos/conteos-censales-participacion/" rel="noopener">INE, Conteos Censales de Participación Ciudadana</a>. Por Agentes FIME.</p>
@@ -643,6 +670,8 @@
   <script src="js/caso.js"></script>
   <script src="js/voz.js"></script>
   <script src="js/mascota.js"></script>
+  <script src="js/chat-motor.js"></script>
+  <script src="js/chat.js"></script>
   <script src="js/juego.js"></script>
 </body>
 </html>

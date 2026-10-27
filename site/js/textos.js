@@ -63,7 +63,7 @@ const TEXTOS = {
   // Aviso de las lenguas indígenas (js/lenguas.js). Va en español: es el texto revisado.
   lenguas: {
     titulo: (propio, nombre) => `${propio} (${nombre}): traducción preliminar. Leer el aviso`,
-    aviso: (nombre, variante) => `Esta traducción al ${nombre} (${variante}) la hizo una inteligencia artificial y todavía no la revisan personas hablantes: puede tener errores. Las explicaciones con cifras, la guía y la versión para imprimir siguen en español, y la lectura en voz alta no está disponible en esta lengua.`,
+    aviso: (nombre, variante) => `Esta traducción al ${nombre} (${variante}) la hizo una inteligencia artificial y todavía no la revisan personas hablantes: puede tener errores. Las explicaciones con cifras, la guía y la versión para imprimir siguen en español, y la lectura en voz alta no está disponible en esta lengua. «Pregúntale a Boleta» por ahora solo entiende y responde en español.`,
     fuentes: "Elegimos náhuatl, maya y tseltal porque son las tres lenguas indígenas con más hablantes en México, según el Censo de Población y Vivienda 2020 del INEGI. Las cifras de participación son del INE, Conteos Censales de Participación Ciudadana 2009–2024.",
   },
   metodo: {
@@ -160,6 +160,33 @@ const TEXTOS = {
       nacional: "México",
       sinDato: "Sin datos suficientes",
     },
+  },
+  // «Pregúntale a Boleta». Las respuestas con cifras están en scripts/procesar_chat.py (chat.json).
+  chat: {
+    bienvenida: "¡Hola! Soy Boleta. Pregúntame cómo vota México: por estado, por edad, mujeres y hombres, el campo y la ciudad, o si una frase es mito o dato.",
+    vacio: "Escribe una pregunta o toca una de las sugerencias.",
+    noSe: "Todavía no sé responder eso. Prueba con alguna de estas preguntas:",
+    anioSinDatos: (anios, proxima) => `Solo tengo datos de las elecciones federales de ${anios}. La próxima es en ${proxima}.`,
+    pedir: { estado: "¿De qué estado?", otro: "¿Con qué otro estado lo comparo?" },
+    presidencial: "presidencial",
+    intermedia: "intermedia",
+    tipoEleccion: (t) => (t === "intermedia" ? "intermedia" : "presidencial"),
+    enEstado: (nombre) => `en ${nombre}`,
+    enPais: "en todo el país",
+    igualQue: (otro) => `lo mismo que${otro ? ` ${otro}` : ""}`,
+    puntosQue: (p, mas, otro) => `${p} ${mas ? "más" : "menos"} que${otro ? ` ${otro}` : ""}`,
+    votaronIgual: "votaron prácticamente igual",
+    votoMas: (quien, p) => `${quien} votó ${p} más`,
+    votaronMas: (quienes, p) => `${quienes} votaron ${p} más`,
+    lasMujeres: "las mujeres",
+    secciones: ["urbanas", "mixtas", "rurales"],
+    subio: (p) => `subió ${p}`,
+    bajo: (p) => `bajó ${p}`,
+    igual: "quedó prácticamente igual",
+    losHombres: "los hombres",
+    tu: "Tú",
+    boleta: "Boleta",
+    error: "No pude cargar mis datos. Recarga la página para intentarlo de nuevo.",
   },
   voz: {
     detener: "Detener",

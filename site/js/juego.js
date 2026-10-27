@@ -192,7 +192,7 @@
   }
 
   const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoPaso, mapa: () => Explorar.texto() };
-  document.querySelectorAll(".escuchar").forEach((b) =>
+  document.querySelectorAll(".escuchar[data-leer]").forEach((b) =>
     b.addEventListener("click", () => Voz.alternar(LECTURAS[b.dataset.leer](), b)));
 
   document.addEventListener("click", (e) => {

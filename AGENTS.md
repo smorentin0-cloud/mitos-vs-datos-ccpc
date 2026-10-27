@@ -66,6 +66,8 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 ├── scripts/
 │   ├── procesar.py           # agrega, valida y genera los JSON del sitio
 │   ├── procesar_atlas.py     # atlas: hallazgos por región (se detiene con HallazgoNoSostenido) y mapa
+│   ├── procesar_chat.py      # chatbot: intenciones y plantillas (se detiene con ChatNoValido)
+│   ├── probar_chat.js        # prueba del chatbot (Node), con docs/pruebas-chat.csv
 │   ├── generar_guia.py       # convierte la guía a site/guia.html
 │   ├── generar_imagenes.py   # vista previa para redes, QR e íconos
 │   └── recursos/             # Lexend TTF para las imágenes
@@ -88,8 +90,9 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/explorar.js        # pantalla Mapa: pestañas y «Explorar» (filtros, panel, buscador, tablas ordenables)
 │   ├── js/atlas.js           # pestaña «Recorrido por regiones»; carga atlas.json y mapa.json para las dos
 │   ├── js/mapa.js            # Mapa.crear(): mapa SVG con zoom, teclado (flechas) y escala de 5 tonos
+│   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM; botón flotante y ventana (dialog)
 │   ├── js/imprimible.js
-│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, entidad/<clave>/
+│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json, entidad/<clave>/
 │   └── fonts/, img/
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
 ```
@@ -104,6 +107,8 @@ python scripts/procesar.py                # regenera site/data/ desde el agregad
 python scripts/procesar.py --rehacer      # vuelve a leer los ZIP de data/raw/ (1 a 2 min)
 python scripts/procesar.py --entidad 24   # edición de San Luis Potosí (clave INE 1–32)
 python scripts/procesar_atlas.py          # atlas: site/data/atlas.json y mapa.json
+python scripts/procesar_chat.py           # chatbot: site/data/chat.json (después de procesar.py y procesar_atlas.py)
+node scripts/probar_chat.js               # prueba del chatbot; falla si una pregunta cae en otra intención
 python scripts/generar_guia.py            # tras editar docs/guia-facilitacion.md
 python -m http.server 8000 --directory site   # abrir http://localhost:8000
 ```
@@ -141,6 +146,8 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
   - Alturas (normal / A++): pregunta 844–1076 / 1070–1881 px; revelación 1785–2146 / 2900–3820 px; resultado 844–1054 / 962–1741 px. Un solo botón primario por pantalla, botones de al menos 44 px y sin scroll lateral en A, A+ y A++, en español, náhuatl, maya y tseltal.
   - Corregido: con A+ y A++ las tablas de «Ver los datos en una tabla» se cortaban a la derecha (`main` recorta lo que sobra); ahora se ponen guiones y los encabezados se parten. Voz no leía la nota de la gráfica en «Más contexto»; ya la lee.
   - Probado: reto desde la edición nacional, San Luis Potosí y Colima (el enlace solo lleva `entidad` y `reto`); modo salón con clic y teclado (→, ←, Esc); imprimible en las tres ediciones; «Para talleres»; «Explorar» y «Recorrido»; sin conexión con el servidor apagado (juego, perfil y mapa); festejo de la mascota con 4 de 8 y saludo con 3 de 8; Voz con voz local en pregunta, revelación y los 4 pasos del resultado.
+
+- «Pregúntale a Boleta» (rama `chatbot-boleta`): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la navegación inferior y la barra de «Siguiente pregunta», y no aparece en el modo salón). Solo entiende y responde en español, también con la página en náhuatl, maya o tseltal (la ventana lleva `lang="es"`). Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
 
 **En curso:**
 - Auditoría con axe de la versión actual (no se corrió en esta ronda: hace falta cargar axe-core).
