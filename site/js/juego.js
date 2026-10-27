@@ -57,6 +57,7 @@
     }
     if (id === "explora") Explora.abrir();
     else Explora.cerrar();
+    if (id === "chat") Chat.abrir();
     if (id === "cierre") Voz.anunciar(textoPantalla("cierre"));
   }
 
@@ -115,7 +116,7 @@
   }
 
   const LECTURAS = { pregunta: textoPregunta, explicacion: textoRevelacion, resultado: textoPaso };
-  document.querySelectorAll(".escuchar").forEach((b) =>
+  document.querySelectorAll(".escuchar[data-leer]").forEach((b) =>
     b.addEventListener("click", () => Voz.alternar(LECTURAS[b.dataset.leer](), b)));
 
   document.addEventListener("click", (e) => {

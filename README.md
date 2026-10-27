@@ -26,6 +26,7 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
 - **«Ver los datos»**, con dos pestañas:
   - **Explora los datos:** participación por edad y por estado, filtrable por año y estado.
   - **Atlas de la participación:** recorrido por el mapa de México que hace zoom del país a seis regiones, con un hallazgo verificado en cada una, y al final compara tu estado con el país por elección, edad, sexo y tipo de sección. Las regiones son una agrupación geográfica del equipo, no las circunscripciones. Límites estatales de [Natural Earth](https://www.naturalearthdata.com/) (dominio público).
+- **«Pregúntale a Boleta»:** chatbot sin inteligencia artificial generativa (sin LLM) ni servidor. Compara cada pregunta con preguntas de ejemplo y responde con la más parecida, tolerando faltas («chiwawa» → Chihuahua) y siguiendo la conversación («¿y en 2021?»). Responde con las mismas cifras del sitio; si no sabe, lo dice y sugiere preguntas. Lo que se escribe no se guarda ni se envía.
 - **«¿Cómo se calcula?»** plegado al pie de cada pantalla; el pie completo con créditos y licencia aparece en la portada y en «Ver los datos».
 - **Guía de facilitación** de una página: [`docs/guia-facilitacion.md`](docs/guia-facilitacion.md).
 
@@ -70,6 +71,8 @@ Requisitos: Python 3.10 o más reciente y pandas.
 pip install -r requirements.txt
 python scripts/procesar.py
 python scripts/procesar_atlas.py   # mapa y textos del atlas (site/data/atlas.json y mapa.json)
+python scripts/procesar_chat.py    # intenciones del chatbot (site/data/chat.json)
+node scripts/probar_chat.js        # prueba el chatbot con docs/pruebas-chat.csv (requiere Node)
 ```
 
 El repositorio incluye el agregado `data/processed/conteos_agregados.csv`, así que el comando anterior funciona sin los archivos crudos. Para rehacer todo desde cero:
@@ -143,10 +146,13 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │       └── hallazgos.md            # tabla de mitos, cifras y veredictos
 ├── data/fuentes/estados_natural_earth.geojson   # límites estatales para el mapa del atlas
 ├── docs/
-│   └── guia-facilitacion.md  # taller de 20 minutos
+│   ├── guia-facilitacion.md
+│   └── pruebas-chat.csv      # preguntas de prueba del chatbot con la intención esperada  # taller de 20 minutos
 ├── scripts/
 │   ├── procesar.py           # limpieza, agregación, validaciones y JSON del sitio (--entidad)
 │   ├── procesar_atlas.py     # atlas: cifras por región y estado, hallazgos verificados y mapa SVG
+│   ├── procesar_chat.py      # chatbot: intenciones, ejemplos, sinónimos y alias de estados (valida plantillas)
+│   ├── probar_chat.js        # prueba del chatbot con Node (preguntas y conversaciones)
 │   ├── generar_imagenes.py   # vista previa para redes, código QR e íconos
 │   └── recursos/             # Lexend en TTF (licencia OFL) para generar las imágenes
 ├── site/                     # sitio estático (HTML, CSS y JavaScript sin frameworks)
@@ -165,8 +171,10 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
 │   ├── js/atlas.js           # pestaña «Atlas de la participación»: recorrido y comparación
 │   ├── js/mapa.js / atlas-graficas.js   # mapa SVG con zoom y gráficas del atlas
+│   ├── js/chat-motor.js      # chatbot: normaliza, compara (TF-IDF + trigramas), saca datos y responde
+│   ├── js/chat.js            # pantalla «Pregúntale a Boleta»
 │   ├── js/imprimible.js      # arma las tarjetas para imprimir
-│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json y entidad/<clave>/ (mitos, personal, municipios)
+│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json y entidad/<clave>/ (mitos, personal, municipios)
 │   ├── fonts/                # Lexend 400 y 700 en woff2, con su licencia OFL
 │   └── img/                  # vista previa, código QR e íconos
 └── .github/workflows/pages.yml   # publicación en GitHub Pages

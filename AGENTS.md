@@ -66,6 +66,8 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 ├── scripts/
 │   ├── procesar.py           # agrega, valida y genera los JSON del sitio
 │   ├── procesar_atlas.py     # atlas: hallazgos por región (se detiene con HallazgoNoSostenido) y mapa
+│   ├── procesar_chat.py      # chatbot: intenciones y plantillas (se detiene con ChatNoValido)
+│   ├── probar_chat.js        # prueba del chatbot (Node), con docs/pruebas-chat.csv
 │   ├── generar_guia.py       # convierte la guía a site/guia.html
 │   ├── generar_imagenes.py   # vista previa para redes, QR e íconos
 │   └── recursos/             # Lexend TTF para las imágenes
@@ -86,8 +88,9 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/mascota.js         # mascota «Boleta» (SVG decorativo) y confeti
 │   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
 │   ├── js/atlas.js           # pestaña «Atlas de la participación» (mapa.js, atlas-graficas.js)
+│   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM y pantalla
 │   ├── js/imprimible.js
-│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, entidad/<clave>/
+│   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json, entidad/<clave>/
 │   └── fonts/, img/
 └── .github/workflows/pages.yml   # publicación en GitHub Pages
 ```
@@ -102,6 +105,8 @@ python scripts/procesar.py                # regenera site/data/ desde el agregad
 python scripts/procesar.py --rehacer      # vuelve a leer los ZIP de data/raw/ (1 a 2 min)
 python scripts/procesar.py --entidad 24   # edición de San Luis Potosí (clave INE 1–32)
 python scripts/procesar_atlas.py          # atlas: site/data/atlas.json y mapa.json
+python scripts/procesar_chat.py           # chatbot: site/data/chat.json (después de procesar.py y procesar_atlas.py)
+node scripts/probar_chat.js               # prueba del chatbot; falla si una pregunta cae en otra intención
 python scripts/generar_guia.py            # tras editar docs/guia-facilitacion.md
 python -m http.server 8000 --directory site   # abrir http://localhost:8000
 ```
@@ -134,6 +139,7 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 - «Y en tu caso…» visible: con perfil, la figura de la revelación abre en el dato de la persona. El municipio aparece solo en intermedias y tendencia (lo único que responde su participación total); la comparación la calcula `procesar.py` en `municipios.json`.
 
 **En curso:**
+- «Pregúntale a Boleta» (rama `chatbot-boleta`, por validar con el equipo): chatbot sin LLM por intenciones. Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
 - Verificación final de la ronda de saturación. Faltan:
   - medir alturas por pantalla (normal y A++), ya con la mascota;
   - probar el reto desde ambas ediciones, el modo salón, el imprimible, «Explora», «Para talleres» y sin conexión;

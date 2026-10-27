@@ -86,6 +86,7 @@
       </div>
       <p class="enlaces-portada">
         <button class="enlace-texto" data-ir="explora">Ver los datos</button>
+        <button class="enlace-texto" data-ir="chat">Pregúntale a Boleta</button>
         <button class="enlace-texto" data-ir="talleres">¿Das talleres? Modo salón e imprimible →</button>
       </p>
     </section>
@@ -543,6 +544,30 @@
         <button class="boton primario" data-ir="portada">Volver al inicio</button>
       </div>
     </section>
+    <!-- Pregúntale a Boleta: chatbot sin LLM (chat-motor.js) -->
+    <section id="chat" class="pantalla" aria-labelledby="t-chat" hidden>
+      <div class="chat-cabeza">
+        <div id="masc-chat" class="masc-chat" aria-hidden="true"></div>
+        <div>
+          <h2 id="t-chat">Pregúntale a Boleta</h2>
+          <p class="chat-intro">Respondo con datos del INE de las elecciones federales de 2009 a 2024. Lo que escribes no se guarda ni se envía: respondo aquí, en tu dispositivo.</p>
+        </div>
+      </div>
+      <div id="chat-log" class="chat-log" role="log" aria-label="Conversación con Boleta" tabindex="0"></div>
+      <div id="chat-sugerencias" class="chat-sugerencias" role="group" aria-label="Preguntas sugeridas"></div>
+      <form id="chat-form" class="chat-form" autocomplete="off">
+        <label for="chat-entrada" class="chat-etiqueta">Tu pregunta</label>
+        <div class="chat-fila">
+          <input id="chat-entrada" type="text" maxlength="200" enterkeyhint="send" placeholder="Por ejemplo: ¿cuánto votó Jalisco?">
+          <button class="boton primario" type="submit">Preguntar</button>
+        </div>
+      </form>
+      <p class="enlaces-portada en-linea">
+        <button id="chat-escuchar" class="escuchar" hidden><svg class="voz-icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="onda" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><span>Escuchar la respuesta</span></button>
+        <button class="enlace-texto" data-ir="portada">Volver al inicio</button>
+      </p>
+    </section>
+
     <details id="como-calcula" class="como-calcula" hidden>
       <summary>¿Cómo se calcula?</summary>
       <p id="nota-metodo-corta"></p>
@@ -569,6 +594,8 @@
   <script src="js/caso.js"></script>
   <script src="js/voz.js"></script>
   <script src="js/mascota.js"></script>
+  <script src="js/chat-motor.js"></script>
+  <script src="js/chat.js"></script>
   <script src="js/juego.js"></script>
 </body>
 </html>

@@ -1,0 +1,95 @@
+pregunta,esperada
+hola!,saludo
+Buen día,saludo
+qué onda boleta,saludo
+¿Qué cosas te puedo preguntar?,ayuda
+no sé qué preguntarte,ayuda
+¿Cuánta gente votó en México?,pais
+¿qué porcentaje de gente votó en 2012?,pais
+participación nacional 2021,pais
+cuantos fueron a votar en la ultima eleccion,pais
+¿Cuánto votó Jalisco?,estado
+participación de nuevo león en 2018,estado
+cuanto voto chiwawa,estado
+¿cómo votó la CDMX?,estado
+cuanto votaron en edomex en 2021,estado
+qué tanto vota Querétaro,estado
+participacion en san luis potosi,estado
+cuanto voto yucatán en 2009,estado
+¿cuánta gente votó en veracrus?,estado
+¿Qué estado votó más?,estado_mas
+cual es el estado que mas vota,estado_mas
+dónde votan más en 2015,estado_mas
+estado con más participación en 2021,estado_mas
+¿qué estado vota menos?,estado_menos
+dónde se vota menos en el país,estado_menos
+el estado con menor participación,estado_menos
+quien voto menos en 2018,estado_menos
+compara jalisco con nuevo leon,comparar
+¿quién vota más: Oaxaca o Chiapas?,comparar
+diferencia entre sonora y sinaloa,comparar
+puebla vs tlaxcala,comparar
+jalisco contra cdmx en 2012,comparar
+¿Cuánto votan los jóvenes?,edad
+participación por grupo de edad,edad
+qué edad vota más,edad
+como votan los abuelitos,edad
+¿los adultos mayores votan?,edad
+participacion de los jovenes en oaxaca,edad
+qué grupo de edad vota menos en 2021,edad
+¿Votan más las mujeres?,sexo
+cuantos hombres votaron,sexo
+participacion de mujeres en chiapas,sexo
+diferencia entre mujeres y hombres,sexo
+quien vota mas hombres o mujeres,sexo
+¿se vota más en el campo?,seccion
+participación en zonas rurales,seccion
+en la ciudad se vota mas o en el campo,seccion
+como votan en los pueblos,seccion
+urbano vs rural en jalisco,seccion
+¿cómo ha cambiado la participación?,historia
+participación en cada elección,historia
+ha bajado la participacion con los años,historia
+historia de la participación en sonora,historia
+¿qué es una elección intermedia?,tipos
+se vota más en las presidenciales,tipos
+diferencia entre presidencial e intermedia,tipos
+¿qué región vota más?,regiones
+cómo vota el norte del país,regiones
+participación por regiones,regiones
+¿cuándo es la próxima elección?,proxima
+cuando vuelve a haber elecciones,proxima
+cuándo puedo votar otra vez,proxima
+¿de dónde sacan los datos?,ccpc
+qué son los conteos censales,ccpc
+¿los datos son oficiales?,ccpc
+¿cómo se calcula la participación?,metodo
+por qué no coincide con el resultado oficial,metodo
+¿guardan lo que escribo?,privacidad
+¿es privado?,privacidad
+¿me están espiando?,privacidad
+¿cómo se juega?,como_jugar
+quiero jugar,como_jugar
+¿dónde me toca votar?,fuera_alcance
+como tramito mi credencial,fuera_alcance
+donde queda mi casilla,fuera_alcance
+¿quién va a ganar?,opinion
+¿por quién debo votar?,opinion
+que partido es el mejor,opinion
+gracias boleta,gracias
+adiós,gracias
+¿Es cierto que los hombres votan más que las mujeres?,mito:sexo
+los hombres votan mas que las mujeres?,mito:sexo
+en el campo se vota menos que en la ciudad?,mito:campo
+¿en las intermedias vota menos gente?,mito:intermedias
+¿a los 18 años se vota menos?,mito:primer-voto
+los de 18 votan menos que el promedio,mito:primer-voto
+¿Es verdad que los jóvenes no votan?,mito:jovenes
+los chavos no votan,mito:jovenes
+¿los de 60 a 69 son los que más votan?,mito:sesentas
+¿los de 85 o más votan menos?,mito:mayores
+la participación en las intermedias va bajando?,mito:tendencia
+¿cuál es la capital de Francia?,
+receta de pozole,
+asdfgh,
+me gusta el futbol,

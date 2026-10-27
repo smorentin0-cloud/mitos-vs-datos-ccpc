@@ -843,3 +843,34 @@ main:has(> #resultado:not([hidden])) { padding-top: var(--esp-4); }
 .pestana + .pestana { border-left: 2px solid var(--tinta); }
 .pestana[aria-selected="true"] { background: var(--tinta); color: var(--papel); }
 @media (min-width: 40rem) { .pestanas { display: inline-flex; } .pestana { flex: none; padding: var(--esp-2) var(--esp-4); } }
+
+/* ---------------------------------------------------------------- «Pregúntale a Boleta» */
+.chat-cabeza { display: flex; align-items: flex-start; gap: var(--esp-3); margin: 0 0 var(--esp-4); }
+.chat-cabeza h2 { margin-bottom: var(--esp-2); }
+.masc-chat { flex: none; width: 4.5rem; }
+.chat-intro { margin: 0; font-size: 1rem; color: var(--tinta-suave); }
+/* El único contenedor con borde de la pantalla: la conversación. */
+.chat-log {
+  display: flex; flex-direction: column; gap: var(--esp-2);
+  min-height: 10rem; max-height: min(28rem, 55vh); overflow-y: auto;
+  padding: var(--esp-3); background: var(--papel); border: 2px solid var(--tinta); border-radius: 6px;
+}
+.chat-msg { max-width: 85%; padding: var(--esp-2) var(--esp-3); border-radius: 6px; font-size: 1.0625rem; line-height: 1.5; overflow-wrap: anywhere; }
+.chat-bot { align-self: flex-start; background: var(--mesa); color: var(--tinta); }
+.chat-tu { align-self: flex-end; background: var(--tinta); color: var(--papel); }
+.chat-sugerencias { display: flex; flex-wrap: wrap; gap: var(--esp-2); margin: var(--esp-3) 0 0; }
+.chat-sugerencia {
+  min-height: 44px; padding: var(--esp-1) var(--esp-3); text-align: left;
+  font: inherit; font-size: 1rem; font-weight: 700; color: var(--azul);
+  background: var(--papel); border: 2px solid var(--azul); border-radius: 999px; cursor: pointer;
+}
+.chat-sugerencia:hover { background: var(--mesa); }
+.chat-form { margin: var(--esp-4) 0 0; }
+.chat-etiqueta { display: block; font-weight: 700; margin: 0 0 var(--esp-1); }
+.chat-fila { display: flex; flex-wrap: wrap; gap: var(--esp-2); }
+.chat-fila input {
+  flex: 1 1 12rem; min-width: 0; min-height: 3.5rem; padding: 0 var(--esp-3);
+  font: inherit; color: var(--tinta); background: var(--papel); border: 2px solid var(--tinta); border-radius: 4px;
+}
+.chat-fila .boton { flex: none; margin: 0; }
+#chat .enlaces-portada { margin-top: var(--esp-3); align-items: center; }
