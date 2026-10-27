@@ -26,7 +26,7 @@
   --papel: #FFFFFF;
   --mesa: #EFEBEB;
   --perforado: #9CA3AF;
-  --gris-graf: #6B7280;
+  --gris-graf: #5E6573;
   /* Escala de espacios: todo margen, relleno y separación sale de aquí. */
   --esp-1: 0.25rem;
   --esp-2: 0.5rem;
@@ -843,3 +843,76 @@ main:has(> #resultado:not([hidden])) { padding-top: var(--esp-4); }
 .pestana + .pestana { border-left: 2px solid var(--tinta); }
 .pestana[aria-selected="true"] { background: var(--tinta); color: var(--papel); }
 @media (min-width: 40rem) { .pestanas { display: inline-flex; } .pestana { flex: none; padding: var(--esp-2) var(--esp-4); } }
+
+/* ---------------------------------------------------------------- navegación: Inicio · Juego · Mapa · Cómo se calcula */
+/* Tamaño fijo, como el resto del encabezado: no crece con A+/A++ para que siempre quepa. */
+:root { --nav-alto: 0px; }
+.nav-principal { display: flex; }
+.nav-principal a {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  min-width: 44px; min-height: 48px; padding: 4px 8px;
+  font: 700 13px/1.15 var(--fuente); color: var(--tinta); text-decoration: none; text-align: center;
+  border-radius: 4px;
+}
+.nav-principal svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.nav-principal a:hover { background: var(--mesa); }
+.nav-principal a[aria-current="page"] { color: var(--azul); box-shadow: inset 0 -4px 0 var(--azul); }
+.modo-salon .nav-principal { display: none; }
+
+/* Celular y tableta: barra inferior fija. */
+@media (max-width: 51.99rem) {
+  :root { --nav-alto: calc(68px + env(safe-area-inset-bottom)); }
+  .nav-principal {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; height: var(--nav-alto);
+    justify-content: space-around; gap: 2px;
+    padding: 4px 4px env(safe-area-inset-bottom);
+    background: var(--papel); border-top: 2px solid var(--tinta);
+  }
+  .nav-principal a { flex: 1 1 0; min-width: 0; }
+  .nav-principal a[aria-current="page"] { box-shadow: inset 0 4px 0 var(--azul); }
+  body:not(.modo-salon) { padding-bottom: var(--nav-alto); }
+  body:not(.modo-salon) .acciones-fijas { bottom: var(--nav-alto); }
+  html { scroll-padding-bottom: calc(6rem + var(--nav-alto)); }
+}
+/* Escritorio: en la barra superior, entre la marca y «Aa». */
+@media (min-width: 52rem) {
+  .nav-principal { order: 2; gap: var(--esp-1); margin-left: auto; }
+  .nav-principal a { flex-direction: row; gap: 6px; font-size: 15px; padding: 4px 12px; }
+  .barra .lectura { order: 3; }
+}
+
+/* ---------------------------------------------------------------- portada: dos puertas con el mismo peso */
+.puertas { list-style: none; margin: 0 0 var(--esp-4); padding: 0; display: grid; gap: var(--esp-3); }
+@media (min-width: 40rem) { .puertas { grid-template-columns: 1fr 1fr; gap: var(--esp-4); } }
+.puertas li { display: flex; }
+.puerta {
+  flex: 1; display: grid; grid-template-columns: auto 1fr; grid-template-areas: "icono titulo" "icono texto" "icono tiempo";
+  align-items: start; gap: 0 var(--esp-3); min-height: 44px; padding: var(--esp-4);
+  font: inherit; text-align: left; color: var(--tinta);
+  background: var(--papel); border: 3px solid var(--tinta); border-radius: 6px; cursor: pointer;
+  box-shadow: 4px 4px 0 var(--azul);
+}
+.puerta:hover { box-shadow: 6px 6px 0 var(--azul); transform: translate(-1px, -1px); }
+.puerta:active { box-shadow: 2px 2px 0 var(--azul); transform: translate(1px, 1px); }
+.puerta-icono { grid-area: icono; width: 3rem; height: 3rem; fill: none; stroke: var(--tinta); stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.puerta-icono .puerta-x { stroke: var(--azul); stroke-width: 4; }
+.puerta-titulo { grid-area: titulo; font-size: 1.25rem; font-weight: 700; line-height: 1.25; }
+.puerta-texto { grid-area: texto; margin-top: var(--esp-1); font-size: 1rem; line-height: 1.4; }
+.puerta-tiempo { grid-area: tiempo; margin-top: var(--esp-2); font-size: 0.9375rem; font-weight: 700; color: var(--tinta-suave); }
+@media (min-width: 40rem) {
+  .puerta { grid-template-columns: 1fr; grid-template-areas: "icono" "titulo" "texto" "tiempo"; gap: var(--esp-2); padding: var(--esp-5); }
+  .puerta-titulo { font-size: 1.5rem; }
+}
+@media (prefers-reduced-motion: reduce) { .puerta:hover, .puerta:active { transform: none; } }
+
+/* ---------------------------------------------------------------- enlaces entre el juego y el mapa */
+.ver-en-mapa { margin: var(--esp-4) 0 0; }
+.modo-salon .ver-en-mapa { display: none; }
+.invita-mapa { margin: var(--esp-4) 0 0; }
+
+/* ---------------------------------------------------------------- cómo se calcula */
+#metodo h3 { margin-top: var(--esp-5); }
+#metodo p { max-width: 38rem; }
+
+/* Sin voces locales en español: no se ofrece la voz (las voces en línea enviarían el texto fuera). */
+.sin-voz .escuchar, .sin-voz .voz-btn, .sin-voz .voz-aviso, .sin-voz .voz-campo { display: none !important; }

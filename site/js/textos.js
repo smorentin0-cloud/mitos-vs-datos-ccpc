@@ -50,12 +50,69 @@ const TEXTOS = {
     fuente: (anio) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${anio}.`,
     error: "No se pudieron cargar los datos. Recarga la página para intentarlo de nuevo.",
   },
-  // Pestaña «Atlas de la participación» de «Ver los datos». Los textos de cada paso de la historia
+  // Pestaña «Recorrido por regiones» del mapa. Los textos de cada paso de la historia
   // vienen de atlas.json, generados por scripts/procesar_atlas.py con las cifras calculadas.
+  // Leyenda y nombres de los mapas (Recorrido y Explorar).
+  mapa: {
+    leyenda: (desde, hasta) => (hasta == null ? `${desde} o más` : desde == null ? `menos de ${hasta}` : `${desde} a ${hasta}`),
+    tituloLeyenda: "De cada 100 personas, votaron:",
+    sinDato: "Sin dato (muy pocas personas)",
+    deCada100: (v) => (v == null ? "sin dato" : `${Math.round(v)} de cada 100`),
+  },
+  metodo: {
+    umbral: (n) => `No mostramos la cifra de un grupo (por ejemplo, una edad en un estado chico) cuando tiene menos de ${n.toLocaleString("es-MX")} personas en la lista nominal: con tan pocas personas el dato no es confiable. En esos casos verás «sin dato» o usamos un grupo más grande, y lo decimos.`,
+  },
+  // Pestaña «Explorar» del mapa.
+  explorar: {
+    ver: { total: "Todas las personas", edad: "Por edad", sexo: "Mujeres y hombres", seccion: "Campo y ciudad" },
+    grupos: {
+      edad: { "18": "18 años (primer voto)", "18–29": "18 a 29 años", "30–44": "30 a 44 años", "45–59": "45 a 59 años", "60–69": "60 a 69 años", "70–84": "70 a 84 años", "85 y más": "85 años o más" },
+      sexo: { Mujeres: "Mujeres", Hombres: "Hombres" },
+      seccion: { Urbana: "Secciones urbanas", Mixta: "Secciones mixtas", Rural: "Secciones rurales" },
+    },
+    // A quién se refiere la cifra, dentro de una frase: «votaron 46 de cada 100 personas de 18 a 29 años».
+    quien: {
+      total: "personas",
+      edad: { "18": "personas de 18 años", "18–29": "personas de 18 a 29 años", "30–44": "personas de 30 a 44 años", "45–59": "personas de 45 a 59 años", "60–69": "personas de 60 a 69 años", "70–84": "personas de 70 a 84 años", "85 y más": "personas de 85 años o más" },
+      sexo: { Mujeres: "mujeres", Hombres: "hombres" },
+      seccion: { Urbana: "personas en secciones urbanas", Mixta: "personas en secciones mixtas", Rural: "personas en secciones rurales" },
+    },
+    anio: (a, presidencial) => `${a} (${presidencial ? "presidencial" : "intermedia"})`,
+    titulo: (quien, anio) => `De cada 100 ${quien}, cuántas votaron en ${anio}`,
+    estadoNombre: (nombre, v, dif) => `${nombre}: ${TEXTOS.mapa.deCada100(v)}${v == null ? "" : dif === 0 ? ", igual que el país" : `, ${Math.abs(dif)} ${dif > 0 ? "más" : "menos"} que el país`}`,
+    frase: (lugar, v, quien, anio, n, ref) => {
+      const dif = Math.round(v) - Math.round(n);
+      const comp = dif === 0 ? `Es lo mismo que el promedio ${ref} (${Math.round(n)}).`
+        : `Son ${Math.abs(dif)} ${dif > 0 ? "más" : "menos"} que el promedio ${ref} (${Math.round(n)}).`;
+      return `En ${anio} votaron ${Math.round(v)} de cada 100 ${quien} en ${lugar}. ${comp}`;
+    },
+    lugar: (n, total) => `Quedó en el lugar ${n} de ${total} estados.`,
+    sinDato: (lugar) => `En ${lugar} hay muy pocas personas de este grupo en la lista nominal para dar un dato confiable.`,
+    soloTotal: "Por municipio solo hay datos de todas las personas, no por edad, sexo ni tipo de sección.",
+    munSinDato: (mun) => `${mun} tiene muy pocas personas en la lista nominal, o no existía en ese año, para dar un dato confiable.`,
+    tituloSerie: (quien, desde, hasta) => `De cada 100 ${quien}, cuántas votaron de ${desde} a ${hasta}`,
+    pais: "el país",
+    delPais: "del país",
+    colEstado: "Estado",
+    colMunicipio: "Municipio",
+    colValor: "De cada 100",
+    colDif: "Diferencia",
+    colDifCon: (ref) => `Diferencia con ${ref}`,
+    ordenar: (col) => `Ordenar por ${col.toLowerCase()}`,
+    tablaEstados: "Ver todos los estados en una tabla",
+    tablaMunicipios: (estado) => `Ver los municipios de ${estado} en una tabla`,
+    fuente: (anio) => `Fuente: INE, Conteos Censales de Participación Ciudadana, ${anio}.`,
+    copiado: "Enlace copiado. Lleva esta misma vista del mapa.",
+    copiaManual: (url) => `Copia este enlace: ${url}`,
+    miEstado: (nombre) => `Ver mi estado (${nombre})`,
+    miEdad: "Ver mi grupo de edad",
+    municipio: { visibles: (n) => `${n} municipios en la lista.`, ninguno: "Ningún municipio coincide." },
+  },
   atlas: {
     pct: (v) => (v == null ? "sin dato" : `${v.toFixed(1)}%`),
     puntos: (v) => `${Math.abs(v).toFixed(1)} ${Math.abs(v).toFixed(1) === "1.0" ? "punto" : "puntos"}`,
     error: "No se pudo cargar el mapa. Recarga la página para intentarlo de nuevo.",
+    escuchar: "Escuchar",
 
     mapa: {
       tituloPais: "Participación por estado",
@@ -66,7 +123,6 @@ const TEXTOS = {
       listaEstados: (filas) => filas.map(([n, v]) => `${n}: ${v == null ? "sin dato" : v.toFixed(1) + "%"}`).join("; ") + ".",
       // Nombres cortos para que las etiquetas del centro del país quepan.
       corto: { 9: "CDMX", 15: "Edomex" },
-      leyenda: (desde, hasta) => (hasta == null ? `${desde}% o más` : desde == null ? `menos de ${hasta}%` : `${desde}–${hasta}%`),
     },
 
     pasos: {
@@ -90,7 +146,7 @@ const TEXTOS = {
       tituloSexo: (anio) => `Mujeres y hombres, ${anio}`,
       tituloSeccion: (anio) => `Por tipo de sección, ${anio}`,
       fraseEdad: (estado, grupo, dif) =>
-        `La mayor diferencia con el país está en las personas de ${grupo} años: en ${estado} votaron ${TEXTOS.atlas.puntos(dif)} ${dif > 0 ? "más" : "menos"}.`,
+        `La mayor diferencia con el país está en las personas de ${TEXTOS.perfil.grupoLegible(grupo)}: en ${estado} votaron ${TEXTOS.atlas.puntos(dif)} ${dif > 0 ? "más" : "menos"}.`,
       colGrupo: "Grupo",
       colAnio: "Elección",
       nacional: "México",
@@ -122,7 +178,9 @@ const TEXTOS = {
       `de ${desde} en ${x0} a ${hasta} en ${x1}; mínimo de ${min} en ${xMin} y máximo de ${max} en ${xMax}`,
   },
   portada: {
-    entrada: (n) => `Todo mundo repite frases sobre quién vota. Aquí hay ${n}: marca si son ciertas o falsas y los datos del INE te dirán la respuesta.`,
+    titulo: (lugar) => `¿Quién vota en ${lugar}?`,
+    // Las dos puertas: el juego y el mapa, con el mismo peso.
+    juego: (n) => `Pon a prueba lo que crees: ${n} frases, ¿cierto o falso?`,
     edicion: (lugar) => `Edición ${lugar}: solo frases que se cumplen con los datos de este estado.`,
     sinEdicion: 'Todavía no hay una versión para ese estado; estás jugando la versión de todo el país.',
   },

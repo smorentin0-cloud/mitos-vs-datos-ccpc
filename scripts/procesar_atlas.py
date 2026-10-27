@@ -57,8 +57,10 @@ REGIONES = [
     ("golfo", "Golfo y Península", [30, 27, 4, 31, 23]),
 ]
 
-GRUPOS_EDAD = [("18–24", 18, 24), ("25–34", 25, 34), ("35–44", 35, 44), ("45–54", 45, 54),
-               ("55–64", 55, 64), ("65–74", 65, 74), ("75 y más", 75, 200)]
+# Los mismos cortes que los mitos del juego: 18 a 29 (jóvenes), 60 a 69 (sesentas) y 85 y más (mayores).
+# Los 18 años (primer voto) van aparte en "edad_18" porque se traslapan con 18 a 29.
+GRUPOS_EDAD = [("18–29", 18, 29), ("30–44", 30, 44), ("45–59", 45, 59), ("60–69", 60, 69),
+               ("70–84", 70, 84), ("85 y más", 85, 200)]
 JOVENES, MAYORES = (18, 29), (65, 200)
 SEXOS = {1: "Mujeres", 0: "Hombres"}
 TIPOS_SECCION = {"U": "Urbana", "M": "Mixta", "R": "Rural"}
@@ -117,6 +119,7 @@ def detalle(df: pd.DataFrame) -> dict:
         sec = participacion(a, ["TIPOSEC"])
         salida[str(anio)] = {
             "edad": edad,
+            "edad_18": r1(participacion(edad_en(a, 18, 18).assign(K=0), ["K"]).get(0)),
             "sexo": [r1(sexo.get(k)) for k in SEXOS],
             "seccion": [r1(sec.get(k)) for k in TIPOS_SECCION],
         }

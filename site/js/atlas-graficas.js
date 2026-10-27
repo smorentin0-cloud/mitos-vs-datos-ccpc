@@ -1,10 +1,10 @@
 /*
- * Atlas de la participación: gráficas SVG de la comparación: tu estado (rosa INE) frente a México (gris).
+ * Gráficas SVG del mapa: tu estado o municipio (rosa INE) frente a la referencia, México o el estado (gris).
  * Son decorativas para el lector de pantalla: cada una tiene su tabla con los mismos datos.
  */
 const GraficasAtlas = (() => {
   const NS = "http://www.w3.org/2000/svg";
-  const C = { estado: "#C31C78", pais: "#6B7280", base: "#E5E7EB", tinta: "#1D1D1D", suave: "#4B5563" };
+  const C = { estado: "#C31C78", pais: "#5E6573", base: "#E5E7EB", tinta: "#1D1D1D", suave: "#4B5563" };
   const el = (tag, attrs = {}, padre) => {
     const n = document.createElementNS(NS, tag);
     Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
@@ -39,7 +39,7 @@ const GraficasAtlas = (() => {
   }
 
   // Línea: participación por elección, con el año elegido marcado.
-  function historia(contenedor, { anios, estado, pais, nombre, anioActivo }) {
+  function historia(contenedor, { anios, estado, pais, nombre, nombreRef = TEXTOS.atlas.compara.nacional, anioActivo }) {
     const k = escala();
     const alto = 240 * k;
     const { svg, ancho } = lienzo(contenedor, alto);
@@ -64,7 +64,7 @@ const GraficasAtlas = (() => {
       el("polyline", { points: pts.join(" "), fill: "none", stroke: col, "stroke-width": 3 * k, "stroke-dasharray": guiones, "stroke-linejoin": "round" }, svg);
       serie.forEach((v, i) => v != null && el("circle", { cx: x(i), cy: y(v), r: 4 * k, fill: "#fff", stroke: col, "stroke-width": 2.5 * k }, svg));
     });
-    leyenda(contenedor, [[nombre, C.estado, true], [TEXTOS.atlas.compara.nacional, C.pais, true]]);
+    leyenda(contenedor, [[nombre, C.estado, true], [nombreRef, C.pais, true]]);
   }
 
   // Barras pareadas por categoría: estado arriba, país abajo, con el valor escrito.

@@ -23,10 +23,12 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
 - **Versión por estado** con un solo comando, con demo principal de San Luis Potosí y demo de Colima.
 - **Funciona sin conexión** después de la primera visita y no usa servicios externos.
 - **Opciones de lectura** en el botón «Aa» del encabezado: lectura en voz alta, elección de voz (solo voces instaladas en el dispositivo) y tamaño de letra (A, A+, A++). Gráficas con tabla de datos. Mientras suena la voz, la mascota mueve la boca.
-- **«Ver los datos»**, con dos pestañas:
-  - **Explora los datos:** participación por edad y por estado, filtrable por año y estado.
-  - **Atlas de la participación:** recorrido por el mapa de México que hace zoom del país a seis regiones, con un hallazgo verificado en cada una, y al final compara tu estado con el país por elección, edad, sexo y tipo de sección. Las regiones son una agrupación geográfica del equipo, no las circunscripciones. Límites estatales de [Natural Earth](https://www.naturalearthdata.com/) (dominio público).
-- **«¿Cómo se calcula?»** plegado al pie de cada pantalla; el pie completo con créditos y licencia aparece en la portada y en «Ver los datos».
+- **Dos puertas con el mismo peso:** el juego («Pon a prueba lo que crees») y el mapa («Explora tu territorio»), con navegación Inicio · Juego · Mapa · Cómo se calcula. Cada sección tiene su dirección (`#inicio`, `#juego`, `#mapa`, `#metodo`) y el botón Atrás funciona.
+- **Mapa**, con dos pestañas:
+  - **Explorar:** elige la elección, qué ver (todas las personas, por edad, mujeres y hombres, campo y ciudad) y el grupo. Al tocar un estado, o elegirlo en la lista, un panel dice el dato en una frase («En 2024 votaron 46 de cada 100 personas de 18 a 29 años en Colima. Son 3 menos que el promedio del país…»), su evolución de 2009 a 2024 y su lugar entre los estados. El buscador de municipio compara el municipio con su estado. Todo se puede hacer sin el mapa: lista de estados, buscador y tablas ordenables. Con teclado, las flechas recorren los estados y Enter elige. La dirección guarda la vista (`#mapa?anio=2024&ver=edad&grupo=18–29`); el estado solo entra si la persona pulsa «Copiar enlace a esta vista».
+  - **Recorrido por regiones:** el mapa hace zoom del país a seis regiones, con un hallazgo verificado en cada una, y al final compara tu estado con el país por elección, edad, sexo y tipo de sección. Las regiones son una agrupación geográfica del equipo, no las circunscripciones. Límites estatales de [Natural Earth](https://www.naturalearthdata.com/) (dominio público).
+- **Juego y mapa conectados:** cada respuesta tiene «Ver esto en el mapa» (abre el mapa con el indicador de la frase y, si la diste, tu edad o tu estado, sin ponerlos en la URL); el panel del mapa invita a «Ponte a prueba»; el resultado invita a explorar tu estado.
+- **«Cómo se calcula»**, una sola pantalla para el juego y el mapa: fórmula, fuente, umbral de celdas pequeñas y privacidad.
 - **Guía de facilitación** de una página: [`docs/guia-facilitacion.md`](docs/guia-facilitacion.md).
 
 ## Mensaje central y público
@@ -150,7 +152,7 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── generar_imagenes.py   # vista previa para redes, código QR e íconos
 │   └── recursos/             # Lexend en TTF (licencia OFL) para generar las imágenes
 ├── site/                     # sitio estático (HTML, CSS y JavaScript sin frameworks)
-│   ├── index.html            # juego, modo salón, resultado, cierre y «Ver los datos»
+│   ├── index.html            # portada, juego, modo salón, resultado, cierre, Mapa y Cómo se calcula
 │   ├── imprimible.html       # tarjetas para imprimir
 │   ├── sw.js                 # service worker: funciona sin conexión
 │   ├── manifest.webmanifest
@@ -162,9 +164,9 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── js/personal.js        # carga de datos por estado y respaldo edad → grupo → país
 │   ├── js/caso.js            # «Y en tu caso…» de cada mito
 │   ├── js/voz.js             # lectura en voz alta
-│   ├── js/explora.js         # «Ver los datos»: pestañas y «Explora los datos»
-│   ├── js/atlas.js           # pestaña «Atlas de la participación»: recorrido y comparación
-│   ├── js/mapa.js / atlas-graficas.js   # mapa SVG con zoom y gráficas del atlas
+│   ├── js/explorar.js        # pantalla Mapa: pestañas y «Explorar» (filtros, panel, municipio, tablas)
+│   ├── js/atlas.js           # pestaña «Recorrido por regiones»: recorrido y comparación
+│   ├── js/mapa.js / atlas-graficas.js   # Mapa.crear() (zoom, teclado, escala) y gráficas del mapa
 │   ├── js/imprimible.js      # arma las tarjetas para imprimir
 │   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json y entidad/<clave>/ (mitos, personal, municipios)
 │   ├── fonts/                # Lexend 400 y 700 en woff2, con su licencia OFL
@@ -230,7 +232,7 @@ Variables de `site/css/estilos.css`. `--azul` y `--ambar` conservan su nombre de
 | `#766552` dorado oscuro | `--ambar` | Sello del veredicto, foco del teclado, año del mapa, acentos de la mascota | 5.6:1 / 4.7:1 |
 | `#1D1D1D` tinta | `--tinta` | Texto, bordes de la boleta, botones seleccionados | 16.9:1 / 14.3:1 |
 | `#4B5563` tinta suave | `--tinta-suave` | Texto secundario, fuentes y notas | 7.6:1 / 6.4:1 |
-| `#6B7280` gris de gráficas | `--gris-graf` | Serie de comparación («México», «Hombres») | 4.8:1 / 4.1:1 |
+| `#5E6573` gris de gráficas | `--gris-graf` | Serie de comparación («México», «Hombres») | 5.9:1 / 5.0:1 |
 | `#9CA3AF` perforado | `--perforado` | Línea punteada de la boleta (decorativa) | 2.5:1 / 2.1:1 |
 | `#E5E7EB` base | `--base` | Rejillas, pistas de las barras, estados fuera de foco en el mapa | decorativo |
 | `#EFEBEB` fondo | `--mesa` | Fondo de la página | — |
@@ -242,14 +244,14 @@ No usamos el dorado claro del INE `#C5A989` porque solo da 2.2:1 sobre blanco.
 
 | Gráfica | Colores | Archivo |
 |---|---|---|
-| Juego y «Explora los datos» | dato `#C31C78`, comparación `#6B7280`, acento `#766552`, pista `#E5E7EB` | `site/js/graficas.js` (`COLORES`) |
-| Atlas: tu estado frente al país | tu estado `#C31C78`, México `#6B7280` (línea punteada) | `site/js/atlas-graficas.js` |
+| Juego | dato `#C31C78`, comparación `#5E6573`, acento `#766552`, pista `#E5E7EB` | `site/js/graficas.js` (`COLORES`) |
+| Mapa: tu estado o municipio frente a la referencia | tu estado `#C31C78`, México o el estado `#5E6573` (línea punteada) | `site/js/atlas-graficas.js` |
 
 Nada depende solo del color: cada serie lleva su nombre o su valor escrito, la línea del país es punteada y cada gráfica tiene su tabla.
 
-### Mapa del atlas
+### Mapas
 
-Escala fija de siete tonos del rosa INE, la misma para todos los años (así 2021 se ve más claro que 2024). Está en `site/js/mapa.js` (`CORTES` y `COLORES`). Las etiquetas del mapa llevan contorno blanco para leerse sobre cualquier tono.
+Cinco tonos del rosa INE con pasos de claridad parecidos (`#FCE7F2`, `#F0A6CB`, `#D9579D`, `#A3195F`, `#5C1240`) y trama de rayas para «sin dato»; la leyenda va en «de cada 100». Los cortes son enteros entre el percentil 10 y el 90 de los valores: el Recorrido usa todos los años (así 2021 se ve más claro que 2024) y Explorar el año elegido. Está en `site/js/mapa.js` (`COLORES` y `escala`). Las etiquetas del mapa llevan contorno blanco para leerse sobre cualquier tono.
 
 | Participación | Color |
 |---|---|
