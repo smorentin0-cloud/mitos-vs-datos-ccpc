@@ -137,12 +137,13 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
 
 - **Lenguas indígenas (borrador, rama `lenguas-indigenas`):** selector en «Aa» con náhuatl, maya y tseltal, las tres con más hablantes (INEGI, Censo 2020). Traducción preliminar hecha con IA, **sin revisar por hablantes**; la página lo avisa siempre. Traduce portada, navegación, instrucciones, perfil, las 8 frases y sus explicaciones, «Y en tu caso…», el resultado, el mapa y el recorrido (rama `lenguas-completas`; si una cifra no coincide con la plantilla, ese texto se queda en español); la guía y el imprimible siguen en español; Voz se apaga en esas lenguas. Antes de usarla con comunidades debe revisarla una persona hablante de cada lengua.
 
+- **Verificación final** (27 oct. 2026, a 390 px, recorriendo el juego completo con un script en el navegador):
+  - Alturas (normal / A++): pregunta 844–1076 / 1070–1881 px; revelación 1785–2146 / 2900–3820 px; resultado 844–1054 / 962–1741 px. Un solo botón primario por pantalla, botones de al menos 44 px y sin scroll lateral en A, A+ y A++, en español, náhuatl, maya y tseltal.
+  - Corregido: con A+ y A++ las tablas de «Ver los datos en una tabla» se cortaban a la derecha (`main` recorta lo que sobra); ahora se ponen guiones y los encabezados se parten. Voz no leía la nota de la gráfica en «Más contexto»; ya la lee.
+  - Probado: reto desde la edición nacional, San Luis Potosí y Colima (el enlace solo lleva `entidad` y `reto`); modo salón con clic y teclado (→, ←, Esc); imprimible en las tres ediciones; «Para talleres»; «Explorar» y «Recorrido»; sin conexión con el servidor apagado (juego, perfil y mapa); festejo de la mascota con 4 de 8 y saludo con 3 de 8; Voz con voz local en pregunta, revelación y los 4 pasos del resultado.
+
 **En curso:**
-- Verificación final de la ronda de saturación. Faltan:
-  - medir alturas por pantalla (normal y A++), ya con la mascota;
-  - probar el reto desde ambas ediciones, el modo salón, el imprimible, «Explora», «Para talleres» y sin conexión;
-  - con la mascota: el festejo con la mitad o más de aciertos, el modo salón, Voz y teclado;
-  - auditoría con axe.
+- Auditoría con axe de la versión actual (no se corrió en esta ronda: hace falta cargar axe-core).
 - Entregables fuera del repositorio (sección 9).
 
 ## 8. Ideas de mejora para explorar

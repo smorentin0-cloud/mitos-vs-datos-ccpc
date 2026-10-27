@@ -301,6 +301,9 @@ main:focus { outline: none; }
 .g-tabla table { border-collapse: collapse; width: 100%; font-size: 1rem; margin-top: var(--esp-2); }
 .g-tabla th, .g-tabla td { text-align: left; padding: 0.375rem var(--esp-2); border-bottom: 1px solid var(--base); }
 .g-tabla td.num, .g-tabla th.num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Con A+ y A++ las tablas no caben a 390 px: la palabra se parte antes que cortarse (main recorta lo que sobra). */
+main th, main td { hyphens: auto; }
+main thead th { overflow-wrap: anywhere; }
 
 .leyenda { display: flex; flex-wrap: wrap; gap: 1.25rem; margin: 0 0 var(--esp-3); padding: 0; list-style: none; font-size: 1rem; }
 .leyenda li { display: flex; align-items: center; gap: var(--esp-2); }
