@@ -397,7 +397,8 @@
     if (m.id === "sesentas") return { quien: E.de60a69, real: datos.estimar[anio]["60_69"], lugar, anio };
     if (m.id === "jovenes") {
       const edadEleccion = perfil.edad != null ? Personal.edadEn(perfil.edad, Number(anio)) : null;
-      if (edadEleccion != null && edadEleccion >= 18 && !estado.salon) {
+      // Solo dentro del rango joven; fuera de él, su edad no dice nada sobre el mito.
+      if (edadEleccion != null && Personal.esJoven(edadEleccion) && !estado.salon) {
         const res = Personal.participacionEdad(datos, perfil.pais || estado.personalAmbito, anio, edadEleccion);
         if (res.nivel === "edad") return { quien: E.deTuEdad(edadEleccion, anio), real: res.valor, lugar, anio };
       }

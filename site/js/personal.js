@@ -30,6 +30,10 @@ const Personal = (() => {
   // Edad aproximada en una elección pasada, a partir de la edad de hoy.
   const edadEn = (edad, anio) => edad - (anioActual() - anio);
 
+  // Rango del mito «Los jóvenes no votan» (el mismo 18_29 de procesar.py): solo dentro de él se usa la edad de la persona.
+  const EDAD_JOVEN = { min: 18, max: 29 };
+  const esJoven = (edad) => edad >= EDAD_JOVEN.min && edad <= EDAD_JOVEN.max;
+
   function indiceEdad(p, edad) {
     return Math.min(edad, 85) - 18; // las edades van de 18 a 84 y al final «85+»
   }
@@ -66,5 +70,5 @@ const Personal = (() => {
     return anio;
   }
 
-  return { cargar, cargarMunicipios, anioActual, edadEn, participacionEdad, eleccionesVividas, primeraEleccion, indiceGrupo };
+  return { cargar, cargarMunicipios, anioActual, edadEn, esJoven, participacionEdad, eleccionesVividas, primeraEleccion, indiceGrupo };
 })();
