@@ -97,7 +97,11 @@ const TEXTOS = {
       sinDato: "Sin datos suficientes",
     },
   },
-  voz: { detener: "Detener" },
+  voz: {
+    detener: "Detener",
+    muestra: "Así suena esta voz.",
+    regiones: { MX: "México", US: "Estados Unidos", ES: "España", AR: "Argentina", CO: "Colombia", CL: "Chile", PE: "Perú", "419": "Latinoamérica" },
+  },
   lectura: {
     boton: "Opciones de lectura",
     botonConVoz: "Opciones de lectura (voz activada)",

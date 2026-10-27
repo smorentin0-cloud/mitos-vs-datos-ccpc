@@ -2,6 +2,7 @@
  * «Boleta», la mascota del juego: una boleta con cara, dibujada en SVG sin imágenes externas.
  * Es decorativa (aria-hidden): toda la información sigue en el texto de cada pantalla.
  * Expresiones: saluda, piensa, celebra, sorpresa. Los colores salen de las variables de estilos.css.
+ * Mientras suena la voz (clase .voz-hablando que pone voz.js), la boca .m-boca-habla se abre y se cierra.
  */
 const Mascota = (() => {
   const mano = (x, y) => `<circle class="m-mano" cx="${x}" cy="${y}" r="3.2"/>`;
@@ -12,7 +13,7 @@ const Mascota = (() => {
       brazos: `<path class="m-linea" d="M23 58 Q13 66 15 75"/>${mano(15, 77)}
         <g class="m-brazo-saluda"><path class="m-linea" d="M77 56 Q89 48 87 35"/>${mano(87, 32)}</g>`,
       cara: `<circle class="m-tinta" cx="41" cy="40" r="3.4"/><circle class="m-tinta" cx="59" cy="40" r="3.4"/>
-        <path class="m-linea" d="M42 50 Q50 57 58 50"/>`,
+        <path class="m-linea m-boca" d="M42 50 Q50 57 58 50"/>`,
       casilla: marca,
       extra: "",
     },
@@ -20,7 +21,7 @@ const Mascota = (() => {
       brazos: `<path class="m-linea" d="M23 58 Q13 66 15 75"/>${mano(15, 77)}
         <path class="m-linea" d="M77 58 Q90 55 85 45"/>${mano(84, 43)}`,
       cara: `<circle class="m-tinta" cx="43" cy="38" r="3"/><circle class="m-tinta" cx="61" cy="38" r="3"/>
-        <path class="m-linea" d="M45 52 L56 50"/>`,
+        <path class="m-linea m-boca" d="M45 52 L56 50"/>`,
       casilla: "",
       extra: '<g class="m-signo"><path class="m-ambar" d="M81 8 Q81 2 87 2 Q93 2 93 8 Q93 12 87 14 L87 17"/><circle class="m-ambar-relleno" cx="87" cy="22" r="1.9"/></g>',
     },
@@ -28,7 +29,7 @@ const Mascota = (() => {
       brazos: `<path class="m-linea" d="M23 54 Q11 42 13 29"/>${mano(13, 26)}
         <path class="m-linea" d="M77 54 Q89 42 87 29"/>${mano(87, 26)}`,
       cara: `<path class="m-linea" d="M36 42 Q41 35 46 42"/><path class="m-linea" d="M54 42 Q59 35 64 42"/>
-        <path class="m-tinta" d="M41 49 Q50 61 59 49 Z"/>`,
+        <path class="m-tinta m-boca" d="M41 49 Q50 61 59 49 Z"/>`,
       casilla: marca,
       extra: '<path class="m-ambar m-chispa" d="M6 8 V18 M1 13 H11"/><path class="m-ambar m-chispa" d="M94 4 V14 M89 9 H99"/>',
     },
@@ -37,7 +38,7 @@ const Mascota = (() => {
         <path class="m-linea" d="M77 56 Q89 54 92 45"/>${mano(93, 42)}`,
       cara: `<path class="m-linea" d="M36 30 Q41 27 46 30"/><path class="m-linea" d="M54 30 Q59 27 64 30"/>
         <circle class="m-tinta" cx="41" cy="40" r="4.2"/><circle class="m-tinta" cx="59" cy="40" r="4.2"/>
-        <ellipse class="m-tinta" cx="50" cy="53" rx="3.6" ry="4.6"/>`,
+        <ellipse class="m-tinta m-boca" cx="50" cy="53" rx="3.6" ry="4.6"/>`,
       casilla: "",
       extra: '<path class="m-ambar" d="M88 2 V13"/><circle class="m-ambar-relleno" cx="88" cy="19" r="1.9"/>',
     },
@@ -52,6 +53,7 @@ const Mascota = (() => {
       <rect class="m-cuerpo" x="22" y="12" width="56" height="74" rx="5"/>
       <path class="m-perforado" d="M27 21 H73"/>
       ${e.cara}
+      <ellipse class="m-boca-habla" cx="50" cy="52" rx="5.5" ry="4"/>
       <rect class="m-casilla" x="40" y="62" width="20" height="17" rx="2"/>
       ${e.casilla}
       ${e.extra}
