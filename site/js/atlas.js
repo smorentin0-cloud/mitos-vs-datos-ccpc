@@ -175,11 +175,14 @@ const Atlas = (() => {
       ["sexo", atlas.sexos, T.compara.tituloSexo(a)],
       ["seccion", atlas.secciones, T.compara.tituloSeccion(a)],
     ];
+    // Las categorías son claves (las usan los filtros); se muestran con su nombre en la lengua de la página.
+    const nombreDe = (k, c) => (TEXTOS.explorar.grupos[k] || {})[c] || c;
     bloques.forEach(([k, cats, titulo], i) => {
+      const nombres = cats.map((c) => nombreDe(k, c));
       $(`#a-g${i + 2}-t`).textContent = titulo;
-      GraficasAtlas.pares($(`#a-g-${k}`), { categorias: cats, estado: de[k], pais: dn[k], nombre: e.nombre });
+      GraficasAtlas.pares($(`#a-g-${k}`), { categorias: nombres, estado: de[k], pais: dn[k], nombre: e.nombre });
       GraficasAtlas.tabla($(`#a-t-${k}`), [T.compara.colGrupo, e.nombre, T.compara.nacional],
-        cats.map((c, j) => [c, T.pct(de[k][j]), T.pct(dn[k][j])]));
+        nombres.map((c, j) => [c, T.pct(de[k][j]), T.pct(dn[k][j])]));
     });
 
     // La mayor diferencia por edad, calculada con los mismos datos de la gráfica.
@@ -207,7 +210,7 @@ const Atlas = (() => {
         fetch("data/atlas.json").then((r) => r.json()),
         fetch("data/mapa.json").then((r) => r.json()),
       ]).then(([a, g]) => {
-        atlas = a;
+        atlas = Lengua.atlas(a);
         geo = g;
         porClave = Object.fromEntries(atlas.estados.map((e) => [e.clave, e]));
         presidencial = (x) => atlas.presidenciales.includes(Number(x));
