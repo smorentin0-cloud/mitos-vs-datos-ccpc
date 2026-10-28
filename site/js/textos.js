@@ -63,7 +63,7 @@ const TEXTOS = {
   // Aviso de las lenguas indígenas (js/lenguas.js). Va en español: es el texto revisado.
   lenguas: {
     titulo: (propio, nombre) => `${propio} (${nombre}): traducción preliminar. Leer el aviso`,
-    aviso: (nombre, variante) => `Esta traducción al ${nombre} (${variante}) la hizo una inteligencia artificial y todavía no la revisan personas hablantes: puede tener errores. Las explicaciones con cifras, la guía y la versión para imprimir siguen en español, y la lectura en voz alta no está disponible en esta lengua. «Pregúntale a Boleta» por ahora solo entiende y responde en español.`,
+    aviso: (nombre, variante) => `Esta traducción al ${nombre} (${variante}) la hizo una inteligencia artificial y todavía no la revisan personas hablantes: puede tener errores. Las explicaciones con cifras, la guía y la versión para imprimir siguen en español, y la lectura en voz alta no está disponible en esta lengua.`,
     fuentes: "Elegimos náhuatl, maya y tseltal porque son las tres lenguas indígenas con más hablantes en México, según el Censo de Población y Vivienda 2020 del INEGI. Las cifras de participación son del INE, Conteos Censales de Participación Ciudadana 2009–2024.",
   },
   metodo: {
@@ -187,6 +187,8 @@ const TEXTOS = {
     tu: "Tú",
     boleta: "Boleta",
     error: "No pude cargar mis datos. Recarga la página para intentarlo de nuevo.",
+    // En náhuatl, maya o tseltal (chat-lenguas.js). Va en español: es el texto revisado.
+    avisoLengua: "Borrador hecho con inteligencia artificial, sin revisar por hablantes. También entiendo español.",
   },
   voz: {
     detener: "Detener",

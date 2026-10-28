@@ -3,6 +3,8 @@
  * del chat sobre lo que se esté haciendo, sin perder el avance del juego. Conversación con chat-motor.js.
  * La conversación vive solo en la página (en memoria y en el DOM): no se guarda ni se envía.
  * Con ?entidad=<clave>, el estado de esa edición queda como contexto inicial.
+ * Con ?lengua=nah|yua|tzh, la ventana y las respuestas van en esa lengua (chat-lenguas.js, borrador) y
+ * Boleta entiende también preguntas en español; una respuesta sin traducir se marca con lang="es".
  */
 const Chat = (() => {
   const $ = (s) => document.querySelector(s);
@@ -11,38 +13,66 @@ const Chat = (() => {
   let ctx = null;
   let carga = null;
   let ultima = "";
+  const lengua = ChatLenguas[Lengua.clave] || null;
+
+  // Textos fijos de la ventana en la lengua elegida; en español se quedan los de index.html.
+  function traducirVentana() {
+    if (!lengua) return;
+    const u = lengua.ui;
+    [$("#chat-abrir"), $("#chat-panel")].forEach((n) => { n.lang = Lengua.clave; });
+    $(".chat-flotante-texto").textContent = u.boton;
+    $("#t-chat").textContent = u.titulo;
+    $(".chat-intro").textContent = u.intro;
+    $(".chat-etiqueta").textContent = u.etiqueta;
+    $("#chat-entrada").placeholder = u.placeholder;
+    $("#chat-form [type=submit]").textContent = u.preguntar;
+    $("#chat-escuchar span").textContent = u.escuchar;
+    $("#chat-cerrar").setAttribute("aria-label", u.cerrar);
+    $("#chat-log").setAttribute("aria-label", u.conversacion);
+    $("#chat-sugerencias").setAttribute("aria-label", u.sugeridas);
+    const aviso = $("#chat-aviso-lengua");
+    aviso.textContent = T.avisoLengua;
+    aviso.hidden = false;
+  }
+  traducirVentana();
 
   async function cargar() {
     const [chat, atlas, mitos] = await Promise.all(
       ["data/chat.json", "data/atlas.json", "data/mitos.json"].map((u) => fetch(u).then((r) => r.json())),
     );
-    motor = ChatMotor.crear({ chat, atlas, mitos, textos: TEXTOS });
+    // Frases de los mitos y fecha de la próxima elección ya en la lengua de la página (js/lenguas.js).
+    const mitosLengua = { ...mitos, niveles: mitos.niveles.map((n) => ({ ...n, mitos: n.mitos.map(Lengua.mito) })),
+      proxima_eleccion: { ...mitos.proxima_eleccion, fecha: Lengua.fecha(mitos.proxima_eleccion.fecha) } };
+    motor = ChatMotor.crear({ chat, atlas, mitos: mitosLengua, textos: TEXTOS, lengua });
     ctx = motor.nuevoContexto(Datos.entidad && atlas.estados.some((e) => e.clave === Datos.entidad) ? Datos.entidad : null);
     Mascota.poner($("#masc-chat"), "saluda");
     decir(motor.inicio());
   }
 
   // Un mensaje en la conversación. Siempre con textContent: lo que escribe la persona nunca se interpreta como HTML.
-  function mensaje(quien, texto) {
+  function mensaje(quien, texto, lang) {
     const div = document.createElement("div");
     div.className = `chat-msg chat-${quien}`;
+    if (lang) div.lang = lang;
     const autor = document.createElement("span");
     autor.className = "sr";
-    autor.textContent = `${quien === "tu" ? T.tu : T.boleta}: `;
+    const nombres = { ...T, ...(lengua ? lengua.textos : {}) };
+    autor.textContent = `${quien === "tu" ? nombres.tu : nombres.boleta}: `;
     div.append(autor, texto);
     $("#chat-log").appendChild(div);
     $("#chat-log").scrollTop = $("#chat-log").scrollHeight;
   }
 
-  function decir({ texto, sugerencias = [] }) {
-    mensaje("bot", texto);
+  function decir({ texto, sugerencias = [], lang }) {
+    mensaje("bot", texto, lang);
     ultima = texto;
     $("#chat-sugerencias").replaceChildren(...sugerencias.map((s) => {
       const b = document.createElement("button");
       b.type = "button";
       b.className = "chat-sugerencia";
       b.textContent = s;
-      b.addEventListener("click", () => preguntar(s));
+      // El botón desaparece al cambiar las sugerencias: el foco vuelve al campo de la pregunta.
+      b.addEventListener("click", () => { preguntar(s); $("#chat-entrada").focus(); });
       return b;
     }));
     Voz.anunciar(texto);
@@ -76,7 +106,7 @@ const Chat = (() => {
       await carga;
     } catch {
       carga = null;
-      mensaje("bot", T.error);
+      mensaje("bot", lengua ? lengua.textos.error : T.error);
     }
     $("#chat-entrada").focus();
   }

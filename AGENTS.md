@@ -67,7 +67,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── procesar.py           # agrega, valida y genera los JSON del sitio
 │   ├── procesar_atlas.py     # atlas: hallazgos por región (se detiene con HallazgoNoSostenido) y mapa
 │   ├── procesar_chat.py      # chatbot: intenciones y plantillas (se detiene con ChatNoValido)
-│   ├── probar_chat.js        # prueba del chatbot (Node), con docs/pruebas-chat.csv
+│   ├── probar_chat.js        # prueba del chatbot (Node), con docs/pruebas-chat.csv y pruebas-chat-lenguas.csv
 │   ├── generar_guia.py       # convierte la guía a site/guia.html
 │   ├── generar_imagenes.py   # vista previa para redes, QR e íconos
 │   └── recursos/             # Lexend TTF para las imágenes
@@ -91,6 +91,7 @@ Ejemplo fuerte para la presentación: en **Colima**, 4 de los 8 mitos nacionales
 │   ├── js/atlas.js           # pestaña «Recorrido por regiones»; carga atlas.json y mapa.json para las dos
 │   ├── js/mapa.js            # Mapa.crear(): mapa SVG con zoom, teclado (flechas) y escala de 5 tonos
 │   ├── js/chat-motor.js / chat.js   # «Pregúntale a Boleta»: motor sin DOM; botón flotante y ventana (dialog)
+│   ├── js/chat-lenguas.js    # el chatbot en náhuatl, maya y tseltal (BORRADOR sin revisar por hablantes)
 │   ├── js/imprimible.js
 │   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json, entidad/<clave>/
 │   └── fonts/, img/
@@ -147,7 +148,7 @@ Si un mito deja de sostenerse, el script se detiene y explica por qué con cifra
   - Corregido: con A+ y A++ las tablas de «Ver los datos en una tabla» se cortaban a la derecha (`main` recorta lo que sobra); ahora se ponen guiones y los encabezados se parten. Voz no leía la nota de la gráfica en «Más contexto»; ya la lee.
   - Probado: reto desde la edición nacional, San Luis Potosí y Colima (el enlace solo lleva `entidad` y `reto`); modo salón con clic y teclado (→, ←, Esc); imprimible en las tres ediciones; «Para talleres»; «Explorar» y «Recorrido»; sin conexión con el servidor apagado (juego, perfil y mapa); festejo de la mascota con 4 de 8 y saludo con 3 de 8; Voz con voz local en pregunta, revelación y los 4 pasos del resultado.
 
-- «Pregúntale a Boleta» (rama `chatbot-boleta`): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la navegación inferior y la barra de «Siguiente pregunta», y no aparece en el modo salón). Solo entiende y responde en español, también con la página en náhuatl, maya o tseltal (la ventana lleva `lang="es"`). Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
+- «Pregúntale a Boleta» (rama `chatbot-boleta`): chatbot sin LLM por intenciones, en un botón flotante abajo a la izquierda que abre una ventana modal (se sube sobre la navegación inferior y la barra de «Siguiente pregunta», y no aparece en el modo salón). En náhuatl, maya o tseltal (rama `chatbot-lenguas`, `site/js/chat-lenguas.js`, borrador con IA como `lenguas.js`) la ventana y las respuestas van en esa lengua y entiende preguntas en esa lengua y en español; una respuesta sin plantilla traducida sale en español con `lang="es"`. Para mejorarlo, lo más útil es que hablantes agreguen preguntas de ejemplo como las escribiría la gente. Para mejorar una respuesta, agrega preguntas de ejemplo o sinónimos en `procesar_chat.py` y una fila en `docs/pruebas-chat.csv`; nunca escribas cifras en las plantillas, solo `{datos}` que calcula `chat-motor.js` con `atlas.json` y `mitos.json`.
 
 **En curso:**
 - Auditoría con axe de la versión actual (no se corrió en esta ronda: hace falta cargar axe-core).

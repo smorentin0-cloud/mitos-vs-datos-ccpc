@@ -29,7 +29,7 @@ Proyecto para el hackatón del INE **«Hackea la participación: Datos que const
   - **Recorrido por regiones:** el mapa hace zoom del país a seis regiones, con un hallazgo verificado en cada una, y al final compara tu estado con el país por elección, edad, sexo y tipo de sección. Las regiones son una agrupación geográfica del equipo, no las circunscripciones. Límites estatales de [Natural Earth](https://www.naturalearthdata.com/) (dominio público).
 - **Juego y mapa conectados:** cada respuesta tiene «Ver esto en el mapa» (abre el mapa con el indicador de la frase y, si la diste, tu edad o tu estado, sin ponerlos en la URL); el panel del mapa invita a «Ponte a prueba»; el resultado invita a explorar tu estado.
 - **Lenguas indígenas (borrador):** en el botón «Aa» se puede elegir náhuatl, maya o tseltal, las tres lenguas indígenas con más hablantes en México (INEGI, Censo de Población y Vivienda 2020). Es una traducción preliminar hecha con inteligencia artificial y todavía no la revisan hablantes; la página lo avisa siempre. Traduce el juego (también las explicaciones con cifras), el mapa y el recorrido por regiones; la guía y el imprimible siguen en español y la voz se apaga en esas lenguas. Textos en `site/js/lenguas.js`.
-- **«Pregúntale a Boleta»:** botón flotante abajo a la izquierda, en todas las pantallas (menos el modo salón), que abre el chat sobre lo que se esté haciendo sin perder el avance del juego. Es un chatbot sin inteligencia artificial generativa (sin LLM) ni servidor. Compara cada pregunta con preguntas de ejemplo y responde con la más parecida, tolerando faltas («chiwawa» → Chihuahua) y siguiendo la conversación («¿y en 2021?»). Responde con las mismas cifras del sitio; si no sabe, lo dice y sugiere preguntas. Lo que se escribe no se guarda ni se envía. Por ahora solo entiende y responde en español, también cuando la página está en náhuatl, maya o tseltal.
+- **«Pregúntale a Boleta»:** botón flotante abajo a la izquierda, en todas las pantallas (menos el modo salón), que abre el chat sobre lo que se esté haciendo sin perder el avance del juego. Es un chatbot sin inteligencia artificial generativa (sin LLM) ni servidor. Compara cada pregunta con preguntas de ejemplo y responde con la más parecida, tolerando faltas («chiwawa» → Chihuahua) y siguiendo la conversación («¿y en 2021?»). Responde con las mismas cifras del sitio; si no sabe, lo dice y sugiere preguntas. Lo que se escribe no se guarda ni se envía. Con la página en náhuatl, maya o tseltal, la ventana y las respuestas van en esa lengua (borrador hecho con IA, como el resto de la traducción) y entiende preguntas en esa lengua y en español.
 - **«Cómo se calcula»**, una sola pantalla para el juego y el mapa: fórmula, fuente, umbral de celdas pequeñas y privacidad.
 - **Guía de facilitación** de una página: [`docs/guia-facilitacion.md`](docs/guia-facilitacion.md).
 
@@ -75,7 +75,7 @@ pip install -r requirements.txt
 python scripts/procesar.py
 python scripts/procesar_atlas.py   # mapa y textos del atlas (site/data/atlas.json y mapa.json)
 python scripts/procesar_chat.py    # intenciones del chatbot (site/data/chat.json)
-node scripts/probar_chat.js        # prueba el chatbot con docs/pruebas-chat.csv (requiere Node)
+node scripts/probar_chat.js        # prueba el chatbot con docs/pruebas-chat.csv y pruebas-chat-lenguas.csv (requiere Node)
 ```
 
 El repositorio incluye el agregado `data/processed/conteos_agregados.csv`, así que el comando anterior funciona sin los archivos crudos. Para rehacer todo desde cero:
@@ -155,7 +155,7 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── procesar.py           # limpieza, agregación, validaciones y JSON del sitio (--entidad)
 │   ├── procesar_atlas.py     # atlas: cifras por región y estado, hallazgos verificados y mapa SVG
 │   ├── procesar_chat.py      # chatbot: intenciones, ejemplos, sinónimos y alias de estados (valida plantillas)
-│   ├── probar_chat.js        # prueba del chatbot con Node (preguntas y conversaciones)
+│   ├── probar_chat.js        # prueba del chatbot con Node (preguntas, conversaciones y las tres lenguas)
 │   ├── generar_imagenes.py   # vista previa para redes, código QR e íconos
 │   └── recursos/             # Lexend en TTF (licencia OFL) para generar las imágenes
 ├── site/                     # sitio estático (HTML, CSS y JavaScript sin frameworks)
@@ -176,6 +176,7 @@ https://smorentin0-cloud.github.io/mitos-vs-datos-ccpc/?entidad=14
 │   ├── js/mapa.js / atlas-graficas.js   # Mapa.crear() (zoom, teclado, escala) y gráficas del mapa
 │   ├── js/chat-motor.js      # chatbot: normaliza, compara (TF-IDF + trigramas), saca datos y responde
 │   ├── js/chat.js            # botón flotante y ventana «Pregúntale a Boleta»
+│   ├── js/chat-lenguas.js    # chatbot en náhuatl, maya y tseltal (borrador): ventana, respuestas y preguntas de ejemplo
 │   ├── js/imprimible.js      # arma las tarjetas para imprimir
 │   ├── data/                 # mitos.json, explora.json, entidades.json, atlas.json, mapa.json, chat.json y entidad/<clave>/ (mitos, personal, municipios)
 │   ├── fonts/                # Lexend 400 y 700 en woff2, con su licencia OFL
