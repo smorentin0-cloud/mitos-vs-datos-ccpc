@@ -24,6 +24,7 @@ Los registros NS (no especificados) se excluyen del cálculo.
 
 import argparse
 import json
+import sys
 import zipfile
 from collections import Counter
 from pathlib import Path
@@ -1075,6 +1076,8 @@ def main() -> None:
     parser.add_argument("--entidad", type=int, choices=sorted(ENTIDADES), metavar="CLAVE",
                         help="genera el juego con datos de un solo estado (clave INE de 1 a 32)")
     args = parser.parse_args()
+    # En Windows, con la salida redirigida, Python usa cp1252 y no puede escribir «→».
+    sys.stdout.reconfigure(encoding="utf-8")
 
     df = preparar(cargar(args.rehacer))
     if args.entidad:
