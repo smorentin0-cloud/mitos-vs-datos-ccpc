@@ -6,6 +6,9 @@
  * 1. Cada pregunta de docs/pruebas-chat.csv debe caer en su intención esperada
  *    (vacía = el bot debe decir que no sabe).
  * 2. Conversaciones de varias preguntas: el contexto («¿y en 2021?», «¿de qué estado?»).
+ * 3. Ninguna respuesta con huecos ni «undefined».
+ * 4. Náhuatl, maya y tseltal (chat-lenguas.js): docs/pruebas-chat-lenguas.csv, que cada sugerencia lleve a su
+ *    intención, que las plantillas solo usen {datos} de la plantilla en español y que el español siga igual.
  * Sale con código 1 si algo falla, para usarlo en el workflow.
  */
 const fs = require("fs");
@@ -90,6 +93,59 @@ filas.forEach(({ pregunta }) => {
     fallas += 1;
     console.log(`FALLA respuesta incompleta para «${pregunta}»: ${texto}`);
   }
+});
+
+// ---------- 4. lenguas indígenas (borrador)
+// Cada lengua en su propio contexto: lenguas.js cambia TEXTOS según ?lengua=.
+const filasLenguas = leer("docs/pruebas-chat-lenguas.csv").trim().split(/\r?\n/).slice(1).map((l) => {
+  const i = l.indexOf(","), j = l.lastIndexOf(",");
+  return { lengua: l.slice(0, i), pregunta: l.slice(i + 1, j), esperada: l.slice(j + 1) || null };
+});
+const chatJson = JSON.parse(leer("site/data/chat.json"));
+const porIdEs = Object.fromEntries(chatJson.intenciones.map((i) => [i.id, i]));
+const huecos = (t) => new Set([...t.matchAll(/\{(\w+)\}/g)].map((m) => m[1]));
+["nah", "yua", "tzh"].forEach((clave) => {
+  const nodo = { textContent: "", setAttribute() {}, querySelector: () => nodo, addEventListener() {} };
+  const cx = vm.createContext({
+    location: { search: `?lengua=${clave}`, pathname: "/", hash: "" }, URLSearchParams,
+    document: { getElementById: () => null, querySelectorAll: () => [], documentElement: {} },
+  });
+  ["textos.js", "lenguas.js", "chat-lenguas.js", "chat-motor.js"].forEach((f) => vm.runInContext(leer(`site/js/${f}`), cx));
+  const { ChatMotor: M, TEXTOS: TX, Lengua, ChatLenguas } = vm.runInContext("({ ChatMotor, TEXTOS, Lengua, ChatLenguas })", cx);
+  const L = ChatLenguas[clave];
+  const mitos = JSON.parse(leer("site/data/mitos.json"));
+  const mitosLengua = { ...mitos, niveles: mitos.niveles.map((n) => ({ ...n, mitos: n.mitos.map(Lengua.mito) })),
+    proxima_eleccion: { ...mitos.proxima_eleccion, fecha: Lengua.fecha(mitos.proxima_eleccion.fecha) } };
+  const m = M.crear({ chat: chatJson, atlas: JSON.parse(leer("site/data/atlas.json")), mitos: mitosLengua, textos: TX, lengua: L });
+  let bien = 0, total = 0;
+  const probar = (pregunta, esperada, etiqueta) => {
+    const r = m.responder(pregunta, m.nuevoContexto());
+    const ok = (r.intencion || null) === esperada && !/undefined|NaN|\{\w+\}/.test(r.texto);
+    total += 1;
+    if (ok) bien += 1; else fallas += 1;
+    if (!ok || todo) {
+      console.log(`${ok ? "  ok " : "FALLA"} [${clave}${etiqueta}] «${pregunta}» → ${r.intencion} (${(r.puntaje || 0).toFixed(2)}), se esperaba ${esperada}`);
+      if (todo) console.log(`      ${r.lang ? "(es) " : ""}${r.texto}`);
+    }
+  };
+  filasLenguas.filter((f) => f.lengua === clave).forEach((f) => probar(f.pregunta, f.esperada, ""));
+  // Las sugerencias son botones: al tocarlas deben llevar a su intención.
+  chatJson.intenciones.filter((i) => i.sugerencia).forEach((i) => {
+    const s = i.tipo === "mito" ? `¿${mitosLengua.niveles.flatMap((n) => n.mitos).find((x) => x.id === i.mito).enunciado.replace(/\.$/, "")}?`
+      : L.sugerencias[i.id] || i.sugerencia;
+    probar(s, i.id, " sugerencia");
+  });
+  // El español se sigue entendiendo con la página en esta lengua.
+  filas.forEach(({ pregunta, esperada }) => probar(pregunta, esperada, " en español"));
+  // Plantillas: solo los {datos} de la plantilla en español.
+  Object.entries(L.respuestas).forEach(([id, t]) => {
+    const es = id === "mito" ? Object.values(porIdEs).find((i) => i.tipo === "mito").respuesta : porIdEs[id]?.respuesta;
+    const sobran = es === undefined ? ["(intención desconocida)"] : [...huecos(t)].filter((k) => !huecos(es).has(k));
+    if (sobran.length) { fallas += 1; console.log(`FALLA [${clave}] plantilla «${id}» usa ${sobran.join(", ")}`); }
+  });
+  const sinTraducir = chatJson.intenciones.filter((i) => i.tipo !== "mito" && !L.respuestas[i.id]).map((i) => i.id);
+  if (sinTraducir.length) console.log(`[${clave}] responden en español: ${sinTraducir.join(", ")}`);
+  console.log(`[${clave}] ${bien} de ${total} en la intención correcta.`);
 });
 
 console.log(fallas ? `${fallas} fallas.` : "Todo bien.");

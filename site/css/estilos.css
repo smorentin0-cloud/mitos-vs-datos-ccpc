@@ -982,6 +982,7 @@ body:not(.modo-salon) { padding-bottom: calc(var(--nav-alto) + 5.5rem); }
 .chat-cabeza h2 { margin: 0; font-size: 1.25rem; }
 .masc-chat { flex: none; width: 3rem; }
 .chat-intro { margin: 0; font-size: 0.875rem; line-height: 1.4; color: var(--tinta-suave); }
+.chat-aviso-lengua { margin-top: var(--esp-1); font-style: italic; }
 .chat-cerrar {
   flex: none; display: inline-flex; align-items: center; justify-content: center;
   width: 44px; height: 44px; padding: 0; color: var(--tinta);

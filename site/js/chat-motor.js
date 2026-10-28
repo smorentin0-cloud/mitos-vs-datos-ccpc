@@ -13,6 +13,10 @@
  * 5. Llena la plantilla con cifras de atlas.json y mitos.json (generadas por los scripts).
  *
  * El contexto (último estado, año e intención) vive solo en memoria, en el objeto que crea nuevoContexto().
+ *
+ * En náhuatl, maya o tseltal (chat-lenguas.js, borrador) se suman sus preguntas de ejemplo y sinónimos a los
+ * del español, así que entiende ambas; responde con las plantillas de esa lengua. Si una intención no tiene
+ * plantilla traducida, responde en español y lo marca (lang: "es").
  */
 const ChatMotor = (() => {
   const UMBRAL = 0.4;
@@ -77,12 +81,14 @@ const ChatMotor = (() => {
     return total ? (2 * comun) / total : 0;
   }
 
-  function crear({ chat, atlas, mitos, textos }) {
-    const T = textos.chat;
+  function crear({ chat, atlas, mitos, textos, lengua = null }) {
+    const L = lengua || { textos: {}, respuestas: {}, sugerencias: {}, ejemplos: {}, sinonimos: {}, vacias: [], grupo: (g) => g };
+    const T = { ...textos.chat, ...L.textos };
     const pct = textos.atlas.pct;
     const puntos = textos.atlas.puntos;
-    const vacias = new Set(chat.vacias);
-    const { sinonimos } = chat;
+    const vacias = new Set([...chat.vacias, ...L.vacias.map(normal)]);
+    const sinonimos = { ...chat.sinonimos };
+    Object.entries(L.sinonimos).forEach(([p, forma]) => { sinonimos[normal(p)] = forma; });
     const alias = Object.entries(chat.alias_estados)
       .map(([a, c]) => ({ a, f: fonetica(a), c: Number(c), n: a.split(" ").length }));
     const aliasExacto = Object.fromEntries(alias.map((x) => [x.a, x.c]));
@@ -90,9 +96,25 @@ const ChatMotor = (() => {
     const listaMitos = mitos.niveles.flatMap((n) => n.mitos);
     const porId = Object.fromEntries(chat.intenciones.map((i) => [i.id, i]));
 
+    // En otra lengua: la sugerencia, la plantilla y los ejemplos de esa lengua (los del español se quedan).
+    const mitoDe = (i) => listaMitos.find((x) => x.id === i.mito);
+    const sugerenciaDe = (i) => {
+      if (!lengua) return i.sugerencia;
+      if (i.tipo === "mito") return `¿${mitoDe(i).enunciado.replace(/\.$/, "")}?`;
+      return L.sugerencias[i.id] || i.sugerencia;
+    };
+    const plantillaDe = (i) => (i.tipo === "mito" ? L.respuestas.mito : L.respuestas[i.id]);
+    const ejemplosDe = (i) => {
+      if (!lengua) return i.ejemplos;
+      const extra = [...(L.ejemplos[i.id] || [])];
+      if (i.tipo === "mito") extra.push(mitoDe(i).enunciado);
+      if (i.sugerencia) extra.push(sugerenciaDe(i));
+      return [...i.ejemplos, ...extra.map(normal)];
+    };
+
     // Palabras conocidas: las de los ejemplos y los sinónimos. Contra ellas se corrigen las faltas.
     const conocidas = new Set([...Object.keys(sinonimos), ...chat.vacias]);
-    chat.intenciones.forEach((i) => i.ejemplos.forEach((e) => normal(e).split(" ").forEach((p) => conocidas.add(p))));
+    chat.intenciones.forEach((i) => ejemplosDe(i).forEach((e) => normal(e).split(" ").forEach((p) => conocidas.add(p))));
     const conocidasLista = [...conocidas].filter((p) => p.length >= 4 && !/^\d+$/.test(p));
 
     function corregir(p) {
@@ -143,7 +165,7 @@ const ChatMotor = (() => {
 
     // ---------- vectores TF-IDF de los ejemplos
     const ejemplos = [];
-    chat.intenciones.forEach((i) => i.ejemplos.forEach((texto) => {
+    chat.intenciones.forEach((i) => ejemplosDe(i).forEach((texto) => {
       ejemplos.push({ intencion: i, terms: terminos(extraer(normal(texto).split(" ").filter(Boolean)).salida) });
     }));
     const df = new Map();
@@ -224,8 +246,8 @@ const ChatMotor = (() => {
           const grupos = atlas.grupos_edad.map((g, k) => ({ g, v: valores[k] })).filter((x) => x.v != null);
           const max = grupos.reduce((x, y) => (y.v > x.v ? y : x));
           const min = grupos.reduce((x, y) => (y.v < x.v ? y : x));
-          return { lugar_texto: lugarTexto(e), anio: a, lista: atlas.grupos_edad.map((g, k) => `${g}: ${pct(valores[k])}`).join("; "),
-            grupo_max: max.g, pct_max: pct(max.v), grupo_min: min.g, pct_min: pct(min.v) };
+          return { lugar_texto: lugarTexto(e), anio: a, lista: atlas.grupos_edad.map((g, k) => `${L.grupo(g)}: ${pct(valores[k])}`).join("; "),
+            grupo_max: L.grupo(max.g), pct_max: pct(max.v), grupo_min: L.grupo(min.g), pct_min: pct(min.v) };
         }
         case "sexo": {
           const [m, h] = fuente(e).detalle[a].sexo;
@@ -256,7 +278,7 @@ const ChatMotor = (() => {
           lista: atlas.regiones.slice().sort((x, y) => y.participacion[a] - x.participacion[a])
             .map((r) => `${r.nombre}, ${pct(r.participacion[a])}`).join("; ") };
         case "mito": {
-          const m = listaMitos.find((x) => x.id === i.mito);
+          const m = mitoDe(i);
           return { enunciado: m.enunciado.replace(/\.$/, ""), veredicto: textos.veredictos[m.veredicto].toLowerCase(), resumen: m.resumen };
         }
         default: return {};
@@ -271,7 +293,7 @@ const ChatMotor = (() => {
     function sugerir(ranking) {
       const ids = ranking.filter((r) => r.p > 0.12 && r.intencion.sugerencia).slice(0, 3).map((r) => r.intencion.id);
       chat.sugerencias_inicio.forEach((id) => { if (ids.length < 3 && !ids.includes(id)) ids.push(id); });
-      return ids.map((id) => porId[id].sugerencia);
+      return ids.map((id) => sugerenciaDe(porId[id]));
     }
 
     // ---------- responder
@@ -293,7 +315,7 @@ const ChatMotor = (() => {
       const buenas = respuestas.filter((r) => r.intencion && !r.falta);
       if (!buenas.length) return respuestas[0];
       return { texto: buenas.map((r) => r.texto).join(" "), intencion: buenas.map((r) => r.intencion).join("+"),
-        puntaje: Math.min(...buenas.map((r) => r.puntaje || 0)) };
+        puntaje: Math.min(...buenas.map((r) => r.puntaje || 0)), ...(buenas.some((r) => r.lang) ? { lang: "es" } : {}) };
     }
 
     function responderUna(texto, ctx) {
@@ -326,6 +348,8 @@ const ChatMotor = (() => {
         intencion = sirve ? previa : porId[estados.length ? "estado" : ctx.estado ? "estado" : "pais"];
       } else if (mejor.p >= UMBRAL) intencion = mejor.intencion;
       ctx.pendiente = null;
+      // «¿Cuántos votaron en Jalisco?» se parece a la pregunta del país, pero nombra un estado.
+      if (intencion && intencion.tipo === "pais" && estados.length) intencion = porId.estado;
       // Dos años en la pregunta («Colima, 2018 contra 2024»): se comparan entre sí.
       const anioUnicos = [...new Set(anios)].sort();
       if (anioUnicos.length >= 2 && (!intencion || ["pais", "estado", "historia", "entre_anios"].includes(intencion.tipo))) {
@@ -358,11 +382,13 @@ const ChatMotor = (() => {
       if (d.estado && usa.has("estado")) ctx.estado = d.estado;
       ctx.otro = d.otro;
       ctx.ultima = intencion.id;
-      return { texto: llenar(intencion.respuesta, datosDe(intencion, d)), intencion: intencion.id, puntaje: mejor.p };
+      const traducida = lengua && plantillaDe(intencion);
+      return { texto: llenar(traducida || intencion.respuesta, datosDe(intencion, d)), intencion: intencion.id, puntaje: mejor.p,
+        ...(lengua && !traducida ? { lang: "es" } : {}) };
     }
 
     function inicio() {
-      return { texto: T.bienvenida, sugerencias: chat.sugerencias_inicio.map((id) => porId[id].sugerencia) };
+      return { texto: T.bienvenida, sugerencias: chat.sugerencias_inicio.map((id) => sugerenciaDe(porId[id])) };
     }
 
     return { responder, nuevoContexto, inicio };
