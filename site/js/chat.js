@@ -129,6 +129,24 @@ const Chat = (() => {
   document.querySelectorAll("[data-chat]").forEach((b) => b.addEventListener("click", abrir));
   Mascota.poner($("#chat-flotante-masc"), "saluda");
 
+  // En náhuatl, maya o tseltal, Boleta saluda en esa lengua al cargar la página: un globo sobre su botón,
+  // la mano y la boca en movimiento. Sin sonido (no hay voces para estas lenguas). Se va solo o al abrir el chat.
+  const globo = $("#saludo-lengua");
+  function saludar() {
+    if (!lengua || document.body.classList.contains("modo-salon")) return;
+    const boton = $("#chat-abrir");
+    globo.lang = Lengua.clave;
+    globo.textContent = lengua.ui.saludo;
+    globo.hidden = false;
+    Mascota.poner($("#chat-flotante-masc"), "saluda");
+    boton.classList.add("saludando");
+    setTimeout(() => boton.classList.remove("saludando"), 2400);
+    setTimeout(() => { globo.hidden = true; }, 7000);
+  }
+  ventana.addEventListener("close", () => { globo.hidden = true; });
+  $("#chat-abrir").addEventListener("click", () => { globo.hidden = true; });
+  setTimeout(saludar, 700);
+
   // Si la barra fija de «Siguiente pregunta» está a la vista, el botón se sube su alto (crece con A+ y A++).
   const barra = $(".acciones-fijas");
   if (barra && window.ResizeObserver) {

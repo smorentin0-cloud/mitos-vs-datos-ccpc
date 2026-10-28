@@ -960,7 +960,33 @@ body.con-atlas .aviso-lengua { max-width: 76rem; }
 body:not(.modo-salon) { padding-bottom: calc(var(--nav-alto) + 5.5rem); }
 /* En el modo salón (proyector) y al imprimir no se muestra. */
 .modo-salon .chat-flotante { display: none; }
-@media print { .chat-flotante { display: none; } }
+
+/* Saludo en la lengua elegida (chat.js): globo sobre el botón de Boleta; no recibe toques. */
+.saludo-lengua {
+  position: fixed; z-index: 6; left: var(--esp-4); max-width: calc(100vw - 2 * var(--esp-4));
+  bottom: calc(var(--esp-4) + max(var(--nav-alto), env(safe-area-inset-bottom)) + var(--chat-elevar, 0px) + 3.5rem + var(--esp-3));
+  margin: 0; padding: var(--esp-2) var(--esp-3);
+  font-size: 1rem; font-weight: 700; line-height: 1.35; color: var(--tinta);
+  background: var(--papel); border: 2px solid var(--tinta); border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(29, 29, 29, 0.2); pointer-events: none;
+  animation: globo 0.3s ease-out;
+}
+/* Pico del globo hacia la cara de Boleta. */
+.saludo-lengua::after {
+  content: ""; position: absolute; left: 1.25rem; bottom: -9px; width: 14px; height: 14px;
+  background: var(--papel); border-right: 2px solid var(--tinta); border-bottom: 2px solid var(--tinta); transform: rotate(45deg);
+}
+.saludo-lengua[hidden] { display: none; }
+.modo-salon .saludo-lengua { display: none; }
+@keyframes globo { from { opacity: 0; transform: translateY(8px); } }
+.saludando .mascota .m-boca { display: none; }
+.saludando .mascota .m-boca-habla { display: inline; animation: hablar 0.22s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .saludo-lengua { animation: none; }
+  .saludando .mascota .m-boca { display: inline; }
+  .saludando .mascota .m-boca-habla { display: none; }
+}
+@media print { .chat-flotante, .saludo-lengua { display: none; } }
 
 /* Ventana del chat: panel en la esquina inferior izquierda; en el celular, pantalla completa. */
 .chat-panel {
