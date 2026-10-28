@@ -93,7 +93,7 @@
     if (seccion === "mapa") mostrar("mapa", { ...desdeUrl, consulta: new URLSearchParams(q || "") });
     else if (seccion === "metodo") mostrar("metodo", desdeUrl);
     else if (seccion === "juego") irAlJuego(desdeUrl);
-    else if (seccion === "inicio" || seccion === "portada") mostrar("portada", desdeUrl);
+    else if (seccion === "" || seccion === "inicio" || seccion === "portada") mostrar("portada", desdeUrl);
   }
 
   addEventListener("popstate", rutear);
@@ -753,6 +753,18 @@
     $("#perfil-error").textContent = "";
   }
 
+  // Edad fuera de rango: el lector de pantalla la anuncia como no válida, con su mensaje.
+  function marcarEdad(invalida) {
+    const campo = $("#p-edad");
+    if (invalida) {
+      campo.setAttribute("aria-invalid", "true");
+      campo.setAttribute("aria-describedby", "edad-ayuda perfil-error");
+    } else {
+      campo.removeAttribute("aria-invalid");
+      campo.setAttribute("aria-describedby", "edad-ayuda");
+    }
+  }
+
   async function confirmarPerfil() {
     const T = TEXTOS.perfilPantalla;
     const error = $("#perfil-error");
@@ -761,6 +773,7 @@
     const clave = comboEstado.valor() === "" ? null : Number(comboEstado.valor());
     if (edad !== null && (!Number.isInteger(edad) || edad < EDAD_MIN || edad > EDAD_MAX)) {
       error.textContent = T.errorEdad(EDAD_MIN, EDAD_MAX);
+      marcarEdad(true);
       $("#p-edad").focus();
       return;
     }
@@ -998,10 +1011,11 @@
   }
 
   // Enlace de reto: solo lleva el puntaje (nunca edad, estado ni compromiso).
-  // La edición (nacional o de un estado) es la página pública, no un dato de la persona.
+  // La edición (nacional o de un estado) y la lengua son la página pública, no datos de la persona.
   function urlReto() {
     const edicion = estado.ambitoClave ? `entidad=${estado.ambitoClave}&` : "";
-    return `${urlJuego()}?${edicion}reto=${estado.puntos}-${estado.mitos.length}`;
+    const lengua = Lengua.clave !== "es" ? `lengua=${Lengua.clave}&` : "";
+    return `${urlJuego()}?${edicion}${lengua}reto=${estado.puntos}-${estado.mitos.length}`;
   }
 
   // Si se llega con un reto válido, la portada lo dice.
@@ -1358,7 +1372,7 @@
   $("#perfil-no-decir").addEventListener("click", prefieroNoDecir);
   $("#edad-menos").addEventListener("click", () => cambiarEdad(-1));
   $("#edad-mas").addEventListener("click", () => cambiarEdad(1));
-  $("#p-edad").addEventListener("input", () => { $("#perfil-error").textContent = ""; });
+  $("#p-edad").addEventListener("input", () => { $("#perfil-error").textContent = ""; marcarEdad(false); });
   $("#agregar-municipio").addEventListener("click", () =>
     mostrarMunicipio($("#agregar-municipio").getAttribute("aria-expanded") !== "true"));
   // "Jugar otra vez" conserva el perfil que se haya elegido.
