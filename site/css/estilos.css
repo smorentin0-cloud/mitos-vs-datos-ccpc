@@ -917,8 +917,9 @@ main:has(> #resultado:not([hidden])) { padding-top: var(--esp-4); }
 #metodo h3 { margin-top: var(--esp-5); }
 #metodo p { max-width: 38rem; }
 
-/* Sin voces locales en español: no se ofrece la voz (las voces en línea enviarían el texto fuera). */
-.sin-voz .escuchar, .sin-voz .voz-btn, .sin-voz .voz-aviso, .sin-voz .voz-campo { display: none !important; }
+/* Sin voces locales en español: no se ofrece la voz (las voces en línea enviarían el texto fuera).
+   Solo el campo de la voz: el de la lengua usa la misma clase y debe seguir visible para volver al español. */
+.sin-voz .escuchar, .sin-voz .voz-btn, .sin-voz .voz-aviso, .sin-voz #voz-campo { display: none !important; }
 
 /* ---------------------------------------------------------------- aviso de las lenguas indígenas */
 .aviso-lengua {
