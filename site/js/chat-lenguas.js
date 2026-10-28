@@ -6,7 +6,7 @@
  * más ayuda es agregar preguntas de ejemplo como las escribiría la gente (ejemplos).
  *
  * Por lengua:
- *   - ui: textos fijos de la ventana del chat.
+ *   - ui: textos fijos de la ventana del chat; «saludo» es el globo con que Boleta recibe al cargar la página.
  *   - textos: piezas de TEXTOS.chat (textos.js) con la misma forma.
  *   - respuestas: plantillas por intención (las de procesar_chat.py), con los mismos {datos}. NUNCA cifras:
  *     las pone chat-motor.js. «mito» es la plantilla de las 8 frases. Si falta una, responde en español.
@@ -21,6 +21,7 @@ const ChatLenguas = {
   // ------------------------------------------------------------------ náhuatl
   nah: {
     ui: {
+      saludo: "¡Kualli tonalli! Na ni Boleta.",
       boton: "Xiktlajtlani Boleta",
       titulo: "Xiktlajtlani Boleta",
       intro: "Niknankilia ika datos tlen INE, 2009 hasta 2024. Tlen tikijkuiloa amo tikpiaj wan amo tiktitlanij.",
@@ -133,6 +134,7 @@ const ChatLenguas = {
   // ------------------------------------------------------------------ maya
   yua: {
     ui: {
+      saludo: "¡Ba'ax ka wa'alik! Teen Boleta.",
       boton: "K'áat ti' Boleta",
       titulo: "K'áat ti' Boleta",
       intro: "Kin núukik yéetel u datos INE, 2009 tak 2024. Ba'ax ka ts'íibtik ma' k ts'áaik mix k túuxtik.",
@@ -244,6 +246,7 @@ const ChatLenguas = {
   // ------------------------------------------------------------------ tseltal
   tzh: {
     ui: {
+      saludo: "¡Bit'il ayat! Joon Boleta.",
       boton: "Jojk'obin Boleta",
       titulo: "Jojk'obin Boleta",
       intro: "Ya jsujtes sok sdatos INE, 2009 k'alal 2024. Te bin ya ats'ibuy ma' ya jk'ejtik sok ma' ya jtakik.",
